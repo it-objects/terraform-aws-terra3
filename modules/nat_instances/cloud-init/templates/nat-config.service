@@ -1,0 +1,13 @@
+[Unit]
+Description=Configure default route pointing to this NAT instance
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/local/bin/nat-config create-route
+ExecStop=/usr/local/bin/nat-config delete-route
+
+[Install]
+WantedBy=multi-user.target

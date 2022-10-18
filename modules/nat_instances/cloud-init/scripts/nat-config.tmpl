@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -e
+export TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+export AWS_DEFAULT_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | cut -d \" -f4)
+INSTANCE_ID="$(/opt/aws/bin/ec2-metadata -i | cut -d' ' -f2)"
+
+usage() {
+  echo -e "Usage: $0 <command>
+
+COMMANDS
+  create-route\tCreate default route pointing to this NAT instance
+  delete-route\tDelete default route pointing to this NAT instance"
+}
+
+delete_route() {
+%{ for route_table_id in route_table_ids ~}
+  aws ec2 delete-route \
+    --route-table-id "${route_table_id}" \
+    --destination-cidr-block "0.0.0.0/0" || true
+%{ endfor ~}
+}
+
+create_route() {
+  delete_route
+%{ for route_table_id in route_table_ids ~}
+  aws ec2 create-route \
+    --route-table-id "${route_table_id}" \
+    --destination-cidr-block "0.0.0.0/0" \
+    --instance-id "$INSTANCE_ID"
+%{ endfor ~}
+}
+
+parse_args() {
+  if [[ $1 == create-route ]]; then
+      sysctl -q -w net.ipv4.ip_forward=1
+      sysctl -q -w net.ipv4.conf.eth0.send_redirects=0
+      iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+      create_route
+  elif [[ $1 == delete-route ]]; then
+      delete_route
+  else
+      usage
+      exit 1
+  fi
+}
+
+{
+  parse_args $1
+}

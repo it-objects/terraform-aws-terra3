@@ -1,0 +1,55 @@
+variable "name" {
+  type        = string
+  description = "Name of container."
+}
+
+variable "container_image" {
+  type        = string
+  description = "Reference of container image, e.g. 'nginx:1.23.1'"
+}
+
+variable "container_cpu" {
+  type = number
+}
+
+variable "container_memory" {
+  type = number
+}
+
+variable "port_mappings" {
+  type = list(object({
+    containerPort = number
+    protocol      = string
+  }))
+
+  description = "The port mappings to configure for the container. This is a list of maps. Each map should contain \"containerPort\", \"hostPort\", and \"protocol\", where \"protocol\" is one of \"tcp\" or \"udp\". If using containers in a task with the awsvpc or host network mode, the hostPort can either be left blank or set to the same value as the containerPort"
+
+  default = []
+}
+
+variable "map_environment" {
+  type        = map(string)
+  description = "The environment variables to pass to the container. This is a map of string: {key: value}. map_environment overrides environment"
+  default     = null
+}
+
+variable "environment" {
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  description = "The environment variables to pass to the container. This is a list of maps. map_environment overrides environment"
+  default     = []
+}
+
+variable "essential" {
+  type        = bool
+  description = "Determines whether all other containers in a task are stopped, if this container fails or stops for any reason. Due to how Terraform type casts booleans in json it is required to double quote this value"
+  default     = true
+}
+
+variable "readonlyRootFilesystem" {
+  type        = bool
+  description = "Best practice is to enable it."
+  default     = true
+}
