@@ -1,5 +1,7 @@
 # Terra3
 
+[![pre-commit](https://github.com/it-objects/terraform-aws-terra3/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/it-objects/terraform-aws-terra3/actions/workflows/pre-commit.yaml)
+
 Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS!
 
 This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and manage a complete stack with
