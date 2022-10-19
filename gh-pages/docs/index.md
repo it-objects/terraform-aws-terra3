@@ -1,1 +1,28 @@
-# Hello VitePress
+---
+layout: home
+
+title: Terra3
+titleTemplate: Terraform module for quickly ramping-up 3-tier solutions in AWS
+
+hero:
+  name: Terra3
+  text:
+  tagline: An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS!
+  actions:
+    - theme: brand
+      text: Get Started!
+      link: /overview
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/it-objects/terraform-aws-terra3
+
+features:
+  - title: Quick and easy
+    details: Get started with a 3-tier-architecture in AWS in minutes
+  - title: Batteries included
+    details: Pick and mix common AWS services such as S3, RDS or Cloudfront for your solution
+  - title: Secure
+    details: Based on all common security standards (fully checked with tfsec)
+  - title: Open Source
+    details: We are happy to receive pull-requests if you want to help us improve Terra3!
+---

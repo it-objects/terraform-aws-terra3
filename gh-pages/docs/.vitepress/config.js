@@ -1,5 +1,6 @@
 export default {
     title: 'Terra3',
+
     base: '/terraform-aws-terra3/',
     description: 'Documentation for Terra3.',
     lastUpdated: true,
@@ -24,7 +25,7 @@ export default {
         },
 
         nav: [
-          { text: 'IT-Objects', link: 'https://www.it-objects.de/cloud/' },
+            { text: '->IT-Objects', link: 'https://www.it-objects.de/cloud/' },
           /*{
             text: 'Dropdown Menu',
             collapsible: true,
@@ -38,10 +39,14 @@ export default {
         sidebar: [
             {
               text: 'Guide',
-              collapsible: true,
+              collapsible: false,
               items: [
-                { text: 'Introduction', link: '/introduction' },
-                { text: 'Getting Started', link: '/getting-started' },
+                  { text: 'Overview', link: '/overview' },
+                  { text: 'Getting Started', link: '/getting-started' },
+                  //{ text: 'Core concepts', link: '/core-concepts' },
+                  //{ text: 'Future', link: '/future' },
+                  { text: 'Contributing', link: '/contributing' },
+                  { text: 'About', link: '/about' },
               ]
             }
           ]
