@@ -29,4 +29,4 @@ jobs:
       #- uses: pre-commit/action@v3.0.0
       - name: Execute pre-commit https://github.com/pre-commit/action/blob/main/action.yml
         run: |
-          pre-commit run --all-files
+          pre-commit run --all-files --verbose --color=always
