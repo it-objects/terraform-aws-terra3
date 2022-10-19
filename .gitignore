@@ -293,4 +293,3 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 /gh-pages/node_modules/
-/gh-pages/package-lock.json

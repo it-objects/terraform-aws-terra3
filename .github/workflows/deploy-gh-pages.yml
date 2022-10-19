@@ -14,7 +14,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: yarn
+          cache: 'npm'
+          cache-dependency-path: gh-pages/package-lock.json
       - run: cd gh-pages
       - run: yarn install --frozen-lockfile
 
