@@ -1,7 +1,7 @@
 export default {
     title: 'Terra3',
 
-    base: '/terraform-aws-terra3/',
+    base: '/',
     description: 'Documentation for Terra3.',
     lastUpdated: true,
     lang: 'en-US',
