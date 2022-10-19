@@ -16,14 +16,11 @@ jobs:
           node-version: 16
           cache: 'npm'
           cache-dependency-path: gh-pages/package-lock.json
-      - run: cd gh-pages
-      - run: yarn install --frozen-lockfile
-
-      - name: Build
-        run: yarn docs:build
-
-      - run: cd ..
-
+      - run: |
+          cd gh-pages
+          npm i
+          npm run docs:build
+          cd ..
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
