@@ -4,11 +4,11 @@
 
 Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier-architecture solutions in AWS!
 
-This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and manage a complete stack with
+This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in AWS. It can be used to configure and manage parts of or the complete stack consisting of
 * a static website served from S3 via Cloudfront
 * and containerized backend/API run on ECS
 * and an RDS MySQL database
-that is fully bootstrapped and correctly setup with best practices in mind.
+that is fully bootstrapped and batteries included with best practices in mind.
 
 ## Getting Started
 
@@ -24,7 +24,7 @@ To view examples for how you can leverage Terra3, please see the [examples](http
 
 ## Usage
 
-The below demonstrates how you can leverage Terra to deploy a 3-tier-architecture, including a static website served via S3 and Cloudfront, a container (in this case an nginx for demo purposes). After a "terraform apply" a Cloudfront is shown which, after about 2 minutes" should redirect to the static website on root ("/") and the nginx container on ("/api").
+The below demonstrates how you can leverage Terra3 to deploy a 3-tier-architecture, including a static website served via S3 and Cloudfront, a container (in this case an nginx for demo purposes). After a "terraform apply" a Cloudfront URL is shown, which after about 4 minutes should redirect to the static website on root ("/") and the nginx container on ("/api/").
 
 ```hcl
 module "terra3_environment" {
@@ -33,9 +33,8 @@ module "terra3_environment" {
 
   solution_name = "example_solution"
 
-  # required when using containers; not required when just using the static web application served from S3
   create_load_balancer = true
-  nat                  = "NAT_INSTANCES"
+  nat                  = "NAT_INSTANCES" # spawns EC2 instances instead of NAT Gateways for cost savings
 
   app_components = {
     backend_service = {
@@ -65,16 +64,17 @@ module "api_container" {
   container_cpu    = 256
   container_memory = 512
 
-  port_mappings = [{ # container reachable by load balancer must have the same name and port
+  port_mappings = [{ # container reachable by load balancer must share the same app_component's name and port
     protocol      = "tcp"
     containerPort = 80
   }]
-
-  map_environment = {
-    "my_var_name" : "my_var_value",
-    "my_var_name2" : "my_var_value2",
-  }
-
-  readonlyRootFilesystem = false # disable because of entrypoint script
 }
 ```
+
+## About
+
+This project is maintained and published with :heart: by [it-objects GmbH](https://it-objects.de/cloud/).
+
+We're a full-service software development company based in Essen, Germany.
+
+[Apply for a job](https://www.it-objects.de/jobs/), or hire us to help with your software development, devops topics and cloud strategy.
