@@ -16,7 +16,8 @@ jobs:
           node-version: 16
           cache: 'npm'
           cache-dependency-path: gh-pages/package-lock.json
-      - run: |
+      - name: Create vitepress site
+        run: |
           cd gh-pages
           npm i
           npm run docs:build
