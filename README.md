@@ -1,6 +1,6 @@
 # Terra3
 
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/it-objects/terraform-aws-terra3/main.svg)](https://results.pre-commit.ci/latest/github/it-objects/terraform-aws-terra3/main)
+[![pre-commit](https://github.com/it-objects/terraform-aws-terra3/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/it-objects/terraform-aws-terra3/actions/workflows/pre-commit.yaml)
 
 Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS!
 
