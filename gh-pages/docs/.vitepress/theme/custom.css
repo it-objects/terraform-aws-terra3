@@ -1,0 +1,12 @@
+/* .vitepress/theme/custom.css */
+
+/* SEE https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css */
+
+:root {
+    --vp-c-brand: #2d6a90;
+    --vp-c-brand-light: #3d89b6;
+    --vp-button-brand-bg: #2d6a90;
+    --vp-button-brand-border: #3d89b6;
+    --vp-button-brand-hover-border: white;
+    --vp-button-brand-: white;
+  }
