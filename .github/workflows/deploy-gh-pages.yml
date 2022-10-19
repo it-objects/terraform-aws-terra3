@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feature/TERRA-37_website
+      - feature/TERRA-37_github_page
 
 jobs:
   deploy:
