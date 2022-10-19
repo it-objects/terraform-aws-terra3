@@ -56,7 +56,7 @@ module "terra3_environment" {
 }
 
 module "api_container" {
-  source = "it-objects/terra3/aws/modules/container"
+  source = "it-objects/terra3/aws//modules/container"
 
   name = "backend_service"
 
