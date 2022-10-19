@@ -1,5 +1,7 @@
 # Terra3
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/it-objects/terraform-aws-terra3/main.svg)](https://results.pre-commit.ci/latest/github/it-objects/terraform-aws-terra3/main)
+
 Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS!
 
 This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and manage a complete stack with
