@@ -2,7 +2,7 @@
 
 [![pre-commit](https://github.com/it-objects/terraform-aws-terra3/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/it-objects/terraform-aws-terra3/actions/workflows/pre-commit.yaml)
 
-Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS!
+Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier-architecture solutions in AWS!
 
 This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and manage a complete stack with
 * a static website served from S3 via Cloudfront
@@ -12,7 +12,7 @@ that is fully bootstrapped and correctly setup with best practices in mind.
 
 ## Getting Started
 
-The easiest way to get started with Terra3 is to follow our [Getting Started guide](https://terra3.io/latest/getting-started/).
+The easiest way to get started with Terra3 is to follow our [Getting Started guide](https://terra3.io/getting-started.html).
 
 ## Documentation
 
@@ -29,7 +29,7 @@ The below demonstrates how you can leverage Terra to deploy a 3-tier-architectur
 ```hcl
 module "terra3_environment" {
   source  = "it-objects/terra3/aws"
-  version = "0.9.0"
+  version = "0.9.1"
 
   solution_name = "example_solution"
 
@@ -57,6 +57,7 @@ module "terra3_environment" {
 
 module "api_container" {
   source = "it-objects/terra3/aws//modules/container"
+  version = "0.9.1"
 
   name = "backend_service"
 
