@@ -68,7 +68,7 @@ module "app_components" {
   service_port       = each.value["service_port"]
 
   # for cost savings undeploy outside work hours
-  enable_autoscaling = each.value["enable_autoscaling"]
+  enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${module.environment.domain_name}" : ""
 
