@@ -1,7 +1,7 @@
 About
 =====
 
-This project is maintained and funded by [it-objects GmbH](https://it-objects.de/cloud/).
+This project is maintained and published with :heart: by [it-objects GmbH](https://it-objects.de/cloud/).
 
 We're a full-service software development company based in Essen, Germany & Lisbon, Portugal.
 
