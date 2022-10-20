@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - main
-      - feature/TERRA-37_github_page
+    paths:
+      - gh-pages
 
 jobs:
   deploy:

@@ -7,7 +7,10 @@ titleTemplate: Terraform module for quickly ramping-up 3-tier solutions in AWS
 hero:
   name: Terra3
   text:
-  tagline: An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS!
+  tagline: An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS
+  image:
+    src: /logo.png
+    alt: Logo
   actions:
     - theme: brand
       text: Get Started!
@@ -24,5 +27,5 @@ features:
   - title: Secure
     details: Based on all common security standards (fully checked with tfsec)
   - title: Open Source
-    details: We are happy to receive pull-requests if you want to help us improve Terra3!
+    details: We are happy to receive pull-requests if you want to help us to improve Terra3!
 ---
