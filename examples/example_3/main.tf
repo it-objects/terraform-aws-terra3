@@ -10,7 +10,8 @@ locals {
 }
 
 module "terra3_examples" {
-  source = "../.."
+  source  = "it-objects/terra3/aws"
+  version = "0.9.1"
 
   solution_name                 = local.solution_name
   enable_account_best_practices = true
@@ -59,7 +60,8 @@ module "terra3_examples" {
 # - Names need to be different when used together
 # ---------------------------------------------------------------------------------------------------------------------
 module "container_my_main" {
-  source = "../../modules/container"
+  source  = "it-objects/terra3/aws//modules/container"
+  version = "0.9.1"
 
   name = "my_main_container"
 
@@ -81,7 +83,8 @@ module "container_my_main" {
 }
 
 module "container_my_sidecar" {
-  source = "../../modules/container"
+  source  = "it-objects/terra3/aws//modules/container"
+  version = "0.9.1"
 
   name = "my_sidecar"
 
