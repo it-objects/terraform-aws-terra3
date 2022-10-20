@@ -2,12 +2,12 @@
 layout: home
 
 title: Terra3
-titleTemplate: Terraform module for quickly ramping-up 3-tier solutions in AWS
+titleTemplate: Terraform module for quickly ramping-up 3-tier architectures in AWS
 
 hero:
   name: Terra3
   text:
-  tagline: An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS
+  tagline: An opinionated Terraform module for quickly ramping-up 3-tier architectures in AWS
   image:
     src: /logo.png
     alt: Logo

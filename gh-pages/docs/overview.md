@@ -1,9 +1,9 @@
 Overview
 ========
 
-Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier solutions in AWS!
+Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier architectures in AWS!
 
-This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and manage a complete stack with
+This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and provision a complete stack with
 
 *   a static website served from S3 and AWS Cloudfront
 
@@ -11,25 +11,34 @@ This repository contains a collection of Terraform modules that aim to make it e
 
 *   an AWS RDS MySQL database
 
+It is the result of many projects we did for customers with similar requirements. And rather than starting from scratch
+with every project, we've created reusable Terraform modules. What started as an internal library, now evolved into
+a single module we'd like to share and to give back to the community as open source.
 
-The result is a _configurable_, fully bootstrapped, secure and preconfigured setup with best practices in mind.
+While the internal sub-modules are used by us in production, the single Terraform module, that bundles all sub-modules
+behind neat module parameters such as app_modules and containers, is a completely new development. It should be considered
+as beta for now, until we release the first major version 1.0 expected to be generally available still in 2022. Subscribe
+to the GitHub project to hear about the release!
 
-**Configurable**
+**Features**
 
-Besides the full-blown setup described above it is possible to simply use certain parts of it:
+These are module features that allow cloud engineers to customize the AWS infrastructure setup, mostly by just setting the appropriate flag.
 
-1.  A static website served from S3 and AWS Cloudfront only: Use this to host your static web application on AWS
+* NAT instance as optional low-cost alternative to NAT Gateway
 
-2.  A containerized backend/API/web page running on AWS ECS only: Use this to host one or more services or APIs as containers in an AWS ECS cluster
+* Reasonable defaults such as "Enabled VPC Gateway endpoint for S3", "account-wide S3/EBS encryption"
 
+* Database access for devs without SSH but via an SSM enabled bastion host
 
-**Opinionated**
+* ECS Exec to quickly shell into a container in a debug stage
 
-It’s opinionated in the sense that the many decisions involved in such a setup were all made in a reasonable way, suiting the many customers where this is already running in production, where we think that this could also be an ideal starting point for others. Some examples of defaults are
+* Optional multi-state Terraform to separate infrastructure from application deployment using AWS Parameter Store
 
-*   ECS Fargate over ECS with EC2 instances and over EKS
+* Least privileged IAM roles and security groups settings
 
-*   Use Cloudfront to serve both static (S3) and dynamic (containers) content
+* Transport encryption between Cloudfront and the Application Loadbalancer (if custom_domain is enabled)
+
+* and many more...
 
 
 What is Terra3
@@ -39,9 +48,9 @@ In its full-blown version it results in this AWS infrastructure setup:
 
 ![](attachments/61276161/62128139.png)
 
-Motivation
------------------------
-Coming soon
+For now, please visit our [getting started](https://terra3.io/getting-started.html) for a step-by-step walk-through
+to understand what different aspects Terra3 has to offer. We're planning to extend this documentation as a
+blog series, that will highlight the different features with each post. So stay tuned.
 
 What can I do with this solution?
 ---------------------------------

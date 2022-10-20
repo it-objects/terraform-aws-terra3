@@ -22,7 +22,7 @@ First, ensure that you have installed the following tools locally.
 
 ### Clone the repo
 
-```java
+```
 git clone https://github.com/it-objects/terraform-aws-terra3.git
 ```
 
@@ -42,13 +42,13 @@ as depicted in this diagram:
 
 CD into the examples directory:
 
-```java
+```
 cd terraform-aws-terra3/examples/example_1
 ```
 
 Initialize the working directory with the following:
 
-```java
+```
 terraform init
 ```
 
@@ -56,7 +56,7 @@ terraform init
 
 Verify the resources that will be created by this execution:
 
-```java
+```
 terraform plan
 ```
 
@@ -66,16 +66,15 @@ Let’s provision this example.
 
 Note: make sure that the AWS CLI is correctly configured and that you’re deploying to the right AWS account.
 
-```java
+```
 terraform apply
 ```
 
-Validation
-----------
+### Validation
 
 After about 30-60 seconds, the script has been applied and a Cloudfront URL is shown similar to this one:
 
-```java
+```
 cloudfront_default_domain_name = "dcot74k2131h8.cloudfront.net"
 ```
 
@@ -85,19 +84,18 @@ Please note: it requires another 30 seconds, until the Cloudfront distribution i
 
 It could look something like this when you use the command line tool “curl” to query the URL:
 
-```java
+```
 ❯ curl https://dcot74k2131h8.cloudfront.net  
 <h1>Hello world, Terra3!</h1>%  
 ```
 
 Go to the S3 section in your AWS web console and find the S3 bucket with the index.html file. Feel free, to edit the file and see the change being reflected when reloading the page in your browser.
 
-Finalization
-------------
+### Finalization
 
 To clean up your AWS account, issue the following command which will remove all previously provisioned AWS resources.
 
-```java
+```
 terraform destroy
 ```
 
@@ -119,13 +117,13 @@ as depicted in this diagram:
 
 CD into the examples directory:
 
-```java
+```
 cd terraform-aws-terra3/examples/example_2
 ```
 
 Initialize the working directory with the following:
 
-```java
+```
 terraform init
 ```
 
@@ -133,7 +131,7 @@ terraform init
 
 Verify the resources that will be created by this execution:
 
-```java
+```
 terraform plan
 ```
 
@@ -143,16 +141,15 @@ Let’s provision the first example.
 
 Note: make sure that the AWS CLI is correctly configured and that you’re deploying to the right AWS account.
 
-```java
+```
 terraform apply
 ```
 
-Validation
-----------
+### Validation
 
 After about 4 minutes, the script has been applied and a Cloudfront URL is shown similar to this one:
 
-```java
+```
 cloudfront_default_domain_name = "dcot74k2131h8.cloudfront.net"
 ```
 
@@ -162,7 +159,7 @@ Please note: it requires another 30 seconds, until the Cloudfront distribution a
 
 It could look something like this when you use the command line tool “curl” to query the URL:
 
-```java
+```
 ❯ curl https://dcot74k2131h8.cloudfront.net  
 <h1>Hello world, Terra3!</h1>%  
 
@@ -176,12 +173,11 @@ It could look something like this when you use the command line tool “curl” 
 
 Go to the ECS section in your AWS web console and find the ECS cluster. You should be able to see the task with two containers you just have deployed. The
 
-Finalization
-------------
+### Finalization
 
 To clean up your AWS account, issue the following command which will remove all previously provisioned AWS resources.
 
-```java
+```
 terraform destroy
 ```
 
@@ -209,13 +205,13 @@ A subdomain will be created named after the name of your solution (solution\_nam
 
 CD into the examples directory:
 
-```java
+```
 cd terraform-aws-terra3/examples/example_3
 ```
 
 Initialize the working directory with the following:
 
-```java
+```
 terraform init
 ```
 
@@ -223,7 +219,7 @@ terraform init
 
 As mentioned in the prerequisite to this example, please open the [main.tf](http://main.tf) file and enter the Route53 hosted zone ID.
 
-```java
+```
 locals {
   route53_zone_id = "<PLEASE ENTER HERE THE HOSTED ZONE ID>"  
   solution_name   = "terra3-example3"
@@ -234,7 +230,7 @@ locals {
 
 Verify the resources that will be created by this execution:
 
-```java
+```
 terraform plan
 ```
 
@@ -244,16 +240,15 @@ Let’s provision the first example.
 
 Note: make sure that the AWS CLI is correctly configured and that you’re deploying to the right AWS account.
 
-```java
+```
 terraform apply
 ```
 
-Validation
-----------
+### Validation
 
 After about 30-60 seconds, the script has been applied and a Cloudfront URL is shown similar to this one:
 
-```java
+```
 cloudfront_default_domain_name = "dcot74k2131h8.cloudfront.net"
 ```
 
@@ -263,18 +258,17 @@ Please note: it requires another 30 seconds, until the Cloudfront distribution i
 
 It could look something like this when you use the command line tool “curl” to query the URL:
 
-```java
+```
 ❯ curl https://dcot74k2131h8.cloudfront.net  
 <h1>Hello world, Terra3!</h1>%  
 ```
 
 Go to the S3 section in your AWS web console and find the S3 bucket with the index.html file. Feel free, to edit the file and see the change being reflected when reloading the page in your browser.
 
-Finalization
-------------
+### Finalization
 
 To clean up your AWS account, issue the following command which will remove all previously provisioned AWS resources.
 
-```java
+```
 terraform destroy
 ```
