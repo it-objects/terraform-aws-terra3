@@ -1,7 +1,7 @@
 Overview
 ========
 
-Welcome to Terra3 - An opinionated Terraform module for quickly ramping-up 3-tier architectures in AWS!
+Welcome to Terra3 (beta) - An opinionated Terraform module for quickly ramping-up 3-tier architectures in AWS!
 
 This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and provision a complete stack with
 
@@ -14,11 +14,6 @@ This repository contains a collection of Terraform modules that aim to make it e
 It is the result of many projects we did for customers with similar requirements. And rather than starting from scratch
 with every project, we've created reusable Terraform modules. What started as an internal library, now evolved into
 a single module we'd like to share and to give back to the community as open source.
-
-While the internal sub-modules are used by us in production, the single Terraform module, that bundles all sub-modules
-behind neat module parameters such as app_modules and containers, is a completely new development. It should be considered
-as beta for now, until we release the first major version 1.0 expected to be generally available still in 2022. Subscribe
-to the GitHub project to hear about the release!
 
 **Features**
 
@@ -39,6 +34,12 @@ These are module features that allow cloud engineers to customize the AWS infras
 * Transport encryption between Cloudfront and the Application Loadbalancer (if custom_domain is enabled)
 
 * and many more...
+
+**Beta phase**
+While the internal sub-modules are used by us in production, the single Terraform module, that bundles all sub-modules
+behind neat module parameters such as app_modules and containers, is a completely new development. It should be considered
+as beta for now, until we release the first major version, expected to be generally available in 2022. Subscribe
+to the GitHub project to hear about the release! Any feedback from you is welcome!
 
 
 What is Terra3
