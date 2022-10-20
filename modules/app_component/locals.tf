@@ -38,7 +38,7 @@ locals {
     mountPoints = []
     volumesFrom = []
 
-    readonlyRootFilesystem = true
+    readonlyRootFilesystem = false
 
     linuxParameters = {
       initProcessEnabled : true

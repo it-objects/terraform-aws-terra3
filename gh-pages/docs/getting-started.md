@@ -190,7 +190,7 @@ Example 3 will provision an even more advanced subset of the overall 3-tier arch
 
 *   an ECS task with two containers and
 
-*   your own domain + certificates
+*   your own domain + ACM certificates
 
 
 as depicted in this diagram:
@@ -246,24 +246,38 @@ terraform apply
 
 ### Validation
 
-After about 30-60 seconds, the script has been applied and a Cloudfront URL is shown similar to this one:
+After about 6 minutes, the script has been applied and a Cloudfront URL is shown similar to this one:
 
 ```
 cloudfront_default_domain_name = "dcot74k2131h8.cloudfront.net"
 ```
-
-Use it in your browser to test the static website deployed to S3 and served via Cloudfront.
-
 Please note: it requires another 30 seconds, until the Cloudfront distribution is ready and the website is presented correctly.
+
+Use it in your browser to test the static website deployed to S3 and served via Cloudfront. If you have setup a hosted
+zone correctly with your domain, you should now also be able to use your domain name in your browser following this schema:
+
+```
+<solution_name>.<domain_name given in your hosted zone>, e.g.
+terra3-example3.terra3.io where "terra3-example3" is the solution_name and terra3.io the hosted zone domain name.
+```
 
 It could look something like this when you use the command line tool “curl” to query the URL:
 
 ```
-❯ curl https://dcot74k2131h8.cloudfront.net  
+❯ curl https://terra3-example3.terra3.io       # use your domain name here, as this example won't work  
 <h1>Hello world, Terra3!</h1>%  
+
+❯ curl https://terra3-example3.terra3.io/api/  # use your domain name here, as this example won't work  
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hello World</title>
+...
 ```
 
-Go to the S3 section in your AWS web console and find the S3 bucket with the index.html file. Feel free, to edit the file and see the change being reflected when reloading the page in your browser.
+Go to the ECS section in your AWS web console and find the ECS cluster. You should be able to see the task with two containers you just have deployed. The
+
+Go to the EC2 section, select the bastion host from the list and click on "Connect". Select the "Session Manager" tab and click connect. Now, you should be able to shell into the EC2 instance in the most secure way. After installing the mysql client, you should also be able to access the RDS MySQL database, as security groups are configured accordingly.
 
 ### Finalization
 

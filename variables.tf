@@ -14,8 +14,9 @@ variable "enable_account_best_practices" {
 }
 
 variable "nat" {
-  type    = string
-  default = "NO_NAT"
+  type        = string
+  default     = "NO_NAT"
+  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
 
   validation {
     condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY"], var.nat)

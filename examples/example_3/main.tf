@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # This is example 3 showcasing Terra3's capabilities.
 #
-# Outcome: Like example 2 + with a container runtime AND a custom domain.
+# Outcome: Like example 2 + with a containers AND a custom domain.
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  route53_zone_id = "Z038774514STH6Q52B21H"
+  route53_zone_id = "<PLEASE ENTER HERE THE HOSTED ZONE ID>"
   solution_name   = "terra3-example3"
 }
 
@@ -25,6 +25,8 @@ module "terra3_examples" {
 
   # configure your environment here
   create_load_balancer = true
+  create_bastion_host  = true
+  create_database      = true
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
