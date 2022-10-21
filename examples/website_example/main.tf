@@ -38,3 +38,11 @@ module "api_container" {
     containerPort = 80
   }]
 }
+
+# Please wait 1 minute until the Cloudfront distribution becomes available
+output "static_website_url" {
+  value = "https://${module.terra3_environment.cloudfront_domain_name}/"
+}
+output "container_url" {
+  value = "https://${module.terra3_environment.cloudfront_domain_name}/api/"
+}
