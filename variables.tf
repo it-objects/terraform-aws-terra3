@@ -1,22 +1,29 @@
 variable "solution_name" {
+  description = "Enter your solution name here. It will also be reflected in your subdomain name."
   type        = string
-  description = "Update your solution name here; max. 8 lower-case characters."
+
+  validation {
+    condition     = length(var.solution_name) <= 16 && can(regex("^([a-z0-9])+(?:-[a-z0-9]+)*$", var.solution_name))
+    error_message = "Only max. 16 lower-case alphanumeric characters and dashes in between are allowed."
+  }
 }
 
 variable "app_components" {
-  type    = any
-  default = {}
+  description = "Define here the app_component object. See the examples or documentation for more details."
+  type        = any
+  default     = {}
 }
 
 variable "enable_account_best_practices" {
-  type    = bool
-  default = false
+  description = "Should account-wide best practices such as default encryption be applied?"
+  type        = bool
+  default     = false
 }
 
 variable "nat" {
+  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
   type        = string
   default     = "NO_NAT"
-  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
 
   validation {
     condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY"], var.nat)
@@ -25,53 +32,55 @@ variable "nat" {
 }
 
 variable "create_load_balancer" {
+  description = "Enables/disables an AWS Application Load Balancer."
   type        = bool
   default     = false
-  description = "Enables/disables an AWS Application Load Balancer."
 }
 
 variable "create_dns_and_certificates" {
+  description = "Creates DNS entries and ACM certificates to be consumed by other resources."
   type        = bool
   default     = false
-  description = "Creates DNS entries and certificates to be consumed by other resources."
 }
 
 variable "add_default_index_html" {
-  type    = bool
-  default = true
+  description = "Should a default index.html be created in the S3 bucket serving the static web page?"
+  type        = bool
+  default     = true
 }
 
 variable "route53_zone_id" {
+  description = "Put in here the zone id of the Route53 Hosted Zone to which the subdomain should be added."
   type        = string
-  description = "Put in here the zone id of the Hosted Zone to which the subdomain should be added"
   default     = ""
 }
 
 variable "single_az_setup" {
-  type        = bool
   description = "Multi-AZ is default."
+  type        = bool
   default     = false
 }
 
 variable "create_bastion_host" {
-  type        = bool
   description = "Creates a private bastion host reachable via SSM."
+  type        = bool
   default     = false
 }
 
 variable "create_database" {
-  type    = bool
-  default = false
+  description = "Creates a AWS RDS MySQL database and gives access to it from ECS containers and the bastion host."
+  type        = bool
+  default     = false
 }
 
 variable "enable_ecs_exec" {
-  description = "Required for ECS exec. Either the key given by its id here is used or a new one is created."
+  description = "Enables ECS Exec which allows SSH into containers for debugging purposes."
   type        = bool
   default     = false
 }
 
 variable "enable_container_insights" {
-  description = "Enables/disables more detailed logging via container insights for ECS."
+  description = "Enables/disables more detailed logging via Container Insights for ECS."
   type        = bool
   default     = false
 }
