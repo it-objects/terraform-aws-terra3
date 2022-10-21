@@ -18,6 +18,9 @@ hero:
     - theme: alt
       text: View on GitHub
       link: https://github.com/it-objects/terraform-aws-terra3
+    - theme: alt
+      text: View on Terraform Registry
+      link: https://registry.terraform.io/modules/it-objects/terra3/aws/latest
 
 features:
   - title: Quick and easy
