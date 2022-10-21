@@ -1,6 +1,5 @@
 module "terra3_environment" {
-  source  = "it-objects/terra3/aws"
-  version = "0.9.2"
+  source = "it-objects/terra3/aws"
 
   solution_name = "example-solution"
 
@@ -26,8 +25,7 @@ module "terra3_environment" {
 }
 
 module "api_container" {
-  source  = "it-objects/terra3/aws//modules/container"
-  version = "0.9.2"
+  source = "it-objects/terra3/aws//modules/container"
 
   name = "backend_service"
 

@@ -29,7 +29,6 @@ The below demonstrates how you can leverage Terra3 to deploy a 3-tier-architectu
 ```hcl
 module "terra3_environment" {
   source  = "it-objects/terra3/aws"
-  version = "0.9.2"
 
   solution_name = "example_solution"
 
@@ -56,7 +55,6 @@ module "terra3_environment" {
 
 module "api_container" {
   source = "it-objects/terra3/aws//modules/container"
-  version = "0.9.2"
 
   name = "backend_service"
 
