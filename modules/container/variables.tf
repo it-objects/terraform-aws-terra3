@@ -50,6 +50,6 @@ variable "essential" {
 
 variable "readonlyRootFilesystem" {
   type        = bool
-  description = "Best practice is to enable it."
-  default     = true
+  description = "Best practice is to enable it, but causes issues in some cases."
+  default     = false
 }
