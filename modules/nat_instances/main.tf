@@ -74,7 +74,7 @@ data "aws_route_tables" "this" {
 # for 1-2 AZs create a nat_instance cloudinit_config
 # ---------------------------------------------------------------------------------------------------------------------
 data "cloudinit_config" "nat_instance" {
-  count         = var.nat_single_az_setup ? 1 : length(var.public_subnets_cidr_blocks)
+  count         = length(var.public_subnets_cidr_blocks)
   gzip          = false
   base64_encode = true
 
@@ -121,7 +121,7 @@ resource "aws_launch_template" "nat_template" {
   # -------------------------------------------------------------------------------------------------------------------
 
   # count defines a loop along all AZ's
-  count = var.nat_single_az_setup ? 1 : length(var.public_subnets_cidr_blocks)
+  count = length(var.public_subnets_cidr_blocks)
 
   # We're only setting the name_prefix here,
   # Terraform will add a random string at the end to keep it unique.
@@ -178,7 +178,7 @@ resource "aws_launch_template" "nat_template" {
 resource "aws_autoscaling_group" "this" {
 
   # count defines a loop along all AZ's
-  count = var.nat_single_az_setup ? 1 : length(var.public_subnets_cidr_blocks)
+  count = length(var.public_subnets_cidr_blocks)
 
   # -------------------------------------------------------------------------------------------------------------------
   # Force a redeployment when launch configuration changes.

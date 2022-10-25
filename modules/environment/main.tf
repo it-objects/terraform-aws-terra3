@@ -73,8 +73,6 @@ module "nat_instances" {
   nat_use_spot_instance = false
   nat_instance_types    = var.nat_instance_types
 
-  nat_single_az_setup = var.single_az_setup
-
   private_route_table_ids = module.vpc.private_route_table_ids
   public_subnets          = module.vpc.public_subnets
   private_subnets         = module.vpc.private_subnets

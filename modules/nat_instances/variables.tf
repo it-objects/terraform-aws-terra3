@@ -53,9 +53,3 @@ variable "nat_use_spot_instance" {
   default     = false
   description = "Whether to use spot instances for NAT"
 }
-
-variable "nat_single_az_setup" {
-  type        = bool
-  default     = false
-  description = "Whether to deploy only one NAT instance (for test setup)"
-}

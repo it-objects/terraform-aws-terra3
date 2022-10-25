@@ -90,12 +90,6 @@ variable "nat_instance_types" {
   default     = ["t4g.nano"] # cheapest
 }
 
-variable "single_az_setup" {
-  type        = bool
-  description = "Multi-AZ is default."
-  default     = false
-}
-
 variable "create_bastion_host" {
   type        = bool
   description = "Creates a private bastion host reachable via SSM."
