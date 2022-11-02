@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 # as this is meant for testing purposes, costs are higher weighted than medium or low security related aspects
-#tfsec:ignore:aws-rds-specify-backup-retention tfsec:ignore:aws-rds-enable-performance-insights
+#tfsec:ignore:aws-rds-specify-backup-retention tfsec:ignore:aws-rds-enable-performance-insights tfsec:ignore:aws-rds-enable-deletion-protection
 resource "aws_db_instance" "mysql_db" {
   allocated_storage               = var.rds_cluster_allocated_storage
   max_allocated_storage           = var.rds_cluster_max_allocated_storage

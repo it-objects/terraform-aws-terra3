@@ -5,6 +5,7 @@ locals {
 # ---------------------------------------------------------------------------------------------------------------------
 # Public/Private cross-AZ VPC setup. Default CIDR use /20 allowing up to 4094 IPs per subnet
 # ---------------------------------------------------------------------------------------------------------------------
+# tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs
 module "vpc" {
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "3.16.0"
