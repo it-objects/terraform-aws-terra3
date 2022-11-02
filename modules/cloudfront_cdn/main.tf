@@ -95,6 +95,8 @@ locals {
   ]])
 }
 
+# for testing purposes WAF is disabled. TLS is disabled for the non-custom-domain examples.
+# tfsec:ignore:aws-cloudfront-enable-waf tfsec:ignore:aws-cloudfront-use-secure-tls-policy
 resource "aws_cloudfront_distribution" "general_distribution" {
   enabled         = true
   is_ipv6_enabled = true

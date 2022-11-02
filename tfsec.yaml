@@ -1,7 +1,2 @@
 exclude:
-  - aws-ec2-no-public-ip-subnet          # required by NAT instance module
-
-  - aws-cloudfront-enable-waf            # not used in basic configuration
-  - aws-cloudfront-use-secure-tls-policy # only used for example 1 which is not recommended to be used in production
-
   - aws-rds-enable-deletion-protection # needs to be added as local ignore is not evaluated. See https://github.com/aquasecurity/tfsec/issues/1935
