@@ -27,12 +27,13 @@ variable "route53_zone_id" {
 }
 
 variable "nat" {
-  type    = string
-  default = "NO_NAT"
+  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
+  type        = string
+  default     = "NO_NAT"
 
   validation {
-    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY"], var.nat)
-    error_message = "Only 'NAT_INSTANCES','NO_NAT' and 'NAT_GATEWAY' are allowed."
+    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY_PER_SUBNET", "NAT_GATEWAY_SINGLE", "NAT_GATEWAY_PER_AZ"], var.nat)
+    error_message = "Only 'NO_NAT', 'NAT_INSTANCES', 'NAT_GATEWAY_PER_SUBNET', 'NAT_GATEWAY_SINGLE' and 'NAT_GATEWAY_PER_AZ' are allowed."
   }
 }
 
