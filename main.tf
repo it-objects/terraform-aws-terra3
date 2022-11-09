@@ -42,6 +42,7 @@ module "cluster" {
 
   environment_name       = local.environment_name
   container_runtime_name = "${local.environment_name}-cluster"
+  cluster_type           = var.cluster_type
 
   enable_container_insights = var.enable_container_insights
   enable_ecs_exec           = var.enable_ecs_exec
@@ -55,6 +56,7 @@ module "app_components" {
   name              = each.key
   environment       = local.environment_name
   container_runtime = module.cluster.ecs_cluster_name
+  cluster_type      = var.cluster_type
 
   instances = each.value["instances"]
 

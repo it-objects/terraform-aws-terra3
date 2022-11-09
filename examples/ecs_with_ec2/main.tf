@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "terra3-example2"
+  solution_name = "terra3-ecs-ec2"
 }
 
 module "terra3_examples" {
@@ -19,6 +19,9 @@ module "terra3_examples" {
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
+
+  #cluster_type = "ECS_FARGATE"
+  cluster_type = "ECS_EC2"
 
   app_components = {
 

@@ -1,5 +1,7 @@
 locals {
-  kms_key_id = (var.enable_ecs_exec && var.solution_kms_key_id == "") ? aws_kms_key.container_runtime_kms_key[0].key_id : var.solution_kms_key_id
+  kms_key_id              = (var.enable_ecs_exec && var.solution_kms_key_id == "") ? aws_kms_key.container_runtime_kms_key[0].key_id : var.solution_kms_key_id
+  create_ecs_with_fargate = var.cluster_type == "ECS_FARGATE" ? true : false
+  create_ecs_with_ec2     = var.cluster_type == "ECS_EC2" ? true : false
 }
 
 #tfsec:ignore:aws-kms-auto-rotate-keys
@@ -14,7 +16,8 @@ resource "aws_kms_key" "container_runtime_kms_key" {
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-ecs-enable-container-insight
 resource "aws_ecs_cluster" "fargate_cluster" {
-  name = var.container_runtime_name
+  count = local.create_ecs_with_fargate ? 1 : 0
+  name  = var.container_runtime_name
 
   dynamic "setting" {
     for_each = var.enable_container_insights ? [1] : []
@@ -40,7 +43,8 @@ resource "aws_ecs_cluster" "fargate_cluster" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "fargate_cap_provider" {
-  cluster_name = aws_ecs_cluster.fargate_cluster.name
+  count        = local.create_ecs_with_fargate ? 1 : 0
+  cluster_name = aws_ecs_cluster.fargate_cluster[0].name
 
   capacity_providers = ["FARGATE"]
 
@@ -50,7 +54,6 @@ resource "aws_ecs_cluster_capacity_providers" "fargate_cap_provider" {
     capacity_provider = "FARGATE"
   }
 }
-
 # ---------------------------------------------------------------------------------------------------------------------
 # SSM Parameter
 # ---------------------------------------------------------------------------------------------------------------------
@@ -63,7 +66,36 @@ resource "aws_ssm_parameter" "ssm_container_runtime_kms_key_id" {
 }
 
 resource "aws_ssm_parameter" "ecs_cluster_name" {
+  #count = local.create_ecs_with_fargate ? 1 : 0
   name  = "/${var.environment_name}/${var.container_runtime_name}/container_runtime_ecs_cluster_name"
   type  = "String"
-  value = aws_ecs_cluster.fargate_cluster.name
+  value = local.create_ecs_with_fargate == true ? aws_ecs_cluster.fargate_cluster[0].name : aws_ecs_cluster.ec2_cluster[0].name
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# ECS with EC2 instances
+# ---------------------------------------------------------------------------------------------------------------------
+# tfsec:ignore:aws-ecs-enable-container-insight
+resource "aws_ecs_cluster" "ec2_cluster" {
+  count = local.create_ecs_with_ec2 ? 1 : 0
+  name  = var.container_runtime_name
+
+  configuration {
+    execute_command_configuration {
+      logging = "NONE"
+    }
+  }
+}
+
+/*
+resource "aws_ecs_cluster_capacity_providers" "ecs_ec2_cap_provider" {
+  count = local.create_ecs_with_ec2 ? 1 : 0
+  cluster_name       = aws_ecs_cluster.ec2_cluster[0].name
+  capacity_providers = [aws_ecs_capacity_provider.ecs_ec2_capacity_provider[0].name]
+
+  default_capacity_provider_strategy {
+    base              = 20
+    weight            = 60
+    capacity_provider = aws_ecs_capacity_provider.ecs_ec2_capacity_provider[0].name
+  }
+}*/

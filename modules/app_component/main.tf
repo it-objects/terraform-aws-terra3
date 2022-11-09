@@ -9,13 +9,19 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # Service definition, auto heals if task shuts down
 # ---------------------------------------------------------------------------------------------------------------------
+locals {
+  #create_ecs_with_fargate = var.cluster_type == "ECS_FARGATE" ? true : false
+  create_ecs_with_ec2      = var.cluster_type == "ECS_EC2" ? true : false
+  ecs_launch_type          = var.cluster_type == "ECS_FARGATE" ? "FARGATE" : "EC2"
+  fargate_platform_version = var.cluster_type == "ECS_FARGATE" ? "LATEST" : null
+}
 resource "aws_ecs_service" "ecs_service" {
   name             = "${var.name}Service"
   cluster          = data.aws_ecs_cluster.selected.arn
   task_definition  = aws_ecs_task_definition.ecs_task_definition.arn
   desired_count    = var.instances
-  launch_type      = "FARGATE"
-  platform_version = "LATEST"
+  launch_type      = local.ecs_launch_type #"FARGATE"
+  platform_version = local.fargate_platform_version
 
   health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
@@ -52,7 +58,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   execution_role_arn       = aws_iam_role.ExecutionRole.arn
   task_role_arn            = aws_iam_role.task.arn
   network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
+  requires_compatibilities = [local.ecs_launch_type]
 
   # Fargate cpu/mem must match available options: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
   cpu    = var.total_cpu
@@ -258,10 +264,13 @@ resource "aws_cloudwatch_log_group" "CloudWatchLogGroup" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Create autoscaling target linked to ECS
 # ---------------------------------------------------------------------------------------------------------------------
+locals {
+  desired_running_tasks = var.cluster_type == "ECS_FARGATE" ? var.desired_tasks_count_with_fargate : var.desired_tasks_count_with_ecs_ec2
+}
 resource "aws_appautoscaling_target" "ServiceAutoScalingTarget" {
   count              = var.enable_autoscaling ? 1 : 0
   min_capacity       = var.autoscale_task_weekday_scale_down
-  max_capacity       = var.desired_count
+  max_capacity       = local.desired_running_tasks
   resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service.name}" # service/(clusterName)/(serviceName)
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
@@ -273,7 +282,6 @@ resource "aws_appautoscaling_target" "ServiceAutoScalingTarget" {
     ]
   }
 }
-
 # ---------------------------------------------------------------------------------------------------------------------
 # Scale down on weekdays logic to save costs
 # Scale up weekdays at beginning of day
@@ -288,8 +296,8 @@ resource "aws_appautoscaling_scheduled_action" "WeekdayScaleUp" {
   timezone           = "Europe/Berlin"
 
   scalable_target_action {
-    min_capacity = var.desired_count
-    max_capacity = var.desired_count
+    min_capacity = local.desired_running_tasks
+    max_capacity = local.desired_running_tasks
   }
 }
 
@@ -345,6 +353,50 @@ resource "aws_iam_role" "ExecutionRole" {
 resource "aws_iam_role_policy_attachment" "ExecutionRole_to_ecsTaskExecutionRole" {
   role       = aws_iam_role.ExecutionRole.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+data "aws_iam_policy_document" "ecs_ec2_role" {
+  version = "2012-10-17"
+  statement {
+    sid     = "EC2AssumeRole"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ecs_ec2_role" {
+  count              = local.create_ecs_with_ec2 ? 1 : 0
+  name               = "EcsCluster_Ec2InstanceRole"
+  assume_role_policy = data.aws_iam_policy_document.ecs_ec2_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_ecs_role" {
+  count      = local.create_ecs_with_ec2 ? 1 : 0
+  role       = aws_iam_role.ecs_ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
+  count      = local.create_ecs_with_ec2 ? 1 : 0
+  role       = aws_iam_role.ecs_ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonSSMManagedInstanceCore" {
+  count      = local.create_ecs_with_ec2 ? 1 : 0
+  role       = aws_iam_role.ecs_ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ecs_ec2_role" {
+  count = local.create_ecs_with_ec2 ? 1 : 0
+  name  = "ec2_role"
+  role  = aws_iam_role.ecs_ec2_role[count.index].name
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

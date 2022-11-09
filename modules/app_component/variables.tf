@@ -1,3 +1,14 @@
+variable "cluster_type" {
+  description = "Select ECS_FARGATE for cluster type as FARGATE, or select ECS_EC2 for cluster type as EC2."
+  type        = string
+  default     = "ECS_FARGATE"
+
+  validation {
+    condition     = contains(["ECS_FARGATE", "ECS_EC2"], var.cluster_type)
+    error_message = "Only 'ECS_FARGATE', and 'ECS_EC2' are allowed."
+  }
+}
+
 variable "environment" {
   type        = string
   description = "Reference to name of environment."
@@ -100,6 +111,17 @@ variable "autoscale_down_event" {
 variable "desired_count" {
   description = "Number of tasks to launch on weekdays"
   default     = 1
+  type        = number
+}
+
+variable "desired_tasks_count_with_fargate" {
+  description = "Number of tasks to launch on weekdays with fargate"
+  default     = 1
+  type        = number
+}
+variable "desired_tasks_count_with_ecs_ec2" {
+  description = "Number of tasks to launch on weekdays with ecs_ec2 instances"
+  default     = 2
   type        = number
 }
 
