@@ -21,7 +21,7 @@ module "terra3_examples" {
   nat = "NAT_INSTANCES"
 
   #cluster_type = "ECS_FARGATE"
-  cluster_type = "ECS_EC2"
+  #cluster_type = "ECS_EC2"
 
   app_components = {
 
