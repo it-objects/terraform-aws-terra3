@@ -46,6 +46,7 @@ module "cluster" {
 
   enable_container_insights = var.enable_container_insights
   enable_ecs_exec           = var.enable_ecs_exec
+  depends_on                = [module.environment]
 }
 
 module "app_components" {
@@ -74,5 +75,5 @@ module "app_components" {
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${module.environment.domain_name}" : ""
 
-  depends_on = [module.environment]
+  depends_on = [module.environment, module.cluster]
 }

@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "terra3-ecs-ec2"
+  solution_name = "terra3-ecs"
 }
 
 module "terra3_examples" {

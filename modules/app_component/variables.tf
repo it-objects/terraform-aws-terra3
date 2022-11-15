@@ -114,17 +114,6 @@ variable "desired_count" {
   type        = number
 }
 
-variable "desired_tasks_count_with_fargate" {
-  description = "Number of tasks to launch on weekdays with fargate"
-  default     = 1
-  type        = number
-}
-variable "desired_tasks_count_with_ecs_ec2" {
-  description = "Number of tasks to launch on weekdays with ecs_ec2 instances"
-  default     = 2
-  type        = number
-}
-
 variable "enable_ecs_exec" {
   type        = bool
   default     = false
