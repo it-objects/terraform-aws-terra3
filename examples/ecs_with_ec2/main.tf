@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is example 2 showcasing Terra3's capabilities.
-#
-# Outcome: Like example 1 + a container runtime and no custom domain
+# This is an example with Cluster type options.
+# Here, cluster_type can be selected as "ECS_FARGATE" or "ECS_EC2".
+# Default cluster_type is "ECS_FARGATE".
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
