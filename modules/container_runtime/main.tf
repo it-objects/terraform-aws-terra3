@@ -79,9 +79,25 @@ resource "aws_ecs_cluster" "ec2_cluster" {
   count = local.create_ecs_with_ec2 ? 1 : 0
   name  = var.container_runtime_name
 
-  configuration {
-    execute_command_configuration {
-      logging = "NONE"
+  dynamic "setting" {
+    for_each = var.enable_container_insights ? [1] : []
+
+    content {
+      # enable container insights
+      name  = "containerInsights"
+      value = "enabled"
+    }
+  }
+
+  dynamic "configuration" {
+    for_each = var.enable_ecs_exec ? [1] : []
+
+    content {
+      # enable ECS exec
+      execute_command_configuration {
+        kms_key_id = local.kms_key_id
+        logging    = "NONE" # NONE | DEFAULT | OVERRIDE
+      }
     }
   }
 }
