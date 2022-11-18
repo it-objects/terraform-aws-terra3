@@ -17,8 +17,7 @@ resource "aws_ecs_service" "ecs_service" {
   cluster         = data.aws_ecs_cluster.selected.arn
   task_definition = aws_ecs_task_definition.ecs_task_definition.arn
   desired_count   = var.instances
-  launch_type     = local.ecs_launch_type #"FARGATE"
-  #platform_version = local.fargate_platform_version
+  launch_type     = local.ecs_launch_type
 
   health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
