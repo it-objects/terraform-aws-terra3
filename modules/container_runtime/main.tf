@@ -102,16 +102,6 @@ resource "aws_ecs_cluster" "ec2_cluster" {
   }
 }
 
-locals {
-  user_data = <<-EOT
-    #!/bin/bash
-    cat <<'EOF' >> /etc/ecs/ecs.config
-    ECS_CLUSTER=${var.container_runtime_name}
-    ECS_LOGLEVEL=debug
-    EOF
-  EOT
-}
-
 resource "aws_ecs_cluster_capacity_providers" "ecs_ec2_cap_provider" {
   count              = local.create_ecs_with_ec2 ? 1 : 0
   cluster_name       = aws_ecs_cluster.ec2_cluster[0].name
@@ -179,9 +169,16 @@ resource "aws_launch_template" "ecs_ec2_launch_template" {
   name_prefix            = "ecs_ec2_container_instance"
   image_id               = data.aws_ami.amazon-linux.id
   instance_type          = "t3.small"
-  vpc_security_group_ids = [data.aws_security_group.ecs_default_sg.id] #[aws_security_group.auto_scaling_sg.id]
-  user_data              = base64encode(local.user_data)
+  vpc_security_group_ids = [data.aws_security_group.ecs_default_sg.id]
   update_default_version = true
+  user_data = base64encode(<<-EOT
+    #!/bin/bash
+    cat <<'EOF' >> /etc/ecs/ecs.config
+    ECS_CLUSTER=${var.container_runtime_name}
+    ECS_LOGLEVEL=debug
+    EOF
+  EOT
+  )
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ecs_ec2_role[0].name
