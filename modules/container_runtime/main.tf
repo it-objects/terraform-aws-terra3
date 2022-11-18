@@ -193,7 +193,7 @@ resource "aws_launch_template" "ecs_ec2_launch_template" {
     create_before_destroy = true
   }
   monitoring {
-    enabled = true
+    enabled = false
   }
   tag_specifications {
     resource_type = "instance"
