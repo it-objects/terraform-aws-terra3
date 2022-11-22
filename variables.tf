@@ -42,6 +42,36 @@ variable "cluster_type" {
   }
 }
 
+variable "cluster_ec2_min_nodes" {
+  description = "Select the minimum nodes of the EC2 instances."
+  type        = number
+}
+
+variable "cluster_ec2_max_nodes" {
+  description = "Select the maximum nodes of the EC2 instances."
+  type        = number
+}
+
+variable "cluster_ec2_instance_type" {
+  description = "Select instance type of the EC2 instances."
+  type        = string
+}
+
+variable "cluster_ec2_desired_capacity" {
+  description = "Select desired capacity of the EC2 instances."
+  type        = number
+}
+
+variable "cluster_ec2_detailed_monitoring" {
+  description = "Select the detailed monitoring of the EC2 instances."
+  type        = bool
+}
+
+variable "cluster_ec2_volume_size" {
+  description = "Select the ebs volume size of the EC2 instances."
+  type        = number
+}
+
 variable "create_load_balancer" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool

@@ -145,13 +145,13 @@ resource "aws_autoscaling_group" "ecs_ec2_asg" {
   }
 
   protect_from_scale_in     = true
-  desired_capacity          = 2
-  min_size                  = 0
-  max_size                  = 2
+  desired_capacity          = var.cluster_ec2_desired_capacity
+  min_size                  = var.cluster_ec2_min_nodes
+  max_size                  = var.cluster_ec2_max_nodes
   health_check_grace_period = 300
   health_check_type         = "ELB"
   wait_for_capacity_timeout = "10m"
-  wait_for_elb_capacity     = 2
+  wait_for_elb_capacity     = 1
 
 
   lifecycle {
@@ -169,7 +169,7 @@ resource "aws_launch_template" "terra3_ecs_ec2_container_instance" {
   count                  = local.create_ecs_with_ec2 ? 1 : 0
   name_prefix            = "terra3_ecs_ec2_container_instance"
   image_id               = data.aws_ami.amazon-linux.id
-  instance_type          = "t3.small"
+  instance_type          = var.cluster_ec2_instance_type
   vpc_security_group_ids = [data.aws_security_group.ecs_default_sg.id]
   update_default_version = true
   user_data = base64encode(<<-EOT
@@ -194,7 +194,16 @@ resource "aws_launch_template" "terra3_ecs_ec2_container_instance" {
     create_before_destroy = true
   }
   monitoring {
-    enabled = false
+    enabled = var.cluster_ec2_detailed_monitoring
+  }
+  block_device_mappings {
+    device_name = "/dev/xvda"
+
+    ebs {
+      encrypted   = true
+      volume_size = var.cluster_ec2_volume_size
+      volume_type = "gp2"
+    }
   }
   tag_specifications {
     resource_type = "instance"

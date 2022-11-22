@@ -21,7 +21,15 @@ module "terra3_examples" {
   nat = "NAT_INSTANCES"
 
   #cluster_type = "ECS_FARGATE"
-  #cluster_type = "ECS_EC2"
+  cluster_type = "ECS_EC2"
+
+  #EC2 cluster configurations
+  cluster_ec2_min_nodes           = 1           #(default: 1)
+  cluster_ec2_max_nodes           = 2           #(default: 2)
+  cluster_ec2_instance_type       = "t3a.small" #(default: t3a.small)
+  cluster_ec2_desired_capacity    = 1           #(default: 1)
+  cluster_ec2_detailed_monitoring = false       #(default: false)
+  cluster_ec2_volume_size         = 30          #(default: 20gb)
 
   app_components = {
 

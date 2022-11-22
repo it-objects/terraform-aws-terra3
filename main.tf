@@ -44,6 +44,13 @@ module "cluster" {
   container_runtime_name = "${local.environment_name}-cluster"
   cluster_type           = var.cluster_type
 
+  cluster_ec2_min_nodes           = var.cluster_ec2_min_nodes
+  cluster_ec2_max_nodes           = var.cluster_ec2_max_nodes
+  cluster_ec2_instance_type       = var.cluster_ec2_instance_type
+  cluster_ec2_desired_capacity    = var.cluster_ec2_desired_capacity
+  cluster_ec2_detailed_monitoring = var.cluster_ec2_detailed_monitoring
+  cluster_ec2_volume_size         = var.cluster_ec2_volume_size
+
   enable_container_insights = var.enable_container_insights
   enable_ecs_exec           = var.enable_ecs_exec
   depends_on                = [module.environment]
