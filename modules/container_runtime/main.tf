@@ -105,18 +105,18 @@ resource "aws_ecs_cluster" "ec2_cluster" {
 resource "aws_ecs_cluster_capacity_providers" "ecs_ec2_cap_provider" {
   count              = local.create_ecs_with_ec2 ? 1 : 0
   cluster_name       = aws_ecs_cluster.ec2_cluster[0].name
-  capacity_providers = [aws_ecs_capacity_provider.ecs_ec2_capacity_provider[0].name]
+  capacity_providers = [aws_ecs_capacity_provider.terra3_ec2_capacity_provider[0].name]
 
   default_capacity_provider_strategy {
     base              = 20
     weight            = 60
-    capacity_provider = aws_ecs_capacity_provider.ecs_ec2_capacity_provider[0].name
+    capacity_provider = aws_ecs_capacity_provider.terra3_ec2_capacity_provider[0].name
   }
 }
 
-resource "aws_ecs_capacity_provider" "ecs_ec2_capacity_provider" {
+resource "aws_ecs_capacity_provider" "terra3_ec2_capacity_provider" {
   count = local.create_ecs_with_ec2 ? 1 : 0
-  name  = "ec2_capacity_provider"
+  name  = "terra3_ec2_capacity_provider"
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.ecs_ec2_asg[count.index].arn
@@ -136,12 +136,12 @@ resource "aws_ecs_capacity_provider" "ecs_ec2_capacity_provider" {
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_autoscaling_group" "ecs_ec2_asg" {
   count               = local.create_ecs_with_ec2 ? 1 : 0
-  name                = "ecs_ec2_autoscaling"
+  name                = "terra3_ecs_ec2_autoscaling"
   vpc_zone_identifier = data.aws_subnets.private_subnets.ids #aws_subnet.private_subnets.*.id
 
   launch_template {
-    id      = aws_launch_template.ecs_ec2_launch_template[count.index].id
-    version = aws_launch_template.ecs_ec2_launch_template[count.index].latest_version
+    id      = aws_launch_template.terra3_ecs_ec2_container_instance[count.index].id
+    version = aws_launch_template.terra3_ecs_ec2_container_instance[count.index].latest_version
   }
 
   protect_from_scale_in     = true
@@ -164,9 +164,10 @@ resource "aws_autoscaling_group" "ecs_ec2_asg" {
     propagate_at_launch = true
   }
 }
-resource "aws_launch_template" "ecs_ec2_launch_template" {
+
+resource "aws_launch_template" "terra3_ecs_ec2_container_instance" {
   count                  = local.create_ecs_with_ec2 ? 1 : 0
-  name_prefix            = "ecs_ec2_container_instance"
+  name_prefix            = "terra3_ecs_ec2_container_instance"
   image_id               = data.aws_ami.amazon-linux.id
   instance_type          = "t3.small"
   vpc_security_group_ids = [data.aws_security_group.ecs_default_sg.id]
@@ -199,7 +200,7 @@ resource "aws_launch_template" "ecs_ec2_launch_template" {
     resource_type = "instance"
 
     tags = {
-      Name = "ecs_ec2_container_instance"
+      Name = "terra3_ecs_ec2_container_instance"
     }
   }
 }
