@@ -63,6 +63,14 @@ data "aws_security_group" "mysql_marker_sg" {
   name = "${var.environment}_mysql_access_marker_sg"
 }
 
+data "aws_security_group" "redis_marker_sg" {
+  name = "${var.environment}_redis_access_marker_sg"
+}
+
+data "aws_security_group" "postgres_marker_sg" {
+  name = "${var.environment}_postgres_access_marker_sg"
+}
+
 data "aws_ssm_parameter" "ssm_container_runtime_kms_key_id" {
   count = var.enable_ecs_exec ? 1 : 0
   name  = "/${var.environment}/${var.container_runtime}/container_runtime_kms_key_id"
