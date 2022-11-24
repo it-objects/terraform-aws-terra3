@@ -26,6 +26,10 @@ output "environment" {
   value = local.environment
 }
 
+output "command" {
+  value = var.command
+}
+
 output "essential" {
   value = var.essential
 }

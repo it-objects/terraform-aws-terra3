@@ -32,7 +32,11 @@ module "vpc" {
     "Tier" : "private"
   }
 
-  create_database_subnet_group = false
+  create_database_subnet_group = true
+  database_subnets             = var.database_cidr_blocks
+
+  create_elasticache_subnet_group = true
+  elasticache_subnets             = var.elasticache_cidr_blocks
 
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -149,31 +153,87 @@ module "bastion_host_ssm" {
   depends_on = [module.vpc, module.security_groups]
 }
 
+locals {
+  rds_cluster_engine_version                = var.database == "mysql" ? "8.0.30" : "14.5"
+  rds_cluster_security_group_ids            = var.database == "mysql" ? [module.security_groups.mysql_db_sg] : [module.security_groups.postgres_db_sg]
+  rds_cluster_enable_cloudwatch_logs_export = var.database == "mysql" ? ["audit"] : ["postgresql"]
+}
+
 module "database" {
   count = var.create_database ? 1 : 0
+
+  database = var.database
 
   source        = "../database"
   solution_name = var.solution_name
 
-  db_subnet_group_subnet_ids = module.vpc.private_subnets
+  db_subnet_group_name = module.vpc.database_subnet_group
 
   rds_cluster_database_name  = "${replace(var.solution_name, "-", "")}db" # alphanumeric and lower case
   rds_cluster_identifier     = "${lower(var.solution_name)}_db"
-  rds_cluster_engine         = "MySQL"
-  rds_cluster_engine_version = "8.0.30"
+  rds_cluster_engine         = var.database
+  rds_cluster_engine_version = local.rds_cluster_engine_version
 
-  rds_cluster_security_group_ids = [module.security_groups.mysql_db_sg]
+  rds_cluster_security_group_ids = local.rds_cluster_security_group_ids
 
   # adapt these for prod! Now optimized for for testing and low costs
   rds_cluster_allocated_storage       = 20
   rds_cluster_max_allocated_storage   = 25
-  rds_cluster_backup_retention_period = "1"           # at least 7 days for prod
-  rds_cluster_deletion_protection     = false         # true for prod env
-  rds_cluster_multi_az                = false         # true for ha prod envs
-  rds_cluster_instance_instance_class = "db.t3.micro" # db.t3.* for prod env
-  rds_cluster_storage_encrypted       = true          # true for prod env or non-db.t2x.micro free tier instance
+  rds_cluster_backup_retention_period = "7"            # at least 7 days or more for prod
+  rds_cluster_deletion_protection     = false          # true for prod env
+  rds_cluster_multi_az                = false          # true for ha prod envs
+  rds_cluster_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
+  rds_cluster_storage_encrypted       = true           # true for prod env or non-db.t2x.micro free tier instance
+
+  rds_cluster_enable_cloudwatch_logs_export = local.rds_cluster_enable_cloudwatch_logs_export
 }
 
+#module "database_postgres" {
+#  count = var.create_database ? 1 : 0
+#
+#  source        = "../database"
+#  solution_name = var.solution_name
+#
+#  db_subnet_group_subnet_ids = module.vpc.database_subnets
+#
+#  rds_cluster_database_name  = "${replace(var.solution_name, "-", "")}db" # alphanumeric and lower case
+#  rds_cluster_identifier     = "${lower(var.solution_name)}_db"
+#  rds_cluster_engine         = "MySQL"
+#  rds_cluster_engine_version = "8.0.30"
+#
+#  rds_cluster_security_group_ids = [module.security_groups.mysql_db_sg]
+#
+#  # adapt these for prod! Now optimized for for testing and low costs
+#  rds_cluster_allocated_storage       = 20
+#  rds_cluster_max_allocated_storage   = 25
+#  rds_cluster_backup_retention_period = "7"           # at least 7 days or more for prod
+#  rds_cluster_deletion_protection     = false         # true for prod env
+#  rds_cluster_multi_az                = false         # true for ha prod envs
+#  rds_cluster_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
+#  rds_cluster_storage_encrypted       = true          # true for prod env or non-db.t2x.micro free tier instance
+#}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# ECR repo used for storing container images
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_elasticache_cluster" "redis" {
+  cluster_id         = "${var.solution_name}-redis"
+  engine             = "redis"
+  node_type          = "cache.t4g.micro"
+  num_cache_nodes    = 1
+  engine_version     = "5.0.6"
+  subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup.name
+  security_group_ids = [module.security_groups.redis_sg]
+}
+
+resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
+  name       = "mastodonsubnetgroup"
+  subnet_ids = module.vpc.elasticache_subnets
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# ECR repo used for storing container images
+# ---------------------------------------------------------------------------------------------------------------------
 module "ecr" {
   count = var.create_ecr ? 1 : 0
 
@@ -185,7 +245,7 @@ module "ecr" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# S3 bucket used for storing images
+# S3 bucket used for solution specific purposes
 # ---------------------------------------------------------------------------------------------------------------------
 module "s3_bucket" {
   count = var.create_s3_bucket ? 1 : 0
@@ -212,114 +272,6 @@ module "deployment_user" {
 
   source = "../deployment_user"
 }
-
-# ---------------------------------------------------------------------------------------------------------------------
-# VARIANT 2: OIDC
-# ---------------------------------------------------------------------------------------------------------------------
-# data "tls_certificate" "gitlab" {
-#   url = var.gitlab_url
-# }
-
-# resource "aws_iam_openid_connect_provider" "gitlab" {
-#   url            = var.gitlab_url
-#   client_id_list = [var.gitlab_url] # aud_value = gitlab_url
-
-#   # picks intermediate's certificate;
-#   # in case of ITO's wildcard cert (AlphaSSL) it is valid until 20.2.2024
-#   # in case of Amazon cert it is valid until 19.10.2025
-#   # in case of LetsEncrypt cert (R3) it is valid until 15.9.2025
-#   thumbprint_list = [data.tls_certificate.gitlab.certificates.0.sha1_fingerprint]
-# }
-
-# module "deployment-infra-role-oidc" {
-#   source = "../gitlab-aws-oidc"
-
-#   app_name          = "infra"
-#   oidc_gitlab_arn   = aws_iam_openid_connect_provider.gitlab.arn
-#   oidc_gitlab_url   = aws_iam_openid_connect_provider.gitlab.url
-#   match_value       = ["project_path:other/project_name/repo_name:ref_type:branch:ref:main"]
-#   policy_statements = [
-#     {
-#       "Sid" : "deploymentpolicy",
-#       "Effect" : "Allow",
-#       "Action" : [
-#         "states:*",
-#         "application-autoscaling:*",
-#         "autoscaling:*",
-#         "rds:*",
-#         "s3:*",
-#         "logs:*",
-#         "elasticloadbalancing:*",
-#         "iam:*",
-#         "cloudfront:*",
-#         "secretsmanager:*",
-#         "cloudwatch:*",
-#         "ssm:*",
-#         "route53:*",
-#         "ecs:*",
-#         "ecr:*",
-#         "ec2:*",
-#         "ebs:*",
-#         "events:*",
-#         "acm:*",
-#         "kms:*",
-#       ],
-#       "Resource" : "*"
-#     }
-#   ]
-# }
-
-# module "deployment-cf-website-role-oidc" {
-#   source = "../gitlab-aws-oidc"
-
-#   app_name          = "cfwebsite"
-#   oidc_gitlab_arn   = aws_iam_openid_connect_provider.gitlab.arn
-#   oidc_gitlab_url   = aws_iam_openid_connect_provider.gitlab.url
-#   match_value       = ["project_path:other/project_name/*:ref_type:branch:ref:*"]
-#   policy_statements = [
-#     {
-#       "Sid" : "cloudfrontinvalidationpolicy",
-#       "Effect" : "Allow",
-#       "Action" : [
-#         "cloudfront:CreateInvalidation",
-#         "cloudfront:GetInvalidation",
-#         "cloudfront:ListInvalidations",
-#       ],
-#       "Resource" : [module.cloudfront_cdn.cloudfront_arn]
-#     },
-#     {
-#       "Sid": "ListObjectsInBucket",
-#       "Effect": "Allow",
-#       "Action": "s3:ListBucket",
-#       "Resource": [module.cloudfront_cdn.s3_static_website_arn]
-#     },
-#     {
-#       "Sid": "AllObjectActions",
-#       "Effect": "Allow",
-#       "Action": "s3:*Object",
-#       "Resource": ["${module.cloudfront_cdn.s3_static_website_arn}/*"]
-#     },
-#     {
-#       "Sid": "ECRImagePush",
-#       "Effect": "Allow",
-#       "Action": [
-#         "ecr:CompleteLayerUpload",
-#         "ecr:UploadLayerPart",
-#         "ecr:InitiateLayerUpload",
-#         "ecr:BatchCheckLayerAvailability",
-#         "ecr:PutImage"
-#       ],
-#       "Resource": module.ecr[0].ecr_arn
-#     },
-#     {
-#       "Sid": "ECRRetrieveCredentials",
-#       "Effect": "Allow",
-#       "Action": "ecr:GetAuthorizationToken",
-#       "Resource": "*"
-#     }
-#   ]
-# }
-
 
 resource "aws_ssm_parameter" "vpc_id" {
   name  = "/${local.environment_name}/vpc_id"

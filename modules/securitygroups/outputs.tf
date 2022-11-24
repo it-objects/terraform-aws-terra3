@@ -13,3 +13,19 @@ output "mysql_access_marker_sg" {
 output "mysql_db_sg" {
   value = aws_security_group.mysql_db_sg.id
 }
+
+output "postgres_access_marker_sg" {
+  value = aws_security_group.postgres_access_marker_sg.id
+}
+
+output "postgres_db_sg" {
+  value = aws_security_group.postgres_db_sg.id
+}
+
+output "redis_access_marker_sg" {
+  value = aws_security_group.redis_access_marker_sg.id
+}
+
+output "redis_sg" {
+  value = aws_security_group.redis_sg.id
+}

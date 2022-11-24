@@ -68,7 +68,13 @@ variable "create_bastion_host" {
 }
 
 variable "create_database" {
-  description = "Creates a AWS RDS MySQL database and gives access to it from ECS containers and the bastion host."
+  description = "Creates an AWS RDS MySQL database and gives access to it from ECS containers and the bastion host."
+  type        = bool
+  default     = false
+}
+
+variable "create_s3_bucket" {
+  description = "Creates an AWS S3 bucket and gives access to it from ECS containers."
   type        = bool
   default     = false
 }
@@ -83,4 +89,15 @@ variable "enable_container_insights" {
   description = "Enables/disables more detailed logging via Container Insights for ECS."
   type        = bool
   default     = false
+}
+
+variable "database" {
+  type        = string
+  description = "Type of database."
+  default     = "mysql"
+
+  validation {
+    condition     = contains(["mysql", "postgres"], var.database)
+    error_message = "Only 'mysql' and 'postgres' are allowed."
+  }
 }

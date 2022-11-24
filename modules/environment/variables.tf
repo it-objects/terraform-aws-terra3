@@ -61,16 +61,28 @@ variable "domain_name" {
   default     = ""
 }
 
-variable "public_subnets_cidr_blocks" {
-  type        = list(string)
-  description = ""
-  default     = ["172.72.32.0/20", "172.72.48.0/20"]
-}
-
 variable "private_subnets_cidr_blocks" {
   type        = list(string)
   description = ""
-  default     = ["172.72.0.0/20", "172.72.16.0/20"]
+  default     = ["172.72.0.0/24", "172.72.1.0/24"]
+}
+
+variable "public_subnets_cidr_blocks" {
+  type        = list(string)
+  description = ""
+  default     = ["172.72.2.0/24", "172.72.3.0/24"]
+}
+
+variable "database_cidr_blocks" {
+  type        = list(string)
+  description = ""
+  default     = ["172.72.4.0/24", "172.72.5.0/24"]
+}
+
+variable "elasticache_cidr_blocks" {
+  type        = list(string)
+  description = ""
+  default     = ["172.72.6.0/24", "172.72.7.0/24"]
 }
 
 variable "azs" {
@@ -140,4 +152,15 @@ variable "gitlab_url" {
 variable "add_default_index_html" {
   type    = bool
   default = true
+}
+
+variable "database" {
+  type        = string
+  description = "Type of database."
+  default     = "mysql"
+
+  validation {
+    condition     = contains(["mysql", "postgres"], var.database)
+    error_message = "Only 'mysql' and 'postgres' are allowed."
+  }
 }
