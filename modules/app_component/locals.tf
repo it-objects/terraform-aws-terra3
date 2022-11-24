@@ -12,6 +12,8 @@ locals {
       portMappings = single_container.port_mappings
       environment  = single_container.environment
 
+      command = single_container.command
+
       essential = single_container.essential
 
       readonlyRootFilesystem = single_container.readonlyRootFilesystem
@@ -33,6 +35,8 @@ locals {
       "name" : "my_var_name_default",
       "value" : "my_var_value_default",
     }]
+
+    command = null
 
     essential   = true
     mountPoints = []
