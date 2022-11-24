@@ -17,6 +17,8 @@ module "environment" {
   nat                         = var.nat
   create_bastion_host         = var.create_bastion_host
   create_database             = var.create_database
+  database                    = var.database
+  create_s3_bucket            = var.create_s3_bucket
 
   providers = {
     aws.useast1 = aws.useast1
@@ -63,9 +65,15 @@ module "app_components" {
 
   container = each.value["container"]
 
-  listener_rule_prio = each.value["listener_rule_prio"]
-  path_mapping       = each.value["path_mapping"]
-  service_port       = each.value["service_port"]
+  # if true the next block's variables are ignored internally
+  internal_service = lookup(each.value, "internal_service", false)
+
+  listener_rule_prio  = lookup(each.value, "listener_rule_prio", null)
+  path_mapping        = lookup(each.value, "path_mapping", null)
+  service_port        = lookup(each.value, "service_port", null)
+  lb_healthcheck_url  = lookup(each.value, "lb_healthcheck_url", null)
+  lb_healthcheck_port = lookup(each.value, "lb_healthcheck_port", null)
+  enable_ecs_exec     = lookup(each.value, "enable_ecs_exec", false)
 
   # for cost savings undeploy outside work hours
   enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
