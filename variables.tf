@@ -79,6 +79,12 @@ variable "create_s3_bucket" {
   default     = false
 }
 
+variable "enable_s3_for_static_website" {
+  description = "Creates an AWS S3 bucket and serve static webpages from it."
+  type        = bool
+  default     = true
+}
+
 variable "enable_ecs_exec" {
   description = "Enables ECS Exec which allows SSH into containers for debugging purposes."
   type        = bool

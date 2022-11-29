@@ -8,8 +8,8 @@ output "domain_name" {
   description = "URL of Cloudfront distribution. Please wait some minutes until the distribution becomes available."
 }
 
-output "s3_solution_bucket_domain_name" {
-  value       = module.environment.s3_solution_bucket_domain_name
+output "s3_solution_bucket_name" {
+  value       = module.environment.s3_solution_bucket_name
   description = "Return solution bucket's URL."
 }
 

@@ -53,7 +53,7 @@ locals {
       "options" : {
         awslogs-group : "${var.name}LogGroup",
         awslogs-region : data.aws_region.current_region.name,
-        awslogs-stream-prefix : var.environment
+        awslogs-stream-prefix : var.solution_name
       }
     }
   }

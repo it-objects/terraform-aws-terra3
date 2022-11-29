@@ -1,4 +1,4 @@
-variable "environment" {
+variable "solution_name" {
   type        = string
   description = "Reference to name of environment."
 }
@@ -148,4 +148,10 @@ variable "internal_service" {
   type        = bool
   default     = false
   description = "Set to true to don't attach service to loadbalancer and to keep it internal."
+}
+
+variable "s3_solution_bucket_access" {
+  type        = bool
+  default     = false
+  description = "Gives component access to solution bucket."
 }

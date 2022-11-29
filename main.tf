@@ -1,7 +1,3 @@
-locals {
-  environment_name = "${var.solution_name}-env"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # Initialize environment
 # ---------------------------------------------------------------------------------------------------------------------
@@ -10,15 +6,17 @@ module "environment" {
 
   solution_name = var.solution_name
 
-  add_default_index_html      = var.add_default_index_html
-  create_dns_and_certificates = var.create_dns_and_certificates
-  route53_zone_id             = var.route53_zone_id
-  create_load_balancer        = var.create_load_balancer
-  nat                         = var.nat
-  create_bastion_host         = var.create_bastion_host
-  create_database             = var.create_database
-  database                    = var.database
-  create_s3_bucket            = var.create_s3_bucket
+  add_default_index_html       = var.add_default_index_html
+  create_dns_and_certificates  = var.create_dns_and_certificates
+  route53_zone_id              = var.route53_zone_id
+  create_load_balancer         = var.create_load_balancer
+  nat                          = var.nat
+  create_bastion_host          = var.create_bastion_host
+  create_database              = var.create_database
+  database                     = var.database
+  create_s3_bucket             = var.create_s3_bucket
+  enable_s3_for_static_website = var.enable_s3_for_static_website
+  app_components               = var.app_components
 
   providers = {
     aws.useast1 = aws.useast1
@@ -42,8 +40,8 @@ module "account" {
 module "cluster" {
   source = "./modules/container_runtime"
 
-  environment_name       = local.environment_name
-  container_runtime_name = "${local.environment_name}-cluster"
+  solution_name          = var.solution_name
+  container_runtime_name = "${var.solution_name}-cluster"
 
   enable_container_insights = var.enable_container_insights
   enable_ecs_exec           = var.enable_ecs_exec
@@ -55,7 +53,7 @@ module "app_components" {
   source = "./modules/app_component"
 
   name              = each.key
-  environment       = local.environment_name
+  solution_name     = var.solution_name
   container_runtime = module.cluster.ecs_cluster_name
 
   instances = each.value["instances"]
@@ -77,6 +75,8 @@ module "app_components" {
 
   # for cost savings undeploy outside work hours
   enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
+
+  s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${module.environment.domain_name}" : ""
 

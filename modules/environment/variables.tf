@@ -164,3 +164,15 @@ variable "database" {
     error_message = "Only 'mysql' and 'postgres' are allowed."
   }
 }
+
+variable "enable_s3_for_static_website" {
+  description = "Creates an AWS S3 bucket and serve static webpages from it."
+  type        = bool
+  default     = true
+}
+
+variable "app_components" {
+  description = "Define here the app_component object. See the examples or documentation for more details."
+  type        = any
+  default     = {}
+}

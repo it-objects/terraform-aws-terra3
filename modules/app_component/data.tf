@@ -4,7 +4,7 @@ data "aws_region" "current_region" {} # Find region, e.g. us-east-1
 # Determine cluster id from name (${var.solution_name}-cluster)
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_ssm_parameter" "ecs_cluster_name" {
-  name = "/${var.environment}/${var.container_runtime}/container_runtime_ecs_cluster_name"
+  name = "/${var.solution_name}/${var.container_runtime}/container_runtime_ecs_cluster_name"
 }
 
 data "aws_ecs_cluster" "selected" {
@@ -15,7 +15,7 @@ data "aws_ecs_cluster" "selected" {
 # Determine loadbalancer arn from ssm param store
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_ssm_parameter" "alb_arn" {
-  name = "/${var.environment}/alb_arn"
+  name = "/${var.solution_name}/alb_arn"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ data "aws_acm_certificate" "certificate" {
 # Determine VPC id from VPC name (${var.solution_name}-vpc)
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_ssm_parameter" "vpc_id" {
-  name = "/${var.environment}/vpc_id"
+  name = "/${var.solution_name}/vpc_id"
 }
 
 data "aws_vpc" "selected" {
@@ -56,24 +56,24 @@ data "aws_subnets" "private_subnets" {
 # Determine security groups
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_security_group" "ecs_default_sg" {
-  name = "${var.environment}_ecs_task_sg"
+  name = "${var.solution_name}_ecs_task_sg"
 }
 
 data "aws_security_group" "mysql_marker_sg" {
-  name = "${var.environment}_mysql_access_marker_sg"
+  name = "${var.solution_name}_mysql_access_marker_sg"
 }
 
 data "aws_security_group" "redis_marker_sg" {
-  name = "${var.environment}_redis_access_marker_sg"
+  name = "${var.solution_name}_redis_access_marker_sg"
 }
 
 data "aws_security_group" "postgres_marker_sg" {
-  name = "${var.environment}_postgres_access_marker_sg"
+  name = "${var.solution_name}_postgres_access_marker_sg"
 }
 
 data "aws_ssm_parameter" "ssm_container_runtime_kms_key_id" {
   count = var.enable_ecs_exec ? 1 : 0
-  name  = "/${var.environment}/${var.container_runtime}/container_runtime_kms_key_id"
+  name  = "/${var.solution_name}/${var.container_runtime}/container_runtime_kms_key_id"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

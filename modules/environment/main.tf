@@ -1,6 +1,4 @@
 locals {
-  environment_name = var.environment_name == "" ? "${var.solution_name}-env" : var.environment_name
-
   # "nat" variable defines how nat should be configured
   create_nat_instances          = (var.nat == "NAT_INSTANCES") ? true : false
   create_nat_gateway            = (var.nat != "NO_NAT" && var.nat != "NAT_INSTANCES") ? true : false
@@ -99,7 +97,7 @@ module "l7_loadbalancer" {
 module "security_groups" {
   source = "../securitygroups"
 
-  name   = local.environment_name
+  name   = var.solution_name
   vpc_id = module.vpc.vpc_id
 
   create_dns_and_certificates = var.create_dns_and_certificates
@@ -115,9 +113,9 @@ module "dns_and_certificates" {
 
   source = "../dns_and_certificates"
 
-  environment = local.environment_name
+  environment = var.solution_name
 
-  route53_subdomain = local.environment_name
+  route53_subdomain = var.solution_name
   route53_zone_id   = var.route53_zone_id
   domain            = var.domain_name
 
@@ -139,7 +137,12 @@ module "cloudfront_cdn" {
 
   calculated_zone_id = var.create_dns_and_certificates ? module.dns_and_certificates[0].hosted_zone_id : ""
 
-  add_default_index_html = var.add_default_index_html
+  enable_s3_for_static_website = var.enable_s3_for_static_website
+
+  # ignored if static web page is deactivated
+  add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html
+
+  app_components = var.app_components
 }
 
 module "bastion_host_ssm" {
@@ -148,7 +151,7 @@ module "bastion_host_ssm" {
   source = "../bastion_host_ssm"
 
   solution_name    = var.solution_name
-  environment_name = local.environment_name
+  environment_name = var.solution_name
 
   depends_on = [module.vpc, module.security_groups]
 }
@@ -187,31 +190,6 @@ module "database" {
 
   rds_cluster_enable_cloudwatch_logs_export = local.rds_cluster_enable_cloudwatch_logs_export
 }
-
-#module "database_postgres" {
-#  count = var.create_database ? 1 : 0
-#
-#  source        = "../database"
-#  solution_name = var.solution_name
-#
-#  db_subnet_group_subnet_ids = module.vpc.database_subnets
-#
-#  rds_cluster_database_name  = "${replace(var.solution_name, "-", "")}db" # alphanumeric and lower case
-#  rds_cluster_identifier     = "${lower(var.solution_name)}_db"
-#  rds_cluster_engine         = "MySQL"
-#  rds_cluster_engine_version = "8.0.30"
-#
-#  rds_cluster_security_group_ids = [module.security_groups.mysql_db_sg]
-#
-#  # adapt these for prod! Now optimized for for testing and low costs
-#  rds_cluster_allocated_storage       = 20
-#  rds_cluster_max_allocated_storage   = 25
-#  rds_cluster_backup_retention_period = "7"           # at least 7 days or more for prod
-#  rds_cluster_deletion_protection     = false         # true for prod env
-#  rds_cluster_multi_az                = false         # true for ha prod envs
-#  rds_cluster_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
-#  rds_cluster_storage_encrypted       = true          # true for prod env or non-db.t2x.micro free tier instance
-#}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # ECR repo used for storing container images
@@ -274,7 +252,7 @@ module "deployment_user" {
 }
 
 resource "aws_ssm_parameter" "vpc_id" {
-  name  = "/${local.environment_name}/vpc_id"
+  name  = "/${var.solution_name}/vpc_id"
   type  = "String"
   value = module.vpc.vpc_id
 }
@@ -282,7 +260,7 @@ resource "aws_ssm_parameter" "vpc_id" {
 resource "aws_ssm_parameter" "environment_alb_arn" {
   count = var.create_load_balancer ? 1 : 0
 
-  name  = "/${local.environment_name}/alb_arn"
+  name  = "/${var.solution_name}/alb_arn"
   type  = "String"
   value = length(module.l7_loadbalancer) == 0 ? "" : module.l7_loadbalancer[0].lb_arn
 }
@@ -290,7 +268,7 @@ resource "aws_ssm_parameter" "environment_alb_arn" {
 resource "aws_ssm_parameter" "environment_alb_url" {
   count = var.create_load_balancer ? 1 : 0
 
-  name  = "/${local.environment_name}/alb_url"
+  name  = "/${var.solution_name}/alb_url"
   type  = "String"
   value = length(module.l7_loadbalancer) == 0 ? "" : module.l7_loadbalancer[0].lb_dns_name
 }

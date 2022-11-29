@@ -26,13 +26,13 @@ locals {
     }
   }
 
-  s3_origins = {
+  s3_origins = !var.enable_s3_for_static_website ? {} : {
     s3_static_website = {
-      domain_name = aws_s3_bucket.s3_static_website.bucket_regional_domain_name
+      domain_name = aws_s3_bucket.s3_static_website[0].bucket_regional_domain_name
       origin_path = ""
 
       s3_origin_config = {
-        origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
+        origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity[0].cloudfront_access_identity_path
       }
     }
   }
@@ -43,11 +43,11 @@ locals {
   # Define behaviours either with or without ALB
   # -------------------------------------------------------------------------------------------------------------------
   all_behaviors = flatten([var.origin_alb_url == null ? [] : [{
-    path_pattern           = "/api/*"
+    path_pattern           = var.enable_s3_for_static_website ? "/api/*" : "/*"
     target_origin_id       = "elb"
     viewer_protocol_policy = "redirect-to-https"
 
-    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods  = ["GET", "HEAD"]
     compress        = true
 
@@ -59,7 +59,7 @@ locals {
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
     cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
     }],
-    {
+    !var.enable_s3_for_static_website ? [] : [{
       path_pattern           = "/*"
       target_origin_id       = "s3_static_website"
       viewer_protocol_policy = "redirect-to-https"
@@ -75,7 +75,7 @@ locals {
       use_forwarded_values     = false
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
       cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
-    }
+    }]
   ])
 
   all_certificates = flatten([var.certificate_arn == null ? [
@@ -109,7 +109,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   retain_on_delete    = false
   wait_for_deployment = false
 
-  default_root_object = "index.html"
+  default_root_object = var.enable_s3_for_static_website ? "index.html" : ""
 
   restrictions {
     geo_restriction {
@@ -239,9 +239,9 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   }
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    allowed_methods  = var.enable_s3_for_static_website ? ["GET", "HEAD", "OPTIONS"] : ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = "s3_static_website"
+    target_origin_id = var.enable_s3_for_static_website ? "s3_static_website" : "elb"
 
     min_ttl                = 0
     default_ttl            = 0
@@ -249,7 +249,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
+    origin_request_policy_id = var.enable_s3_for_static_website ? data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id : data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
     cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
   }
 
@@ -285,13 +285,13 @@ resource "random_string" "random_s3_postfix" {
 # CloudFront Function to add index.html to subdirectories
 # Source: https://aws.amazon.com/de/blogs/networking-and-content-delivery/implementing-default-directory-indexes-in-amazon-s3-backed-amazon-cloudfront-origins-using-cloudfront-functions/
 # ---------------------------------------------------------------------------------------------------------------------
-resource "aws_cloudfront_function" "cf_function_rewrite_default_index_request" {
-  name    = "${var.solution_name}-RewriteDefaultIndexRequest"
-  runtime = "cloudfront-js-1.0"
-  comment = "CloudFront Function to add index.html to subdirectories."
-  publish = true
-  code    = file("${path.module}/cf_functions/rewritedefaultindexrequest.js")
-}
+#resource "aws_cloudfront_function" "cf_function_rewrite_default_index_request" {
+#  name    = "${var.solution_name}-RewriteDefaultIndexRequest"
+#  runtime = "cloudfront-js-1.0"
+#  comment = "CloudFront Function to add index.html to subdirectories."
+#  publish = true
+#  code    = file("${path.module}/cf_functions/rewritedefaultindexrequest.js")
+#}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AWS S3 bucket
@@ -382,6 +382,8 @@ resource "aws_route53_record" "domain" {
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "s3_static_website" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
   bucket = "${var.solution_name}-static-website-s3-bucket-${random_string.random_s3_postfix.result}"
 
   force_destroy = true
@@ -389,7 +391,9 @@ resource "aws_s3_bucket" "s3_static_website" {
 
 #tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_static_website_enc_config" {
-  bucket = aws_s3_bucket.s3_static_website.id
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -399,12 +403,16 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_static_website
 }
 
 resource "aws_s3_bucket_acl" "s3_static_website_bucket_acl" {
-  bucket = aws_s3_bucket.s3_static_website.id
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
   acl    = "private"
 }
 
 resource "aws_s3_bucket_cors_configuration" "example" {
-  bucket = aws_s3_bucket.s3_static_website.id
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
 
   cors_rule {
     allowed_headers = ["*"]
@@ -416,6 +424,8 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 }
 
 resource "random_string" "random_s3_static_website_postfix" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
   length    = 4
   special   = false
   min_lower = 4
@@ -425,7 +435,9 @@ resource "random_string" "random_s3_static_website_postfix" {
 # Block public access per-se
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_public_access_block" "block_static_website_bucket" {
-  bucket = aws_s3_bucket.s3_static_website.bucket
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].bucket
 
   block_public_acls       = true
   block_public_policy     = true
@@ -437,39 +449,49 @@ resource "aws_s3_bucket_public_access_block" "block_static_website_bucket" {
 # store s3-static-website-bucket name in parameter store to be retrieved later
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_ssm_parameter" "s3_static_website_bucket" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
   name  = "/${var.solution_name}/s3-static-website-bucket"
   type  = "String"
-  value = aws_s3_bucket.s3_static_website.bucket
+  value = aws_s3_bucket.s3_static_website[0].bucket
 }
 
 resource "aws_ssm_parameter" "s3_static_website_bucket_arn" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
   name  = "/${var.solution_name}/s3-static-website-bucket-arn"
   type  = "String"
-  value = aws_s3_bucket.s3_static_website.arn
+  value = aws_s3_bucket.s3_static_website[0].arn
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # OAI
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
   comment = "OAI for static website."
 }
 
 data "aws_iam_policy_document" "s3_static_website_policy_document" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
   statement {
     actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.s3_static_website.arn}/*"]
+    resources = ["${aws_s3_bucket.s3_static_website[0].arn}/*"]
 
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.origin_access_identity.iam_arn]
+      identifiers = [aws_cloudfront_origin_access_identity.origin_access_identity[0].iam_arn]
     }
   }
 }
 
 resource "aws_s3_bucket_policy" "s3_static_website_policy" {
-  bucket = aws_s3_bucket.s3_static_website.id
-  policy = data.aws_iam_policy_document.s3_static_website_policy_document.json
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
+  policy = data.aws_iam_policy_document.s3_static_website_policy_document[0].json
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -479,7 +501,7 @@ resource "aws_s3_bucket_policy" "s3_static_website_policy" {
 resource "aws_s3_object" "object" {
   count = var.add_default_index_html ? 1 : 0
 
-  bucket       = aws_s3_bucket.s3_static_website.bucket
+  bucket       = aws_s3_bucket.s3_static_website[0].bucket
   key          = "index.html"
   content      = "<h1>Hello world, Terra3!</h1>"
   content_type = "text/html"

@@ -623,3 +623,24 @@ resource "aws_iam_role_policy" "ecs_kms_cmk_access_task_role_policy" {
   role   = aws_iam_role.task.id
   policy = data.aws_iam_policy_document.kms_cmk_access_for_ecs_exec[0].json
 }
+
+###############
+# Access to S3
+###############
+
+data "aws_iam_policy" "s3_bucket_accesss_policy" {
+  count = var.s3_solution_bucket_access ? 1 : 0
+
+  name = "${var.solution_name}-s3-access-policy"
+}
+
+# Attaches a managed IAM policy to an IAM role
+# TF: https://www.terraform.io/docs/providers/aws/r/iam_role_policy_attachment.html
+# AWS: http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html
+# AWS CLI: http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html
+resource "aws_iam_role_policy_attachment" "ecs_role_s3_data_bucket_policy_attach" {
+  count = var.s3_solution_bucket_access ? 1 : 0
+
+  role       = aws_iam_role.task.name
+  policy_arn = data.aws_iam_policy.s3_bucket_accesss_policy[0].arn
+}
