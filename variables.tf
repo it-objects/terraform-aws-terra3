@@ -81,13 +81,19 @@ variable "create_s3_bucket" {
 
 variable "s3_bucket_policy" {
   type        = string
-  description = "Type of database."
+  description = "Option that generally controls blocking public S3 access."
   default     = "PRIVATE"
 
   validation {
     condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_bucket_policy)
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
+}
+
+variable "s3_solution_bucket_cloudfront_path" {
+  type        = string
+  description = "Option that exposes S3 solution bucket via Cloudfront."
+  default     = ""
 }
 
 variable "enable_s3_for_static_website" {

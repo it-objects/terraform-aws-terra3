@@ -26,7 +26,7 @@ locals {
     }
   }
 
-  s3_origins = !var.enable_s3_for_static_website ? {} : {
+  s3_static_website_origins = !var.enable_s3_for_static_website ? {} : {
     s3_static_website = {
       domain_name = aws_s3_bucket.s3_static_website[0].bucket_regional_domain_name
       origin_path = ""
@@ -37,27 +37,56 @@ locals {
     }
   }
 
-  all_origins = merge(local.alb_origins, local.s3_origins)
+  s3_solution_bucket_origins = var.s3_solution_bucket_cloudfront_path == "" ? {} : {
+    s3_solution_bucket = {
+      domain_name = var.s3_solution_bucket_domain_name
+      origin_path = ""
+
+      s3_origin_config = {
+        origin_access_identity = aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].cloudfront_access_identity_path
+      }
+    }
+  }
+
+  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins)
 
   # -------------------------------------------------------------------------------------------------------------------
   # Define behaviours either with or without ALB
   # -------------------------------------------------------------------------------------------------------------------
-  all_behaviors = flatten([var.origin_alb_url == null ? [] : [{
-    path_pattern           = var.enable_s3_for_static_website ? "/api/*" : "/*"
-    target_origin_id       = "elb"
-    viewer_protocol_policy = "redirect-to-https"
+  all_behaviors = flatten([
+    var.s3_solution_bucket_cloudfront_path == "" ? [] : [{
+      path_pattern           = var.s3_solution_bucket_cloudfront_path
+      target_origin_id       = "s3_solution_bucket"
+      viewer_protocol_policy = "https-only"
 
-    allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods  = ["GET", "HEAD"]
-    compress        = true
+      allowed_methods = ["GET", "HEAD", "OPTIONS"]
+      cached_methods  = ["GET", "HEAD"]
+      compress        = true
 
-    min_ttl     = 0
-    default_ttl = 0
-    max_ttl     = 0
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
 
-    use_forwarded_values     = false
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
-    cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+      use_forwarded_values     = false
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
+      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+    }],
+    var.origin_alb_url == null ? [] : [{
+      path_pattern           = var.enable_s3_for_static_website ? "/api/*" : "/*"
+      target_origin_id       = "elb"
+      viewer_protocol_policy = "redirect-to-https"
+
+      allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods  = ["GET", "HEAD"]
+      compress        = true
+
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+
+      use_forwarded_values     = false
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
+      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
     }],
     !var.enable_s3_for_static_website ? [] : [{
       path_pattern           = "/*"
@@ -465,7 +494,7 @@ resource "aws_ssm_parameter" "s3_static_website_bucket_arn" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# OAI
+# OAI for S3 static website
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
   count = var.enable_s3_for_static_website ? 1 : 0
@@ -492,6 +521,36 @@ resource "aws_s3_bucket_policy" "s3_static_website_policy" {
 
   bucket = aws_s3_bucket.s3_static_website[0].id
   policy = data.aws_iam_policy_document.s3_static_website_policy_document[0].json
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# OAI for S3 solution bucket
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudfront_origin_access_identity" "oai_s3_solution_bucket" {
+  count = var.s3_solution_bucket_cloudfront_path != "" ? 1 : 0
+
+  comment = "OAI for S3 solution bucket."
+}
+
+data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
+  count = var.s3_solution_bucket_cloudfront_path != "" ? 1 : 0
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${var.s3_solution_bucket_arn}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].iam_arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "s3_solution_bucket_policy" {
+  count = var.s3_solution_bucket_cloudfront_path != "" ? 1 : 0
+
+  bucket = var.s3_solution_bucket_name
+  policy = data.aws_iam_policy_document.s3_solution_bucket_policy_document[0].json
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

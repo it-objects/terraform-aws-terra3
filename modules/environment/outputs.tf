@@ -15,7 +15,7 @@ output "s3_static_website_bucket" {
 }
 
 output "s3_solution_bucket_name" {
-  value = var.create_s3_bucket ? module.s3_bucket[0].s3_solution_bucket_name : ""
+  value = var.create_s3_solution_bucket ? module.s3_solution_bucket[0].s3_solution_bucket_name : ""
 }
 
 output "db_credentials" {

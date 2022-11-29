@@ -139,6 +139,11 @@ module "cloudfront_cdn" {
 
   enable_s3_for_static_website = var.enable_s3_for_static_website
 
+  s3_solution_bucket_cloudfront_path = var.s3_solution_bucket_cloudfront_path
+  s3_solution_bucket_name            = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
+  s3_solution_bucket_arn             = try(module.s3_solution_bucket[0].s3_bucket_arn, "")
+  s3_solution_bucket_domain_name     = try(module.s3_solution_bucket[0].s3_bucket_domain_name, "")
+
   # ignored if static web page is deactivated
   add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html
 
@@ -225,12 +230,12 @@ module "ecr" {
 # ---------------------------------------------------------------------------------------------------------------------
 # S3 bucket used for solution specific purposes
 # ---------------------------------------------------------------------------------------------------------------------
-module "s3_bucket" {
-  count = var.create_s3_bucket ? 1 : 0
+module "s3_solution_bucket" {
+  count = var.create_s3_solution_bucket ? 1 : 0
 
-  source           = "../s3_bucket"
-  solution_name    = var.solution_name
-  s3_bucket_policy = var.s3_bucket_policy
+  source                    = "../s3_bucket"
+  solution_name             = var.solution_name
+  s3_solution_bucket_policy = var.s3_solution_bucket_policy
 }
 
 module "newrelic_account_integration" {

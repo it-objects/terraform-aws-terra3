@@ -124,7 +124,7 @@ variable "ecr_access_for_account_id" {
   default = ""
 }
 
-variable "create_s3_bucket" {
+variable "create_s3_solution_bucket" {
   type    = bool
   default = false
 }
@@ -177,13 +177,19 @@ variable "app_components" {
   default     = {}
 }
 
-variable "s3_bucket_policy" {
+variable "s3_solution_bucket_policy" {
   type        = string
-  description = "Type of database."
+  description = "Option that generally controls blocking public S3 access."
   default     = "PRIVATE"
 
   validation {
-    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_bucket_policy)
+    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
+}
+
+variable "s3_solution_bucket_cloudfront_path" {
+  type        = string
+  description = "Option that exposes S3 solution bucket via Cloudfront."
+  default     = ""
 }

@@ -6,16 +6,19 @@ module "environment" {
 
   solution_name = var.solution_name
 
-  add_default_index_html       = var.add_default_index_html
-  create_dns_and_certificates  = var.create_dns_and_certificates
-  route53_zone_id              = var.route53_zone_id
-  create_load_balancer         = var.create_load_balancer
-  nat                          = var.nat
-  create_bastion_host          = var.create_bastion_host
-  create_database              = var.create_database
-  database                     = var.database
-  create_s3_bucket             = var.create_s3_bucket
-  s3_bucket_policy             = var.s3_bucket_policy
+  add_default_index_html      = var.add_default_index_html
+  create_dns_and_certificates = var.create_dns_and_certificates
+  route53_zone_id             = var.route53_zone_id
+  create_load_balancer        = var.create_load_balancer
+  nat                         = var.nat
+  create_bastion_host         = var.create_bastion_host
+  create_database             = var.create_database
+  database                    = var.database
+
+  create_s3_solution_bucket          = var.create_s3_bucket
+  s3_solution_bucket_policy          = var.s3_bucket_policy
+  s3_solution_bucket_cloudfront_path = var.s3_solution_bucket_cloudfront_path
+
   enable_s3_for_static_website = var.enable_s3_for_static_website
   app_components               = var.app_components
 

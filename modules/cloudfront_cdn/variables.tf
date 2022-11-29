@@ -40,3 +40,27 @@ variable "app_components" {
   type        = any
   default     = {}
 }
+
+variable "s3_solution_bucket_cloudfront_path" {
+  type        = string
+  description = "Option that exposes S3 solution bucket via Cloudfront."
+  default     = ""
+}
+
+variable "s3_solution_bucket_name" {
+  type        = string
+  description = "S3 solution bucket's name."
+  default     = ""
+}
+
+variable "s3_solution_bucket_arn" {
+  type        = string
+  description = "S3 solution bucket's arn."
+  default     = ""
+}
+
+variable "s3_solution_bucket_domain_name" {
+  type        = string
+  description = "S3 solution bucket's domain name."
+  default     = ""
+}
