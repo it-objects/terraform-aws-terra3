@@ -51,10 +51,10 @@ resource "random_string" "random_s3_postfix" {
 resource "aws_s3_bucket_public_access_block" "block" {
   bucket = aws_s3_bucket.s3_data_bucket.bucket
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = var.s3_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
+  block_public_policy     = var.s3_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
+  ignore_public_acls      = var.s3_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
+  restrict_public_buckets = var.s3_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

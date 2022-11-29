@@ -228,8 +228,9 @@ module "ecr" {
 module "s3_bucket" {
   count = var.create_s3_bucket ? 1 : 0
 
-  source        = "../s3_bucket"
-  solution_name = var.solution_name
+  source           = "../s3_bucket"
+  solution_name    = var.solution_name
+  s3_bucket_policy = var.s3_bucket_policy
 }
 
 module "newrelic_account_integration" {
