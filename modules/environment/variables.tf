@@ -27,13 +27,13 @@ variable "route53_zone_id" {
 }
 
 variable "nat" {
-  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
+  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, ALTER_NAT for hourly based EC2 instances or NAT_GATEWAY for NAT with AWS NAT Gateways."
   type        = string
   default     = "NO_NAT"
 
   validation {
-    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY_PER_SUBNET", "NAT_GATEWAY_SINGLE", "NAT_GATEWAY_PER_AZ"], var.nat)
-    error_message = "Only 'NO_NAT', 'NAT_INSTANCES', 'NAT_GATEWAY_PER_SUBNET', 'NAT_GATEWAY_SINGLE' and 'NAT_GATEWAY_PER_AZ' are allowed."
+    condition     = contains(["NAT_INSTANCES", "NO_NAT", "ALTER_NAT", "NAT_GATEWAY_PER_SUBNET", "NAT_GATEWAY_SINGLE", "NAT_GATEWAY_PER_AZ"], var.nat)
+    error_message = "Only 'NO_NAT', 'NAT_INSTANCES', 'ALTER_NAT', 'NAT_GATEWAY_PER_SUBNET', 'NAT_GATEWAY_SINGLE' and 'NAT_GATEWAY_PER_AZ' are allowed."
   }
 }
 
@@ -140,4 +140,22 @@ variable "gitlab_url" {
 variable "add_default_index_html" {
   type    = bool
   default = true
+}
+
+variable "ingress_security_group_ids" {
+  description = "A list of security group IDs that are allowed by the NAT instance."
+  type        = list(string)
+  default     = []
+}
+
+variable "nat_subnet_suffix" {
+  description = "Suffix in the NAT private subnet name to search for when updating routes via HA NAT Lambda functions."
+  type        = string
+  default     = "private"
+}
+
+variable "tags" {
+  description = "A map of tags to add to all supported resources managed by the module."
+  type        = map(string)
+  default     = {}
 }
