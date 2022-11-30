@@ -1,5 +1,11 @@
 locals {
   environment_name = var.environment_name == "" ? "${var.solution_name}-env" : var.environment_name
+
+  # "nat" variable defines how nat should be configured
+  create_nat_instances          = (var.nat == "NAT_INSTANCES") ? true : false
+  create_nat_gateway            = (var.nat != "NO_NAT" && var.nat != "NAT_INSTANCES") ? true : false
+  create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
+  create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -31,8 +37,9 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  # this switch would spawn NAT gateways per AZ; we use NAT instances instead (see below)
-  enable_nat_gateway = local.create_nat_gateway
+  enable_nat_gateway     = local.create_nat_gateway
+  single_nat_gateway     = local.create_single_nat_gateway
+  one_nat_gateway_per_az = local.create_one_nat_gateway_per_az
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -51,12 +58,6 @@ module "vpc_endpoints" {
       service_type    = "Gateway"
     }
   }
-}
-
-locals {
-  # local variables declaration
-  create_nat_instances = var.nat == "NAT_INSTANCES" ? true : false
-  create_nat_gateway   = var.nat == "NAT_GATEWAY" ? true : false
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
