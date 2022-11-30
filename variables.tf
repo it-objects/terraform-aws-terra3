@@ -21,13 +21,12 @@ variable "enable_account_best_practices" {
 }
 
 variable "nat" {
-  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
-  type        = string
-  default     = "NO_NAT"
+  type    = string
+  default = "NO_NAT"
 
   validation {
-    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY"], var.nat)
-    error_message = "Only 'NAT_INSTANCES','NO_NAT' and 'NAT_GATEWAY' are allowed."
+    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY", "ALTER_NAT"], var.nat)
+    error_message = "Only 'NAT_INSTANCES','NO_NAT', 'NAT_GATEWAY', and 'ALTER_NAT' are allowed."
   }
 }
 
