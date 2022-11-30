@@ -31,8 +31,8 @@ variable "nat" {
   default = "NO_NAT"
 
   validation {
-    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY"], var.nat)
-    error_message = "Only 'NAT_INSTANCES','NO_NAT' and 'NAT_GATEWAY' are allowed."
+    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY", "ALTER_NAT"], var.nat)
+    error_message = "Only 'NAT_INSTANCES','NO_NAT', 'NAT_GATEWAY', and 'ALTER_NAT' are allowed."
   }
 }
 
@@ -139,4 +139,22 @@ variable "gitlab_url" {
 variable "add_default_index_html" {
   type    = bool
   default = true
+}
+
+variable "ingress_security_group_ids" {
+  description = "A list of security group IDs that are allowed by the NAT instance."
+  type        = list(string)
+  default     = []
+}
+
+variable "nat_subnet_suffix" {
+  description = "Suffix in the NAT private subnet name to search for when updating routes via HA NAT Lambda functions."
+  type        = string
+  default     = "private"
+}
+
+variable "tags" {
+  description = "A map of tags to add to all supported resources managed by the module."
+  type        = map(string)
+  default     = {}
 }
