@@ -85,7 +85,7 @@ resource "aws_lb_target_group" "target_group" {
   name_prefix          = substr(replace(var.name, "_", "-"), 0, 6)
   port                 = var.service_port
   protocol             = "HTTP"
-  vpc_id               = data.aws_vpc.selected.id
+  vpc_id               = data.aws_ssm_parameter.vpc_id.value
   target_type          = "ip"
   deregistration_delay = var.deregistration_delay
 
@@ -147,8 +147,6 @@ resource "aws_lb_listener_rule" "https_listener_rule" {
       values = [var.path_mapping]
     }
   }
-
-  depends_on = [aws_lb_target_group.target_group]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -221,8 +219,6 @@ resource "aws_lb_listener_rule" "http_listener_rule" {
       values = [var.path_mapping]
     }
   }
-
-  depends_on = [aws_lb_target_group.target_group]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

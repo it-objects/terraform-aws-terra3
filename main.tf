@@ -83,6 +83,4 @@ module "app_components" {
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${module.environment.domain_name}" : ""
-
-  depends_on = [module.environment]
 }
