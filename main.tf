@@ -200,12 +200,15 @@ module "app_components" {
   # if true the next block's variables are ignored internally
   internal_service = lookup(each.value, "internal_service", false)
 
-  listener_rule_prio  = lookup(each.value, "listener_rule_prio", null)
-  path_mapping        = lookup(each.value, "path_mapping", null)
-  service_port        = lookup(each.value, "service_port", null)
-  lb_healthcheck_url  = lookup(each.value, "lb_healthcheck_url", null)
-  lb_healthcheck_port = lookup(each.value, "lb_healthcheck_port", null)
-  enable_ecs_exec     = lookup(each.value, "enable_ecs_exec", false)
+  listener_rule_prio = lookup(each.value, "listener_rule_prio", null)
+  path_mapping       = lookup(each.value, "path_mapping", null)
+  service_port       = lookup(each.value, "service_port", null)
+
+  lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
+  health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
+  lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
+
+  enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
 
   # for cost savings undeploy outside work hours
   enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
