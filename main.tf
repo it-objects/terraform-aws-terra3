@@ -52,6 +52,12 @@ module "vpc" {
   one_nat_gateway_per_az = local.create_one_nat_gateway_per_az
 }
 
+resource "aws_ssm_parameter" "vpc_id" {
+  name  = "/${var.solution_name}/vpc_id"
+  type  = "String"
+  value = module.vpc.vpc_id
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Enable S3 gateway endpoint. Best practice to keep S3 traffic internal
 # ---------------------------------------------------------------------------------------------------------------------
@@ -323,26 +329,4 @@ module "deployment_user" {
   count = var.create_deployment_user ? 1 : 0
 
   source = "./modules/deployment_user"
-}
-
-resource "aws_ssm_parameter" "vpc_id" {
-  name  = "/${var.solution_name}/vpc_id"
-  type  = "String"
-  value = module.vpc.vpc_id
-}
-
-resource "aws_ssm_parameter" "environment_alb_arn" {
-  count = var.create_load_balancer ? 1 : 0
-
-  name  = "/${var.solution_name}/alb_arn"
-  type  = "String"
-  value = length(module.l7_loadbalancer) == 0 ? "" : module.l7_loadbalancer[0].lb_arn
-}
-
-resource "aws_ssm_parameter" "environment_alb_url" {
-  count = var.create_load_balancer ? 1 : 0
-
-  name  = "/${var.solution_name}/alb_url"
-  type  = "String"
-  value = length(module.l7_loadbalancer) == 0 ? "" : module.l7_loadbalancer[0].lb_dns_name
 }
