@@ -188,8 +188,8 @@ variable "s3_solution_bucket_policy" {
   }
 }
 
-variable "s3_solution_bucket_cloudfront_path" {
-  type        = string
-  description = "Option that exposes S3 solution bucket via Cloudfront."
-  default     = ""
+variable "s3_solution_bucket_cf_behaviours" {
+  type        = list(any)
+  description = "Option that exposes S3 solution bucket via Cloudfront with different behaviours."
+  default     = []
 }

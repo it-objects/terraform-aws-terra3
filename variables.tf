@@ -73,7 +73,7 @@ variable "create_database" {
   default     = false
 }
 
-variable "create_s3_bucket" {
+variable "create_s3_solution_bucket" {
   description = "Creates an AWS S3 bucket and gives access to it from ECS containers."
   type        = bool
   default     = false
@@ -90,10 +90,10 @@ variable "s3_bucket_policy" {
   }
 }
 
-variable "s3_solution_bucket_cloudfront_path" {
-  type        = string
-  description = "Option that exposes S3 solution bucket via Cloudfront."
-  default     = ""
+variable "s3_solution_bucket_cf_behaviours" {
+  type        = list(any)
+  description = "Option that exposes S3 solution bucket via Cloudfront with different behaviours."
+  default     = []
 }
 
 variable "enable_s3_for_static_website" {

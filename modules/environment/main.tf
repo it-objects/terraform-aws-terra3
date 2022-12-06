@@ -139,10 +139,11 @@ module "cloudfront_cdn" {
 
   enable_s3_for_static_website = var.enable_s3_for_static_website
 
-  s3_solution_bucket_cloudfront_path = var.s3_solution_bucket_cloudfront_path
-  s3_solution_bucket_name            = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
-  s3_solution_bucket_arn             = try(module.s3_solution_bucket[0].s3_bucket_arn, "")
-  s3_solution_bucket_domain_name     = try(module.s3_solution_bucket[0].s3_bucket_domain_name, "")
+  s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
+
+  s3_solution_bucket_name        = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
+  s3_solution_bucket_arn         = try(module.s3_solution_bucket[0].s3_bucket_arn, "")
+  s3_solution_bucket_domain_name = try(module.s3_solution_bucket[0].s3_bucket_domain_name, "")
 
   # ignored if static web page is deactivated
   add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html

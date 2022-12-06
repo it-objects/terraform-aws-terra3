@@ -15,9 +15,9 @@ module "environment" {
   create_database             = var.create_database
   database                    = var.database
 
-  create_s3_solution_bucket          = var.create_s3_bucket
-  s3_solution_bucket_policy          = var.s3_bucket_policy
-  s3_solution_bucket_cloudfront_path = var.s3_solution_bucket_cloudfront_path
+  create_s3_solution_bucket        = var.create_s3_solution_bucket
+  s3_solution_bucket_policy        = var.s3_bucket_policy
+  s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
 
   enable_s3_for_static_website = var.enable_s3_for_static_website
   app_components               = var.app_components
