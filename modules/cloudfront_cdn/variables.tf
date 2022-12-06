@@ -35,12 +35,6 @@ variable "enable_s3_for_static_website" {
   default     = true
 }
 
-variable "app_components" {
-  description = "Define here the app_component object. See the examples or documentation for more details."
-  type        = any
-  default     = {}
-}
-
 variable "s3_solution_bucket_cf_behaviours" {
   type        = list(any)
   description = "Option that exposes S3 solution bucket via Cloudfront with different behaviours."

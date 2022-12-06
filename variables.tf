@@ -124,3 +124,80 @@ variable "database" {
     error_message = "Only 'mysql' and 'postgres' are allowed."
   }
 }
+
+
+#####
+
+variable "domain_name" {
+  type        = string
+  description = "Example: aws-sandbox.terra3.io"
+  default     = ""
+}
+
+variable "private_subnets_cidr_blocks" {
+  type        = list(string)
+  description = ""
+  default     = ["172.72.0.0/24", "172.72.1.0/24"]
+}
+
+variable "public_subnets_cidr_blocks" {
+  type        = list(string)
+  description = ""
+  default     = ["172.72.2.0/24", "172.72.3.0/24"]
+}
+
+variable "database_cidr_blocks" {
+  type        = list(string)
+  description = ""
+  default     = ["172.72.4.0/24", "172.72.5.0/24"]
+}
+
+variable "elasticache_cidr_blocks" {
+  type        = list(string)
+  description = ""
+  default     = ["172.72.6.0/24", "172.72.7.0/24"]
+}
+
+variable "azs" {
+  type        = list(string)
+  description = ""
+  default     = ["eu-central-1a", "eu-central-1b"]
+}
+
+variable "cidr" {
+  type        = string
+  description = ""
+  default     = "172.72.0.0/16"
+}
+
+variable "nat_instance_types" {
+  type        = list(string)
+  description = ""
+  default     = ["t4g.nano"] # cheapest
+}
+
+variable "create_ecr" {
+  type    = bool
+  default = false
+}
+
+variable "ecr_access_for_account_id" {
+  type    = string
+  default = ""
+}
+
+variable "create_deployment_user" {
+  type    = bool
+  default = false
+}
+
+variable "s3_solution_bucket_policy" {
+  type        = string
+  description = "Option that generally controls blocking public S3 access."
+  default     = "PRIVATE"
+
+  validation {
+    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
+    error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
+  }
+}

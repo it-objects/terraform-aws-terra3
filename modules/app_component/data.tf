@@ -3,12 +3,8 @@ data "aws_region" "current_region" {} # Find region, e.g. us-east-1
 # ---------------------------------------------------------------------------------------------------------------------
 # Determine cluster id from name (${var.solution_name}-cluster)
 # ---------------------------------------------------------------------------------------------------------------------
-data "aws_ssm_parameter" "ecs_cluster_name" {
-  name = "/${var.solution_name}/${var.container_runtime}/container_runtime_ecs_cluster_name"
-}
-
 data "aws_ecs_cluster" "selected" {
-  cluster_name = data.aws_ssm_parameter.ecs_cluster_name.value
+  cluster_name = var.container_runtime
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -31,10 +27,6 @@ data "aws_acm_certificate" "certificate" {
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_ssm_parameter" "vpc_id" {
   name = "/${var.solution_name}/vpc_id"
-}
-
-data "aws_vpc" "selected" {
-  id = data.aws_ssm_parameter.vpc_id.value
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
