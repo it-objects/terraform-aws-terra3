@@ -284,7 +284,7 @@ resource "aws_elasticache_cluster" "redis" {
 resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
   count = var.create_elasticache_redis ? 1 : 0
 
-  name       = "mastodonsubnetgroup"
+  name       = "${var.solution_name}-elasticache-subnet-group"
   subnet_ids = module.vpc.elasticache_subnets
 }
 
