@@ -267,19 +267,23 @@ module "database" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# ECR repo used for storing container images
+# Redis Cluster
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_elasticache_cluster" "redis" {
+  count = var.create_elasticache_redis ? 1 : 0
+
   cluster_id         = "${var.solution_name}-redis"
   engine             = "redis"
   node_type          = "cache.t4g.micro"
   num_cache_nodes    = 1
   engine_version     = "5.0.6"
-  subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup.name
+  subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[0].name
   security_group_ids = [module.security_groups.redis_sg]
 }
 
 resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
+  count = var.create_elasticache_redis ? 1 : 0
+
   name       = "mastodonsubnetgroup"
   subnet_ids = module.vpc.elasticache_subnets
 }

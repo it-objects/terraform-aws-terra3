@@ -158,6 +158,12 @@ variable "elasticache_cidr_blocks" {
   default     = ["172.72.6.0/24", "172.72.7.0/24"]
 }
 
+variable "create_elasticache_redis" {
+  type        = bool
+  description = "Creates AWS Redis cluster."
+  default     = false
+}
+
 variable "azs" {
   type        = list(string)
   description = ""
