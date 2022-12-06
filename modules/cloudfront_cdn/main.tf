@@ -37,7 +37,7 @@ locals {
     }
   }
 
-  s3_solution_bucket_origins = var.s3_solution_bucket_cf_behaviours == [] ? {} : {
+  s3_solution_bucket_origins = length(var.s3_solution_bucket_cf_behaviours) == 0 ? {} : {
     s3_solution_bucket = {
       domain_name = var.s3_solution_bucket_domain_name
       origin_path = ""
@@ -54,7 +54,7 @@ locals {
   # Define behaviours either with or without ALB
   # -------------------------------------------------------------------------------------------------------------------
   all_behaviors = flatten([
-    var.s3_solution_bucket_cf_behaviours == [] ? [] : [
+    length(var.s3_solution_bucket_cf_behaviours) == 0 ? [] : [
       for behaviour in var.s3_solution_bucket_cf_behaviours :
       {
         path_pattern           = behaviour.s3_solution_bucket_cloudfront_path
@@ -534,13 +534,13 @@ resource "aws_s3_bucket_policy" "s3_static_website_policy" {
 # OAI for S3 solution bucket
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_identity" "oai_s3_solution_bucket" {
-  count = var.s3_solution_bucket_cf_behaviours != [] ? 1 : 0
+  count = length(var.s3_solution_bucket_cf_behaviours) == 0 ? 0 : 1
 
   comment = "OAI for S3 solution bucket."
 }
 
 data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
-  count = var.s3_solution_bucket_cf_behaviours != [] ? 1 : 0
+  count = length(var.s3_solution_bucket_cf_behaviours) == 0 ? 0 : 1
 
   statement {
     actions   = ["s3:GetObject"]
@@ -554,7 +554,7 @@ data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "s3_solution_bucket_policy" {
-  count = var.s3_solution_bucket_cf_behaviours != [] ? 1 : 0
+  count = length(var.s3_solution_bucket_cf_behaviours) == 0 ? 0 : 1
 
   bucket = var.s3_solution_bucket_name
   policy = data.aws_iam_policy_document.s3_solution_bucket_policy_document[0].json

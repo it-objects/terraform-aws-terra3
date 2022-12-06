@@ -19,6 +19,6 @@ output "db_credentials" {
 }
 
 output "redis_endpoint" {
-  value       = aws_elasticache_cluster.redis[0].cache_nodes[0].address
+  value       = var.create_elasticache_redis ? aws_elasticache_cluster.redis[0].cache_nodes[0].address : ""
   description = "Return Redis endpoint."
 }
