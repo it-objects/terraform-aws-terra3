@@ -275,6 +275,7 @@ module "database" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Redis Cluster
 # ---------------------------------------------------------------------------------------------------------------------
+# tfsec:ignore:aws-elasticache-enable-backup-retention
 resource "aws_elasticache_cluster" "redis" {
   count = var.create_elasticache_redis ? 1 : 0
 

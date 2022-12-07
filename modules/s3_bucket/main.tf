@@ -4,10 +4,12 @@
 # AWS: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 # AWS CLI: http://docs.aws.amazon.com/cli/latest/reference/s3api/create-bucket.html
 # ---------------------------------------------------------------------------------------------------------------------
+# tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "s3_data_bucket" {
   bucket = "${var.solution_name}-solution-s3-bucket-${random_string.random_s3_postfix.result}"
 }
 
+# tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
   bucket = aws_s3_bucket.s3_data_bucket.id
 

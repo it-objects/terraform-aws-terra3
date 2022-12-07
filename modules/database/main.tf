@@ -35,7 +35,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
 }
 
 # as this is meant for testing purposes, costs are higher weighted than medium or low security related aspects
-#tfsec:ignore:aws-rds-specify-backup-retention tfsec:ignore:aws-rds-enable-performance-insights tfsec:ignore:aws-rds-enable-deletion-protection
+#tfsec:ignore:aws-rds-enable-performance-insights
 resource "aws_db_instance" "db" {
   allocated_storage               = var.rds_cluster_allocated_storage
   max_allocated_storage           = var.rds_cluster_max_allocated_storage
@@ -45,7 +45,7 @@ resource "aws_db_instance" "db" {
   password                        = random_password.db_password.result
   multi_az                        = var.rds_cluster_multi_az
   backup_retention_period         = var.rds_cluster_backup_retention_period
-  deletion_protection             = var.rds_cluster_deletion_protection
+  deletion_protection             = var.rds_cluster_deletion_protection #tfsec:ignore:AVD-AWS-0177
   enabled_cloudwatch_logs_exports = var.rds_cluster_enable_cloudwatch_logs_export
   engine_version                  = var.rds_cluster_engine_version
   engine                          = var.rds_cluster_engine
@@ -59,6 +59,8 @@ resource "aws_db_instance" "db" {
   db_subnet_group_name            = var.db_subnet_group_name
   vpc_security_group_ids          = var.rds_cluster_security_group_ids
   parameter_group_name            = var.database == "mysql" ? aws_db_parameter_group.mysql_logbin_parameter_group[0].name : null
+
+  iam_database_authentication_enabled = false #tfsec:ignore:AVD-AWS-0176
 
   lifecycle {
     ignore_changes = [

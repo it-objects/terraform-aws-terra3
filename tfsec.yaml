@@ -1,2 +1,0 @@
-exclude:
-  - aws-rds-enable-deletion-protection # needs to be added as local ignore is not evaluated. See https://github.com/aquasecurity/tfsec/issues/1935
