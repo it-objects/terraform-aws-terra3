@@ -86,6 +86,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 # Scale up based on CPU and MEMORY Utilisation
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_policy" "ecs_target_cpu" {
+  count              = var.metric_type == "CPU_UTILISATION" ? 1 : 0
   name               = "application-scaling-policy-cpu"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
@@ -102,6 +103,7 @@ resource "aws_appautoscaling_policy" "ecs_target_cpu" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_target_memory" {
+  count              = var.metric_type == "MEMORY_UTILISATION" ? 1 : 0
   name               = "application-scaling-policy-memory"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id

@@ -20,10 +20,17 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
+  # Cluster type options
   cluster_type = "ECS_FARGATE"
   #cluster_type = "ECS_EC2"
+  #cluster_type = "ECS_FARGATE_SPOT"
+  #cluster_type = "ECS_EC2_SPOT"
 
-  #EC2 cluster configurations
+  # Choose the metric type to perform auto scaling based on.
+  metric_type = "CPU_UTILISATION"
+  #metric_type = "MEMORY_UTILISATION"
+
+  # EC2 cluster configurations
   cluster_ec2_min_nodes           = 1
   cluster_ec2_max_nodes           = 2
   cluster_ec2_instance_type       = "t3a.small"

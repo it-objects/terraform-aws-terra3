@@ -9,6 +9,17 @@ variable "cluster_type" {
   }
 }
 
+variable "metric_type" {
+  description = "Select CPU_UTILISATION to perform auto scaling based on CPU Utilisation, or select MEMORY_UTILISATION for MEMORY Utilisation."
+  type        = string
+  default     = "CPU_UTILISATION"
+
+  validation {
+    condition     = contains(["CPU_UTILISATION", "MEMORY_UTILISATION"], var.metric_type)
+    error_message = "Only 'CPU_UTILISATION', and 'MEMORY_UTILISATION' are allowed."
+  }
+}
+
 variable "environment" {
   type        = string
   description = "Reference to name of environment."

@@ -65,6 +65,7 @@ module "app_components" {
   environment       = local.environment_name
   container_runtime = module.cluster.ecs_cluster_name
   cluster_type      = var.cluster_type
+  metric_type       = var.metric_type
 
   instances = each.value["instances"]
 
