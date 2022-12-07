@@ -18,7 +18,7 @@ Using Terra3 makes the required code base small and almost effortless to glue al
 
 ## Getting Started
 
-The easiest way to get started with Mastodon with Terra3 is to follow this guide.
+The easiest way to get started with Mastodon with Terra3 is to follow this guide!
 
 1. Create an AWS Route53 Hosted Zone and publish it. Take a note of the AWS Hosted Zone, as you need to fill it in in step 2.
 2. Update the terraform.tfvars file. It requires you to generate some secret keys and add an SMTP server to send emails. For latter, you can either use AWS SES or a third party service such as [mailgun](https://www.mailgun.com/)If unsure what to fill in, please visit the official [Mastodon documentation](https://docs.joinmastodon.org/admin/config/)
