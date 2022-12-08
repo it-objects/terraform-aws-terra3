@@ -23,8 +23,31 @@ The easiest way to get started with Mastodon with Terra3 is to follow this guide
 1. Create an AWS Route53 Hosted Zone and publish it. Take a note of the AWS Hosted Zone, as you need to fill it in in step 2.
 2. Update the terraform.tfvars file. It requires you to generate some secret keys and add an SMTP server to send emails. For latter, you can either use AWS SES or a third party service such as [mailgun](https://www.mailgun.com/)If unsure what to fill in, please visit the official [Mastodon documentation](https://docs.joinmastodon.org/admin/config/)
 3. Run "terraform apply"
-4. It'll take about 20 minutes to provision everything
-5. Test it using the URL <solution_name>.<aws_hosted_zone_domain_name>
+4. It'll take about 10 minutes to provision everything
+5. Test your Mastodon instance using the URL <solution_name>.<aws_hosted_zone_domain_name>
+6. On the website, register a new user and confirm your email address via the confirmation mail you've been sent
+7. Determine your cluster name and task arn using the AWS console
+8. The final step is promote this user to an admin user using tootctl. For this, exec into your container with the following command:
+
+```
+# Make sure you're logged in to your AWS account to be able to use the aws cli
+# Add the cluster name and task arn from your AWS console from step 7 and add these to the command below
+$ aws ecs execute-command --interactive --command "/bin/sh" --cluster <CLUSTER_NAME> --task <TASK_ARN>
+
+# It should look something like this:
+$ aws ecs execute-command --interactive --command "/bin/sh" --cluster terra3-mastodon-cluster --task arn:aws:ecs:eu-central-1:111111111111:task/terra3-mastodon-cluster/1f5a00a38bea43459cc1071fc5b14280
+
+# A shell in your container should open. Run tootctl to promote your user
+$ tootctl accounts modify <USERNAME_FROM_STEP_6> --role Admin --confirm
+
+# It takes tootctl some seconds before it confirms with 'OK'.
+# --confirm is only needed if your SMTP email server is not correctly setup and you weren't able to receive a confirmation email
+```
+
+Remark: You can find more documentation on tootctl [here](https://docs.joinmastodon.org/admin/tootctl/).
+
+9. Go back to your browser and reload the page. You should now see all additional admin options.
+10. You've just setup a scalable Mastodon server. Enjoy!
 
 ## Terra3 Documentation
 
