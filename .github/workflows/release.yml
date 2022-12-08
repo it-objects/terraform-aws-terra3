@@ -8,6 +8,11 @@ on:
     paths:
       - '**/*.tpl'
       - '**/*.tf'
+      - '**/*.json'
+      - '**/*.sh'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.hcl'
       - '.github/workflows/release.yml'
 
 jobs:
