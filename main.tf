@@ -42,7 +42,8 @@ module "cluster" {
 
   environment_name       = local.environment_name
   container_runtime_name = "${local.environment_name}-cluster"
-  cluster_type           = var.cluster_type
+  ecs_cluster_type       = var.ecs_cluster_type
+  launch_type            = var.launch_type
 
   cluster_ec2_min_nodes           = var.cluster_ec2_min_nodes
   cluster_ec2_max_nodes           = var.cluster_ec2_max_nodes
@@ -64,7 +65,8 @@ module "app_components" {
   name              = each.key
   environment       = local.environment_name
   container_runtime = module.cluster.ecs_cluster_name
-  cluster_type      = var.cluster_type
+  ecs_cluster_type  = var.ecs_cluster_type
+  launch_type       = var.launch_type
   metric_type       = var.metric_type
 
   instances = each.value["instances"]

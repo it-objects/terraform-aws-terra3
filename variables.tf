@@ -31,14 +31,14 @@ variable "nat" {
   }
 }
 
-variable "cluster_type" {
-  description = "Select ECS_FARGATE for cluster type as FARGATE, or select ECS_EC2 for cluster type as EC2."
+variable "ecs_cluster_type" {
+  description = "Select FARGATE for cluster type as FARGATE, or select EC2 for cluster type as EC2, or Select FARGATE_SPOT for cluster type as FARGATE_SPOT, or select EC2_SPOT for cluster type as EC2_SPOT."
   type        = string
-  default     = "ECS_FARGATE"
+  default     = "FARGATE"
 
   validation {
-    condition     = contains(["ECS_FARGATE", "ECS_EC2"], var.cluster_type)
-    error_message = "Only 'ECS_FARGATE', and 'ECS_EC2' are allowed."
+    condition     = contains(["FARGATE", "EC2", "FARGATE_SPOT", "EC2_SPOT"], var.ecs_cluster_type)
+    error_message = "Only 'ECS_FARGATE', 'ECS_EC2', 'FARGATE_SPOT' and 'EC2_SPOT' are allowed."
   }
 }
 
@@ -86,6 +86,17 @@ variable "metric_type" {
   validation {
     condition     = contains(["CPU_UTILISATION", "MEMORY_UTILISATION"], var.metric_type)
     error_message = "Only 'CPU_UTILISATION', and 'MEMORY_UTILISATION' are allowed."
+  }
+}
+
+variable "launch_type" {
+  description = "Select FARGATE for launch type as FARGATE, or select EC2 for launch type as EC2."
+  type        = string
+  default     = "FARGATE"
+
+  validation {
+    condition     = contains(["FARGATE", "EC2"], var.launch_type)
+    error_message = "Only 'FARGATE', and 'EC2' are allowed."
   }
 }
 

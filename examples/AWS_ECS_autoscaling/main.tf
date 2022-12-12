@@ -21,14 +21,15 @@ module "terra3_examples" {
   nat = "NAT_INSTANCES"
 
   # Cluster type options
-  cluster_type = "ECS_FARGATE"
-  #cluster_type = "ECS_EC2"
-  #cluster_type = "ECS_FARGATE_SPOT"
-  #cluster_type = "ECS_EC2_SPOT"
+  #ecs_cluster_type = "FARGATE" #default
+  ecs_cluster_type = "FARGATE_SPOT"
+  #ecs_cluster_type = "EC2"
+  #ecs_cluster_type = "EC2_SPOT"
 
-  # Choose the metric type to perform auto scaling based on.
-  metric_type = "CPU_UTILISATION"
-  #metric_type = "MEMORY_UTILISATION"
+  # Choose launch type of the cluster
+  launch_type = "FARGATE" #defult
+  #launch_type = "EC2"
+
 
   # EC2 cluster configurations
   cluster_ec2_min_nodes           = 1
@@ -37,6 +38,10 @@ module "terra3_examples" {
   cluster_ec2_desired_capacity    = 1
   cluster_ec2_detailed_monitoring = false
   cluster_ec2_volume_size         = 30
+
+  # Choose the metric type to perform auto scaling based on.
+  #metric_type = "CPU_UTILISATION" #default
+  #metric_type = "MEMORY_UTILISATION"
 
   app_components = {
 

@@ -1,7 +1,8 @@
 locals {
-  kms_key_id              = (var.enable_ecs_exec && var.solution_kms_key_id == "") ? aws_kms_key.container_runtime_kms_key[0].key_id : var.solution_kms_key_id
-  create_ecs_with_fargate = var.cluster_type == "ECS_FARGATE" ? true : false
-  create_ecs_with_ec2     = var.cluster_type == "ECS_EC2" ? true : false
+  kms_key_id                 = (var.enable_ecs_exec && var.solution_kms_key_id == "") ? aws_kms_key.container_runtime_kms_key[0].key_id : var.solution_kms_key_id
+  create_ecs_with_ec2        = var.launch_type == "EC2" ? true : false
+  ecs_capacity_providers     = var.launch_type == "EC2" ? aws_ecs_capacity_provider.terra3_ec2_capacity_provider[0].name : var.ecs_cluster_type
+  ec2_instance_market_option = var.ecs_cluster_type == "EC2_SPOT" ? "spot" : null
 }
 
 #tfsec:ignore:aws-kms-auto-rotate-keys
@@ -15,9 +16,8 @@ resource "aws_kms_key" "container_runtime_kms_key" {
 # Cluster is compute that service will run on
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-ecs-enable-container-insight
-resource "aws_ecs_cluster" "fargate_cluster" {
-  count = local.create_ecs_with_fargate ? 1 : 0
-  name  = var.container_runtime_name
+resource "aws_ecs_cluster" "cluster" {
+  name = var.container_runtime_name
 
   dynamic "setting" {
     for_each = var.enable_container_insights ? [1] : []
@@ -42,16 +42,14 @@ resource "aws_ecs_cluster" "fargate_cluster" {
   }
 }
 
-resource "aws_ecs_cluster_capacity_providers" "fargate_cap_provider" {
-  count        = local.create_ecs_with_fargate ? 1 : 0
-  cluster_name = aws_ecs_cluster.fargate_cluster[0].name
-
-  capacity_providers = ["FARGATE"]
+resource "aws_ecs_cluster_capacity_providers" "cluster_capacity_provider" {
+  cluster_name       = aws_ecs_cluster.cluster.name
+  capacity_providers = [local.ecs_capacity_providers]
 
   default_capacity_provider_strategy {
     base              = 1
     weight            = 100
-    capacity_provider = "FARGATE"
+    capacity_provider = local.ecs_capacity_providers
   }
 }
 # ---------------------------------------------------------------------------------------------------------------------
@@ -68,52 +66,12 @@ resource "aws_ssm_parameter" "ssm_container_runtime_kms_key_id" {
 resource "aws_ssm_parameter" "ecs_cluster_name" {
   name  = "/${var.environment_name}/${var.container_runtime_name}/container_runtime_ecs_cluster_name"
   type  = "String"
-  value = local.create_ecs_with_fargate == true ? aws_ecs_cluster.fargate_cluster[0].name : aws_ecs_cluster.ec2_cluster[0].name
+  value = aws_ecs_cluster.cluster.name
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# ECS with EC2 instances
+# EC2 capacity provider(ASG) to cluster capacity provider
 # ---------------------------------------------------------------------------------------------------------------------
-# tfsec:ignore:aws-ecs-enable-container-insight
-resource "aws_ecs_cluster" "ec2_cluster" {
-  count = local.create_ecs_with_ec2 ? 1 : 0
-  name  = var.container_runtime_name
-
-  dynamic "setting" {
-    for_each = var.enable_container_insights ? [1] : []
-
-    content {
-      # enable container insights
-      name  = "containerInsights"
-      value = "enabled"
-    }
-  }
-
-  dynamic "configuration" {
-    for_each = var.enable_ecs_exec ? [1] : []
-
-    content {
-      # enable ECS exec
-      execute_command_configuration {
-        kms_key_id = local.kms_key_id
-        logging    = "NONE" # NONE | DEFAULT | OVERRIDE
-      }
-    }
-  }
-}
-
-resource "aws_ecs_cluster_capacity_providers" "ecs_ec2_cap_provider" {
-  count              = local.create_ecs_with_ec2 ? 1 : 0
-  cluster_name       = aws_ecs_cluster.ec2_cluster[0].name
-  capacity_providers = [aws_ecs_capacity_provider.terra3_ec2_capacity_provider[0].name]
-
-  default_capacity_provider_strategy {
-    base              = 20
-    weight            = 60
-    capacity_provider = aws_ecs_capacity_provider.terra3_ec2_capacity_provider[0].name
-  }
-}
-
 resource "aws_ecs_capacity_provider" "terra3_ec2_capacity_provider" {
   count = local.create_ecs_with_ec2 ? 1 : 0
   name  = "terra3_ec2_capacity_provider"
@@ -132,12 +90,12 @@ resource "aws_ecs_capacity_provider" "terra3_ec2_capacity_provider" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Auto scaling group and Launch template
+# Auto scaling group and Launch template for ECS Ec2 cluster type.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_autoscaling_group" "ecs_ec2_asg" {
   count               = local.create_ecs_with_ec2 ? 1 : 0
   name                = "terra3_ecs_ec2_autoscaling"
-  vpc_zone_identifier = data.aws_subnets.private_subnets.ids #aws_subnet.private_subnets.*.id
+  vpc_zone_identifier = data.aws_subnets.private_subnets.ids
 
   launch_template {
     id      = aws_launch_template.terra3_ecs_ec2_container_instance[count.index].id
@@ -181,6 +139,10 @@ resource "aws_launch_template" "terra3_ecs_ec2_container_instance" {
   EOT
   )
 
+  # trigger to used ec2 instances as spot and accepted values are null, "spot"
+  instance_market_options {
+    market_type = local.ec2_instance_market_option
+  }
   iam_instance_profile {
     name = aws_iam_instance_profile.ecs_ec2_role[0].name
   }
@@ -215,7 +177,7 @@ resource "aws_launch_template" "terra3_ecs_ec2_container_instance" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# IAM Role Definitions
+# IAM Role Definitions of EC2 cluster type deployment
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "ecs_ec2_role" {
   version = "2012-10-17"
