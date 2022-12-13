@@ -1,0 +1,115 @@
+locals {
+  solution_name = "alb-example"
+}
+
+resource "aws_s3_bucket" "s3_alb_logs_bucket" {
+  bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
+}
+
+resource "aws_s3_bucket_policy" "this" {
+  bucket = aws_s3_bucket.s3_alb_logs_bucket.id
+  policy = data.aws_iam_policy_document.s3_bucket_lb_write.json
+}
+
+data "aws_iam_policy_document" "s3_bucket_lb_write" {
+  policy_id = "s3_bucket_lb_logs"
+
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.s3_alb_logs_bucket.arn}/*",
+    ]
+
+    principals {
+      identifiers = ["054676820928"] #["${data.aws_elb_service_account.this.arn}"]
+      type        = "AWS"
+    }
+  }
+
+  statement {
+    actions = [
+      "s3:PutObject"
+    ]
+    effect = "Allow"
+    resources = ["${aws_s3_bucket.s3_alb_logs_bucket.arn}/*"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+
+  statement {
+    actions = [
+      "s3:GetBucketAcl"
+    ]
+    effect = "Allow"
+    resources = ["${aws_s3_bucket.s3_alb_logs_bucket.arn}"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "random_string" "random_s3_alb_logs_postfix" {
+  length    = 4
+  special   = false
+  min_lower = 4
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Application Loadbalancer
+# ---------------------------------------------------------------------------------------------------------------------
+
+
+
+
+resource "aws_s3_bucket" "lb-logs" {
+  bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
+}
+
+resource "aws_s3_bucket_acl" "lb-logs-acl" {
+  bucket = aws_s3_bucket.lb-logs.id
+  acl    = "private"
+}
+
+data "aws_iam_policy_document" "allow-lb" {
+  statement {
+    principals {
+      type        = "Service"
+      identifiers = ["logdelivery.elb.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:PutObject"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.lb-logs.arn}/*"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+
+      values = [
+        "bucket-owner-full-control"
+      ]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "allow-lb" {
+  bucket = aws_s3_bucket.lb-logs.id
+  policy = data.aws_iam_policy_document.allow-lb.json
+}
+
+resource "random_string" "random_s3_alb_logs_postfix" {
+  length    = 4
+  special   = false
+  min_lower = 4
+}
