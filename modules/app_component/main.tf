@@ -314,6 +314,52 @@ resource "aws_lb_listener_rule" "http_trailing_slash_redirect" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# AWS CloudWatch Composite alarm
+# to send a notification when the composite alarm reaches the desired alarm state
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudwatch_composite_alarm" "ECS_service_CPU_and_Memory" {
+  alarm_description = "Composite alarm that monitors CPUUtilization and MEMORYUtilization"
+  alarm_name        = "${var.name}CPU&MEMORY_Composite_Alarm"
+  alarm_actions     = [aws_sns_topic.ECS_service_CPU_and_Memory_topic.arn]
+
+  alarm_rule = "ALARM(${aws_cloudwatch_metric_alarm.ECS_CPU_Usage_Alarm.alarm_name})"
+
+
+  depends_on = [
+    aws_cloudwatch_metric_alarm.ECS_CPU_Usage_Alarm,
+    aws_sns_topic.ECS_service_CPU_and_Memory_topic,
+    aws_sns_topic_subscription.ECS_service_CPU_and_Memory_Subscription
+  ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "ECS_CPU_Usage_Alarm" {
+  alarm_name          = "${var.name}Alarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "ECSServiceAverageCPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "50"
+  alarm_description   = "This metric monitors ecs service cpu utilization exceeding 80%"
+}
+
+#tfsec:ignore:aws-sns-enable-topic-encryption
+resource "aws_sns_topic" "ECS_service_CPU_and_Memory_topic" {
+  name = "${var.name}topic"
+}
+
+resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Subscription" {
+  topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_topic.arn
+  protocol  = "email"
+  endpoint  = "kaushik.katariya@it-objects.de"
+
+  depends_on = [
+    aws_sns_topic.ECS_service_CPU_and_Memory_topic
+  ]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Cloudwatch to store logs
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-cloudwatch-log-group-customer-key
