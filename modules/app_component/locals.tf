@@ -12,6 +12,8 @@ locals {
       portMappings = single_container.port_mappings
       environment  = single_container.environment
 
+      command = single_container.command
+
       essential = single_container.essential
 
       readonlyRootFilesystem = single_container.readonlyRootFilesystem
@@ -34,6 +36,8 @@ locals {
       "value" : "my_var_value_default",
     }]
 
+    command = null
+
     essential   = true
     mountPoints = []
     volumesFrom = []
@@ -49,7 +53,7 @@ locals {
       "options" : {
         awslogs-group : "${var.name}LogGroup",
         awslogs-region : data.aws_region.current_region.name,
-        awslogs-stream-prefix : var.environment
+        awslogs-stream-prefix : var.solution_name
       }
     }
   }

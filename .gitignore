@@ -6,6 +6,9 @@
 *.tfstate
 *.tfstate.*
 
+# tfvars containing actual creds
+*.auto.tfvars.json
+
 # Crash log files
 crash.log
 

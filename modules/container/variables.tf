@@ -48,6 +48,12 @@ variable "essential" {
   default     = true
 }
 
+variable "command" {
+  type        = list(string)
+  description = "Overwrites command from Dockerfile."
+  default     = null
+}
+
 variable "readonlyRootFilesystem" {
   type        = bool
   description = "Best practice is to enable it, but causes issues in some cases."

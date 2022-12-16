@@ -103,6 +103,30 @@ resource "aws_security_group_rule" "ecs_task_egress_all" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Security group that marks specific entities as valid traffic source
 # ---------------------------------------------------------------------------------------------------------------------
+resource "aws_security_group" "redis_access_marker_sg" {
+  name        = "${var.name}_redis_access_marker_sg"
+  vpc_id      = var.vpc_id
+  description = "Security group for tagging ECS tasks to allow access to Redis."
+}
+
+resource "aws_ssm_parameter" "redis_access_marker_sg_arn_param" {
+  name  = "/${var.name}/sg/redis_access_marker_arn"
+  type  = "String"
+  value = aws_security_group.redis_access_marker_sg.arn
+}
+
+resource "aws_security_group" "postgres_access_marker_sg" {
+  name        = "${var.name}_postgres_access_marker_sg"
+  vpc_id      = var.vpc_id
+  description = "Security group for tagging ECS tasks to allow access to a database."
+}
+
+resource "aws_ssm_parameter" "postgres_access_marker_sg_arn_param" {
+  name  = "/${var.name}/sg/postgres_access_marker_arn"
+  type  = "String"
+  value = aws_security_group.postgres_access_marker_sg.arn
+}
+
 resource "aws_security_group" "mysql_access_marker_sg" {
   name        = "${var.name}_mysql_access_marker_sg"
   vpc_id      = var.vpc_id
@@ -140,6 +164,64 @@ resource "aws_security_group_rule" "mysql_db_sg_rule2" {
   to_port                  = 3306
   protocol                 = "TCP"
   security_group_id        = aws_security_group.mysql_db_sg.id
+  source_security_group_id = aws_security_group.bastion_host_ssm_sg.id
+  description              = "Allow ingress from bastion host on default MySQL port."
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Database security group that allow ingress from marked entities and bastion host (via SSM)
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_security_group" "postgres_db_sg" {
+  name        = "${var.name}_postgres_db_sg"
+  vpc_id      = var.vpc_id
+  description = "Security group for postgres allowing access by tagged instances only."
+}
+
+resource "aws_security_group_rule" "postgres_db_sg_rule" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "TCP"
+  security_group_id        = aws_security_group.postgres_db_sg.id
+  source_security_group_id = aws_security_group.postgres_access_marker_sg.id
+  description              = "Allow ingress from marked ECS services on default postgres port."
+}
+
+resource "aws_security_group_rule" "postgres_db_sg_rule2" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "TCP"
+  security_group_id        = aws_security_group.postgres_db_sg.id
+  source_security_group_id = aws_security_group.bastion_host_ssm_sg.id
+  description              = "Allow ingress from bastion host on default postgres port."
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Redis security group that allow ingress from marked entities and bastion host (via SSM)
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_security_group" "redis_sg" {
+  name        = "${var.name}_redis_db_sg"
+  vpc_id      = var.vpc_id
+  description = "Security group for Redis allowing access by tagged instances only."
+}
+
+resource "aws_security_group_rule" "redis_sg_rule" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "TCP"
+  security_group_id        = aws_security_group.redis_sg.id
+  source_security_group_id = aws_security_group.redis_access_marker_sg.id
+  description              = "Allow ingress from marked ECS services on default MySQL port."
+}
+
+resource "aws_security_group_rule" "redis_sg_rule2" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "TCP"
+  security_group_id        = aws_security_group.redis_sg.id
   source_security_group_id = aws_security_group.bastion_host_ssm_sg.id
   description              = "Allow ingress from bastion host on default MySQL port."
 }

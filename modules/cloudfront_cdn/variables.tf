@@ -28,3 +28,33 @@ variable "add_default_index_html" {
   type    = bool
   default = true
 }
+
+variable "enable_s3_for_static_website" {
+  description = "Creates an AWS S3 bucket and serve static webpages from it."
+  type        = bool
+  default     = true
+}
+
+variable "s3_solution_bucket_cf_behaviours" {
+  type        = list(any)
+  description = "Option that exposes S3 solution bucket via Cloudfront with different behaviours."
+  default     = []
+}
+
+variable "s3_solution_bucket_name" {
+  type        = string
+  description = "S3 solution bucket's name."
+  default     = ""
+}
+
+variable "s3_solution_bucket_arn" {
+  type        = string
+  description = "S3 solution bucket's arn."
+  default     = ""
+}
+
+variable "s3_solution_bucket_domain_name" {
+  type        = string
+  description = "S3 solution bucket's domain name."
+  default     = ""
+}
