@@ -9,11 +9,7 @@ data "aws_ami" "amazon-linux" {
 }
 
 data "aws_ssm_parameter" "vpc_id" {
-  name = "/${var.environment_name}/vpc_id"
-}
-
-data "aws_vpc" "selected" {
-  id = data.aws_ssm_parameter.vpc_id.value
+  name = "/${var.solution_name}/vpc_id"
 }
 
 data "aws_subnets" "private_subnets" {
@@ -28,5 +24,5 @@ data "aws_subnets" "private_subnets" {
 }
 
 data "aws_security_group" "ecs_default_sg" {
-  name = "${var.environment_name}_ecs_task_sg"
+  name = "${var.solution_name}_ecs_task_sg"
 }

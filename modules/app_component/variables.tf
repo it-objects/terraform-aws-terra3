@@ -52,6 +52,7 @@ variable "container" {
       name  = string
       value = string
     }))
+    command                = list(string)
     essential              = bool
     readonlyRootFilesystem = bool
   }))
