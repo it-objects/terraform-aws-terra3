@@ -20,10 +20,7 @@ resource "aws_lb" "this" {
   }
 }
 
-#tfsec:ignore:aws-s3-enable-bucket-logging
-#tfsec:ignore:aws-s3-enable-versioning
-#tfsec:ignore:aws-s3-encryption-customer-key
-
+# tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "lb-logs" {
   bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
 }
@@ -38,6 +35,17 @@ resource "aws_s3_bucket_public_access_block" "block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+# tfsec:ignore:aws-s3-encryption-customer-key
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption_config" {
+  bucket = aws_s3_bucket.lb-logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
 resource "aws_s3_bucket_acl" "lb-logs-acl" {
