@@ -23,8 +23,21 @@ resource "aws_lb" "this" {
 #tfsec:ignore:aws-s3-enable-bucket-logging
 #tfsec:ignore:aws-s3-enable-versioning
 #tfsec:ignore:aws-s3-encryption-customer-key
+
 resource "aws_s3_bucket" "lb-logs" {
   bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
+}
+# ---------------------------------------------------------------------------------------------------------------------
+# Block public access per-se
+# TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_s3_bucket_public_access_block" "block" {
+  bucket = aws_s3_bucket.lb-logs.bucket
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_acl" "lb-logs-acl" {
