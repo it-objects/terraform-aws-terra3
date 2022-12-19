@@ -214,6 +214,22 @@ module "app_components" {
   health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
   lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
 
+  metric_type = var.metric_type
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
   enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
 
   # for cost savings undeploy outside work hours
