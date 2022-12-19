@@ -59,7 +59,7 @@ variable "rds_cluster_engine" {
 variable "rds_cluster_master_username" {
   description = "Master username for the RDS cluster"
   type        = string
-  default     = "admin"
+  default     = "root"
 }
 
 variable "rds_cluster_preferred_backup_window" {
@@ -125,4 +125,15 @@ variable "rds_cluster_publicly_accessible" {
 variable "rds_cluster_security_group_ids" {
   description = "Security group ids for db"
   type        = list(string)
+}
+
+variable "database" {
+  type        = string
+  description = "Type of database."
+  default     = "mysql"
+
+  validation {
+    condition     = contains(["mysql", "postgres"], var.database)
+    error_message = "Only 'mysql' and 'postgres' are allowed."
+  }
 }

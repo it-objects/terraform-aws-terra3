@@ -13,21 +13,14 @@ resource "aws_lb" "this" {
   drop_invalid_header_fields = true
 }
 
-# default redirect of http to https
-#resource "aws_lb_listener" "default_redirect_to_443" {
-#  load_balancer_arn = aws_lb.this.arn
-#  port              = "80"
-#  protocol          = "HTTP"
-#
-#  default_action {
-#    type = "redirect"
-#    redirect {
-#      host        = "#{host}"
-#      path        = "/#{path}"
-#      query       = "#{query}"
-#      protocol    = "HTTPS"
-#      port        = "443"
-#      status_code = "HTTP_301"
-#    }
-#  }
-#}
+resource "aws_ssm_parameter" "environment_alb_arn" {
+  name  = "/${var.solution_name}/alb_arn"
+  type  = "String"
+  value = aws_lb.this.arn
+}
+
+resource "aws_ssm_parameter" "environment_alb_url" {
+  name  = "/${var.solution_name}/alb_url"
+  type  = "String"
+  value = aws_lb.this.dns_name
+}

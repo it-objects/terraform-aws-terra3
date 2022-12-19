@@ -21,7 +21,7 @@ variable "enable_container_insights" {
   default     = false
 }
 
-variable "environment_name" {
+variable "solution_name" {
   type = string
 }
 

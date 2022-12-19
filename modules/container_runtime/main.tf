@@ -58,13 +58,13 @@ resource "aws_ecs_cluster_capacity_providers" "cluster_capacity_provider" {
 resource "aws_ssm_parameter" "ssm_container_runtime_kms_key_id" {
   count = var.enable_ecs_exec ? 1 : 0
 
-  name  = "/${var.environment_name}/${var.container_runtime_name}/container_runtime_kms_key_id"
+  name  = "/${var.solution_name}/${var.container_runtime_name}/container_runtime_kms_key_id"
   type  = "String"
   value = local.kms_key_id
 }
 
 resource "aws_ssm_parameter" "ecs_cluster_name" {
-  name  = "/${var.environment_name}/${var.container_runtime_name}/container_runtime_ecs_cluster_name"
+  name  = "/${var.solution_name}/${var.container_runtime_name}/container_runtime_ecs_cluster_name"
   type  = "String"
   value = aws_ecs_cluster.cluster.name
 }

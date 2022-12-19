@@ -26,14 +26,25 @@ resource "aws_ecs_service" "ecs_service" {
 
     # if security groups are given, then overwrite default, otherwise take default (ecs_default + mysql_marker)
     security_groups = length(var.service_sg) == 0 ? [
-      data.aws_security_group.ecs_default_sg.id, data.aws_security_group.mysql_marker_sg.id
+      data.aws_security_group.ecs_default_sg.id,
+      data.aws_security_group.mysql_marker_sg.id,
+      data.aws_security_group.redis_marker_sg.id,
+      data.aws_security_group.postgres_marker_sg.id
     ] : var.service_sg
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.target_group.arn
-    container_name   = var.container[0].name
-    container_port   = var.service_port
+  dynamic "load_balancer" {
+    for_each = var.internal_service ? [] : [true]
+    content {
+      target_group_arn = aws_lb_target_group.target_group[0].arn
+      container_name   = var.container[0].name
+      container_port   = var.service_port
+    }
+  }
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
   }
 
   # Ignored desired count changes live, permitting schedulers to update this value without terraform reverting
@@ -146,10 +157,12 @@ resource "aws_iam_role_policy_attachment" "ecs-autoscale" {
 # Link to loadbalancer: target group and lb listener
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_target_group" "target_group" {
+  count = var.internal_service ? 0 : 1
+
   name_prefix          = substr(replace(var.name, "_", "-"), 0, 6)
   port                 = var.service_port
   protocol             = "HTTP"
-  vpc_id               = data.aws_vpc.selected.id
+  vpc_id               = data.aws_ssm_parameter.vpc_id.value
   target_type          = "ip"
   deregistration_delay = var.deregistration_delay
 
@@ -173,7 +186,7 @@ resource "aws_lb_target_group" "target_group" {
 # HTTPS (Port 443) listener + rules
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener" "port_443" {
-  count = var.lb_domain_name == "" ? 0 : 1
+  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
 
   load_balancer_arn = data.aws_ssm_parameter.alb_arn.value
   port              = "443"
@@ -194,14 +207,14 @@ resource "aws_lb_listener" "port_443" {
 }
 
 resource "aws_lb_listener_rule" "https_listener_rule" {
-  count = var.lb_domain_name == "" ? 0 : 1
+  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
 
   listener_arn = aws_lb_listener.port_443[0].arn
   priority     = var.listener_rule_prio
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.target_group.arn
+    target_group_arn = aws_lb_target_group.target_group[0].arn
   }
 
   # Exactly one of host_header, http_header, http_request_method, path_pattern, query_string or source_ip must be set per condition.
@@ -211,15 +224,13 @@ resource "aws_lb_listener_rule" "https_listener_rule" {
       values = [var.path_mapping]
     }
   }
-
-  depends_on = [aws_lb_target_group.target_group]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
-  count = var.lb_domain_name == "" ? 0 : 1
+  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
 
   listener_arn = aws_lb_listener.port_443[0].arn
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
@@ -250,6 +261,8 @@ resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
 # HTTP (Port 80) listener + rules
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener" "port_80" {
+  count = var.internal_service ? 0 : 1
+
   load_balancer_arn = data.aws_ssm_parameter.alb_arn.value
   port              = "80"
   protocol          = "HTTP"
@@ -266,12 +279,14 @@ resource "aws_lb_listener" "port_80" {
 }
 
 resource "aws_lb_listener_rule" "http_listener_rule" {
-  listener_arn = aws_lb_listener.port_80.arn
+  count = var.internal_service ? 0 : 1
+
+  listener_arn = aws_lb_listener.port_80[0].arn
   priority     = var.listener_rule_prio
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.target_group.arn
+    target_group_arn = aws_lb_target_group.target_group[0].arn
   }
 
   # Exactly one of host_header, http_header, http_request_method, path_pattern, query_string or source_ip must be set per condition.
@@ -281,15 +296,15 @@ resource "aws_lb_listener_rule" "http_listener_rule" {
       values = [var.path_mapping]
     }
   }
-
-  depends_on = [aws_lb_target_group.target_group]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "http_trailing_slash_redirect" {
-  listener_arn = aws_lb_listener.port_80.arn
+  count = var.internal_service ? 0 : 1
+
+  listener_arn = aws_lb_listener.port_80[0].arn
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
 
   action {
@@ -754,4 +769,25 @@ resource "aws_iam_role_policy" "ecs_kms_cmk_access_task_role_policy" {
   name   = "EcsKmsCmkAccessTaskRolePolicy"
   role   = aws_iam_role.task.id
   policy = data.aws_iam_policy_document.kms_cmk_access_for_ecs_exec[0].json
+}
+
+###############
+# Access to S3
+###############
+
+data "aws_iam_policy" "s3_bucket_accesss_policy" {
+  count = var.s3_solution_bucket_access ? 1 : 0
+
+  name = "${var.solution_name}-s3-access-policy"
+}
+
+# Attaches a managed IAM policy to an IAM role
+# TF: https://www.terraform.io/docs/providers/aws/r/iam_role_policy_attachment.html
+# AWS: http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html
+# AWS CLI: http://docs.aws.amazon.com/cli/latest/reference/iam/attach-role-policy.html
+resource "aws_iam_role_policy_attachment" "ecs_role_s3_data_bucket_policy_attach" {
+  count = var.s3_solution_bucket_access ? 1 : 0
+
+  role       = aws_iam_role.task.name
+  policy_arn = data.aws_iam_policy.s3_bucket_accesss_policy[0].arn
 }
