@@ -10,7 +10,7 @@
 # Service definition, auto heals if task shuts down
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_ecs_service" "ecs_service" {
-  name            = "${var.name}Service"
+  name            = "${var.name}_Service"
   cluster         = data.aws_ecs_cluster.selected.arn
   task_definition = aws_ecs_task_definition.ecs_task_definition.arn
   desired_count   = var.instances
@@ -94,7 +94,7 @@ resource "aws_appautoscaling_policy" "ecs_target_cpu" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-    target_value = 90
+    target_value = 80
   }
   depends_on = [aws_appautoscaling_target.ecs_target]
 }
@@ -111,7 +111,7 @@ resource "aws_appautoscaling_policy" "ecs_target_memory" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-    target_value = 90
+    target_value = 80
   }
   depends_on = [aws_appautoscaling_target.ecs_target]
 }
@@ -314,48 +314,77 @@ resource "aws_lb_listener_rule" "http_trailing_slash_redirect" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# AWS CloudWatch Composite alarm
-# to send a notification when the composite alarm reaches the desired alarm state
+# AWS CloudWatch alarm
+# to send a notification when the alarm reaches the desired alarm state
 # ---------------------------------------------------------------------------------------------------------------------
-resource "aws_cloudwatch_composite_alarm" "ECS_service_CPU_and_Memory" {
-  alarm_description = "Composite alarm that monitors CPUUtilization and MEMORYUtilization"
-  alarm_name        = "${var.name}CPU&MEMORY_Composite_Alarm"
-  alarm_actions     = [aws_sns_topic.ECS_service_CPU_and_Memory_topic.arn]
+locals {
+  metric_name = var.metric_type == "CPU_UTILISATION" ? "CPUUtilization" : "MemoryUtilization"
 
-  alarm_rule = "ALARM(${aws_cloudwatch_metric_alarm.ECS_CPU_Usage_Alarm.alarm_name})"
+  high_evaluation_periods = var.metric_type == "CPU_UTILISATION" ? var.cpu_utilization_high_evaluation_periods : var.memory_utilization_high_evaluation_periods
+  high_period             = var.metric_type == "CPU_UTILISATION" ? var.cpu_utilization_high_period : var.memory_utilization_high_period
+  high_threshold          = var.metric_type == "CPU_UTILISATION" ? var.cpu_utilization_high_threshold : var.memory_utilization_high_threshold
 
-
-  depends_on = [
-    aws_cloudwatch_metric_alarm.ECS_CPU_Usage_Alarm,
-    aws_sns_topic.ECS_service_CPU_and_Memory_topic,
-    aws_sns_topic_subscription.ECS_service_CPU_and_Memory_Subscription
-  ]
+  low_evaluation_periods = var.metric_type == "CPU_UTILISATION" ? var.cpu_utilization_low_evaluation_periods : var.memory_utilization_low_evaluation_periods
+  low_period             = var.metric_type == "CPU_UTILISATION" ? var.cpu_utilization_low_period : var.memory_utilization_low_period
+  low_threshold          = var.metric_type == "CPU_UTILISATION" ? var.cpu_utilization_low_threshold : var.memory_utilization_low_threshold
 }
 
-resource "aws_cloudwatch_metric_alarm" "ECS_CPU_Usage_Alarm" {
-  alarm_name          = "${var.name}Alarm"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "ECSServiceAverageCPUUtilization"
+resource "aws_cloudwatch_metric_alarm" "ECS_CPU_Usage_High" {
+  alarm_name          = "ECS_${var.metric_type}_High_Alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = local.high_evaluation_periods
+  metric_name         = local.metric_name
   namespace           = "AWS/ECS"
-  period              = "60"
+  period              = local.high_period
   statistic           = "Average"
-  threshold           = "50"
-  alarm_description   = "This metric monitors ecs service cpu utilization exceeding 80%"
+  threshold           = local.high_threshold
+  alarm_description   = "This metric monitors ecs service ${var.metric_type} exceeding ${local.high_threshold}%."
+  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
+
+  depends_on = [
+    aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic,
+    aws_sns_topic_subscription.ECS_service_CPU_and_Memory_Utilization_SNS_Subscription
+  ]
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ECS_CPU_Usage_Low" {
+  alarm_name          = "ECS_${var.metric_type}_Low_Alarm"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = local.low_evaluation_periods
+  metric_name         = local.metric_name
+  namespace           = "AWS/ECS"
+  period              = local.low_period
+  statistic           = "Average"
+  threshold           = local.low_threshold
+  alarm_description   = "This metric monitors ecs service ${var.metric_type} less than ${local.low_threshold}%."
+  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
+
+  depends_on = [
+    aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic,
+    aws_sns_topic_subscription.ECS_service_CPU_and_Memory_Utilization_SNS_Subscription
+  ]
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
 }
 
 #tfsec:ignore:aws-sns-enable-topic-encryption
-resource "aws_sns_topic" "ECS_service_CPU_and_Memory_topic" {
-  name = "${var.name}topic"
+resource "aws_sns_topic" "ECS_service_CPU_and_Memory_Utilization_topic" {
+  name = "ECS_service_CPU_and_Memory_Utilization_SNS_topic"
 }
 
-resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Subscription" {
-  topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_topic.arn
+resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Utilization_SNS_Subscription" {
+  topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn
   protocol  = "email"
-  endpoint  = "kaushik.katariya@it-objects.de"
+  endpoint  = "write.your.email.here@it-objects.de"
 
   depends_on = [
-    aws_sns_topic.ECS_service_CPU_and_Memory_topic
+    aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic
   ]
 }
 

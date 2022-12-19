@@ -27,7 +27,7 @@ module "terra3_examples" {
   #ecs_cluster_type = "EC2_SPOT"
 
   # Choose launch type of the cluster
-  launch_type = "FARGATE" #defult
+  #launch_type = "FARGATE" #defult
   #launch_type = "EC2"
 
 
@@ -42,6 +42,21 @@ module "terra3_examples" {
   # Choose the metric type to perform auto scaling based on.
   #metric_type = "CPU_UTILISATION" #default
   #metric_type = "MEMORY_UTILISATION"
+
+  # CloudWatch CPU and MEMORY configurations
+  cpu_utilization_high_evaluation_periods = 3
+  cpu_utilization_high_period             = 300
+  cpu_utilization_high_threshold          = 90
+  cpu_utilization_low_evaluation_periods  = 3
+  cpu_utilization_low_period              = 300
+  cpu_utilization_low_threshold           = 20
+
+  memory_utilization_high_evaluation_periods = 3
+  memory_utilization_high_period             = 300
+  memory_utilization_high_threshold          = 90
+  memory_utilization_low_evaluation_periods  = 3
+  memory_utilization_low_period              = 300
+  memory_utilization_low_threshold           = 20
 
   app_components = {
 
