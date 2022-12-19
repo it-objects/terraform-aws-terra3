@@ -65,3 +65,13 @@ variable "cluster_ec2_volume_size" {
   description = "Select the ebs volume size of the EC2 instances."
   type        = number
 }
+
+variable "public_subnets" {
+  type = list(any)
+}
+
+variable "vpc_security_group_ids" {
+  default     = []
+  type        = list(string)
+  description = "List of security group ids."
+}
