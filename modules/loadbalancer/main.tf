@@ -20,15 +20,9 @@ resource "aws_lb" "this" {
   }
 }
 
-#tfsec:ignore:aws-s3-specify-public-access-block
-#tfsec:ignore:aws-s3-enable-versioning
 #tfsec:ignore:aws-s3-enable-bucket-logging
+#tfsec:ignore:aws-s3-enable-versioning
 #tfsec:ignore:aws-s3-encryption-customer-key
-#tfsec:ignore:aws-s3-no-public-buckets
-#tfsec:ignore:aws-s3-ignore-public-acls
-#tfsec:ignore:aws-s3-enable-bucket-encryption
-#tfsec:ignore:aws-s3-block-public-policy
-#tfsec:ignore:aws-s3-block-public-acls
 resource "aws_s3_bucket" "lb-logs" {
   bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
 }
