@@ -21,7 +21,7 @@ module "terra3_examples" {
   nat = "NAT_INSTANCES"
 
   #cluster_type = "ECS_FARGATE"
-  cluster_type = "ECS_EC2"
+  #cluster_type = "ECS_EC2"
 
   #EC2 cluster configurations
   cluster_ec2_min_nodes           = 1

@@ -137,7 +137,7 @@ resource "aws_ecs_capacity_provider" "terra3_ec2_capacity_provider" {
 resource "aws_autoscaling_group" "ecs_ec2_asg" {
   count               = local.create_ecs_with_ec2 ? 1 : 0
   name                = "terra3_ecs_ec2_autoscaling"
-  vpc_zone_identifier = data.aws_subnets.private_subnets.ids #aws_subnet.private_subnets.*.id
+  vpc_zone_identifier = [var.public_subnets[count.index]] #data.aws_subnets.private_subnets.ids #aws_subnet.private_subnets.*.id
 
   launch_template {
     id      = aws_launch_template.terra3_ecs_ec2_container_instance[count.index].id
@@ -170,7 +170,7 @@ resource "aws_launch_template" "terra3_ecs_ec2_container_instance" {
   name_prefix            = "terra3_ecs_ec2_container_instance"
   image_id               = data.aws_ami.amazon-linux.id
   instance_type          = var.cluster_ec2_instance_type
-  vpc_security_group_ids = [data.aws_security_group.ecs_default_sg.id]
+  vpc_security_group_ids = var.vpc_security_group_ids
   update_default_version = true
   user_data = base64encode(<<-EOT
     #!/bin/bash

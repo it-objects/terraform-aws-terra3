@@ -184,6 +184,9 @@ module "cluster" {
   container_runtime_name = "${var.solution_name}-cluster"
   cluster_type           = var.cluster_type
 
+  public_subnets         = module.vpc.public_subnets
+  vpc_security_group_ids = [module.security_groups.ecs_task_sg]
+
   cluster_ec2_min_nodes           = var.cluster_ec2_min_nodes
   cluster_ec2_max_nodes           = var.cluster_ec2_max_nodes
   cluster_ec2_instance_type       = var.cluster_ec2_instance_type
