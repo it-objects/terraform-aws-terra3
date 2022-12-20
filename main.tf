@@ -235,7 +235,7 @@ module "app_components" {
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : ""
 
-  depends_on = [module.l7_loadbalancer]
+  depends_on = [module.l7_loadbalancer, module.security_groups]
 }
 
 module "bastion_host_ssm" {
