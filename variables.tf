@@ -3,7 +3,7 @@ variable "solution_name" {
   type        = string
 
   validation {
-    condition     = length(var.solution_name) <= 16 && can(regex("^([a-z0-9])+(?:-[a-z0-9]+)*$", var.solution_name))
+    condition     = length(var.solution_name) <= 26 && can(regex("^([a-z0-9])+(?:-[a-z0-9]+)*$", var.solution_name))
     error_message = "Only max. 16 lower-case alphanumeric characters and dashes in between are allowed."
   }
 }
