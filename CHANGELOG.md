@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.10.0...v0.11.0) (2022-12-20)
+
+
+### Features
+
+* ECS cluster option for using EC2 added ([3cba40e](https://github.com/it-objects/terraform-aws-terra3/commit/3cba40efa39bcc54620f5411d3f5ed044e12da09))
+
 ## [0.10.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.9.7...v0.10.0) (2022-12-08)
 
 
