@@ -242,6 +242,8 @@ module "app_components" {
   memory_utilization_low_period              = var.memory_utilization_low_period
   memory_utilization_low_threshold           = var.memory_utilization_low_threshold
 
+  endpoint_email = var.endpoint_email
+
   enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
 
   # for cost savings undeploy outside work hours

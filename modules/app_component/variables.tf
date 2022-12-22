@@ -249,3 +249,9 @@ variable "memory_utilization_low_threshold" {
   description = "The minimum percentage of Memory utilization average"
   default     = 20
 }
+
+variable "endpoint_email" {
+  type        = string
+  default     = "kaushik.katariya@it-objects.de"
+  description = "Email address for the endpoint of SNS subscription."
+}

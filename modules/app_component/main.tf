@@ -395,7 +395,7 @@ resource "aws_sns_topic" "ECS_service_CPU_and_Memory_Utilization_topic" {
 resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Utilization_SNS_Subscription" {
   topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn
   protocol  = "email"
-  endpoint  = "kaushik.katariya@it-objects.de" #"write.your.email.here@it-objects.de"
+  endpoint  = var.endpoint_email
 
   depends_on = [
     aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic

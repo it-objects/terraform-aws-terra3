@@ -39,6 +39,9 @@ module "terra3_examples" {
   memory_utilization_low_period              = 300
   memory_utilization_low_threshold           = 20
 
+  # SNS subscription endpoint.
+  endpoint_email = "kaushik.katariya@it-objects.de"
+
   app_components = {
 
     my_app_component = {

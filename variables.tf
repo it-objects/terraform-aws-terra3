@@ -114,6 +114,12 @@ variable "memory_utilization_low_threshold" {
   default     = 20
 }
 
+variable "endpoint_email" {
+  type        = string
+  default     = "kaushik.katariya@it-objects.de"
+  description = "Email address for the endpoint of SNS subscription."
+}
+
 variable "create_load_balancer" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool
