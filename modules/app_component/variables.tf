@@ -168,7 +168,7 @@ variable "s3_solution_bucket_access" {
 }
 
 variable "metric_type" {
-  description = "Select CPU_UTILISATION to perform auto scaling based on CPU Utilisation, or select MEMORY_UTILISATION for MEMORY Utilisation."
+  description = "Select CPU_UTILISATION to get alert based on CPU Utilisation, or select MEMORY_UTILISATION for MEMORY Utilisation."
   type        = string
   default     = "CPU_UTILISATION"
 
