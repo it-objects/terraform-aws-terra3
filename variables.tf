@@ -116,8 +116,8 @@ variable "memory_utilization_low_threshold" {
 }
 
 variable "endpoint_email" {
-  type        = string
-  default     = "kaushik.katariya@it-objects.de"
+  type        = list(string)
+  default     = ["enter-your-email-here@gmail.com"]
   description = "Email address for the endpoint of SNS subscription."
 }
 

@@ -4,7 +4,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_High" {
   count               = var.cpu_utilization_alert ? 1 : 0
-  alarm_name          = "ECS_CPU_UTILISATION_High_Alarm"
+  alarm_name          = "ECS_Cpu_Utilization_High_Alarm"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.cpu_utilization_high_evaluation_periods
   metric_name         = "CPUUtilization"
@@ -13,7 +13,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_High" {
   statistic           = "Average"
   threshold           = var.cpu_utilization_high_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.cpu_utilization_high_threshold}%."
-  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
+  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[count.index].arn]
 
   dimensions = {
     ServiceName = "my_app_componentService"
@@ -23,7 +23,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_High" {
 
 resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_Low" {
   count               = var.cpu_utilization_alert ? 1 : 0
-  alarm_name          = "ECS_CPU_UTILISATION_Low_Alarm"
+  alarm_name          = "ECS_Cpu_Utilization_Low_Alarm"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.cpu_utilization_low_evaluation_periods
   metric_name         = "CPUUtilization"
@@ -32,7 +32,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_Low" {
   statistic           = "Average"
   threshold           = var.cpu_utilization_low_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.cpu_utilization_low_threshold}%."
-  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
+  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn]
 
   dimensions = {
     ServiceName = "my_app_componentService"
@@ -51,7 +51,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_High" {
   statistic           = "Average"
   threshold           = var.memory_utilization_high_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.memory_utilization_high_threshold}%."
-  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
+  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn]
 
   dimensions = {
     ServiceName = "my_app_componentService"
@@ -70,7 +70,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_Low" {
   statistic           = "Average"
   threshold           = var.memory_utilization_low_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.memory_utilization_low_threshold}%."
-  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
+  alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn]
 
   dimensions = {
     ServiceName = "my_app_componentService"
@@ -78,13 +78,19 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_Low" {
   }
 }
 
+locals {
+  create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
+}
+
 #tfsec:ignore:aws-sns-enable-topic-encryption
 resource "aws_sns_topic" "ECS_service_CPU_and_Memory_Utilization_topic" {
-  name = "ECS_service_CPU_and_Memory_Utilization_SNS_topic"
+  count = local.create_sns_topic ? 1 : 0
+  name  = "ECS_service_CPU_and_Memory_Utilization_SNS_topic"
 }
 
 resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Utilization_SNS_Subscription" {
-  topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn
+  count     = length(var.endpoint_email)
+  topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn
   protocol  = "email"
-  endpoint  = var.endpoint_email
+  endpoint  = var.endpoint_email[count.index]
 }

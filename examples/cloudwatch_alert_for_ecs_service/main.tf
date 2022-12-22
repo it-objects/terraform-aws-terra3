@@ -21,8 +21,8 @@ module "terra3_examples" {
   nat = "NAT_INSTANCES"
 
   # Choose the metric type to perform CloudWatch alert.
-  cpu_utilization_alert    = true
-  memory_utilization_alert = true
+  cpu_utilization_alert    = false
+  memory_utilization_alert = false
 
   # CloudWatch alert CPU Utilization configurations
   cpu_utilization_high_evaluation_periods = 3
@@ -40,8 +40,9 @@ module "terra3_examples" {
   memory_utilization_low_period              = 300
   memory_utilization_low_threshold           = 20
 
-  # SNS subscription endpoint.
-  endpoint_email = "kaushik.katariya@it-objects.de"
+  # SNS subscription endpoint list.
+  # No email should be provided when CPU/Memory utilisation is disabled.
+  endpoint_email = []
 
   app_components = {
 
