@@ -20,11 +20,11 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
-  # Choose the metric type to perform auto scaling based on.
-  #metric_type = "CPU_UTILISATION" #default
-  #metric_type = "MEMORY_UTILISATION"
+  # Choose the metric type to perform CloudWatch alert.
+  cpu_utilization_alert    = true
+  memory_utilization_alert = true
 
-  # CloudWatch CPU and MEMORY configurations
+  # CloudWatch alert CPU Utilization configurations
   cpu_utilization_high_evaluation_periods = 3
   cpu_utilization_high_period             = 300
   cpu_utilization_high_threshold          = 90
@@ -32,6 +32,7 @@ module "terra3_examples" {
   cpu_utilization_low_period              = 300
   cpu_utilization_low_threshold           = 20
 
+  # CloudWatch alert MEMORY Utilization configurations
   memory_utilization_high_evaluation_periods = 3
   memory_utilization_high_period             = 300
   memory_utilization_high_threshold          = 90

@@ -1,12 +1,13 @@
-variable "metric_type" {
-  description = "Select CPU_UTILISATION to get alert based on CPU Utilisation, or select MEMORY_UTILISATION for MEMORY Utilisation."
-  type        = string
-  default     = "CPU_UTILISATION"
+variable "cpu_utilization_alert" {
+  description = "Select true to get alert based on CPU Utilisation"
+  type        = bool
+  default     = false
+}
 
-  validation {
-    condition     = contains(["CPU_UTILISATION", "MEMORY_UTILISATION"], var.metric_type)
-    error_message = "Only 'CPU_UTILISATION', and 'MEMORY_UTILISATION' are allowed."
-  }
+variable "memory_utilization_alert" {
+  description = "Select true to get alert based on MEMORY Utilisation"
+  type        = bool
+  default     = false
 }
 
 variable "cpu_utilization_high_evaluation_periods" {

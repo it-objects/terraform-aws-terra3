@@ -205,7 +205,8 @@ module "alerts" {
   container_runtime = module.cluster.ecs_cluster_name
   #ecs_service_name  = module.app_components.ecs_service_name
 
-  metric_type = var.metric_type
+  cpu_utilization_alert    = var.cpu_utilization_alert
+  memory_utilization_alert = var.memory_utilization_alert
 
   cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
   cpu_utilization_high_period             = var.cpu_utilization_high_period
