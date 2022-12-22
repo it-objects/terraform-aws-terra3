@@ -19,6 +19,17 @@ variable "instances" {
   description = "Horizontal scaling."
 }
 
+variable "cluster_type" {
+  description = "Select ECS_FARGATE for cluster type as FARGATE, or select ECS_EC2 for cluster type as EC2."
+  type        = string
+  default     = "ECS_FARGATE"
+
+  validation {
+    condition     = contains(["ECS_FARGATE", "ECS_EC2"], var.cluster_type)
+    error_message = "Only 'ECS_FARGATE', and 'ECS_EC2' are allowed."
+  }
+}
+
 variable "total_cpu" {
   type = number
 }
