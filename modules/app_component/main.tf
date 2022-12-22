@@ -355,10 +355,6 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_Usage_High" {
   alarm_description   = "This metric monitors ecs service ${var.metric_type} exceeding ${local.high_threshold}%."
   alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
 
-  depends_on = [
-    aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic,
-    aws_sns_topic_subscription.ECS_service_CPU_and_Memory_Utilization_SNS_Subscription
-  ]
   dimensions = {
     ServiceName = aws_ecs_service.ecs_service.name
     ClusterName = var.container_runtime
@@ -377,10 +373,6 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_Usage_Low" {
   alarm_description   = "This metric monitors ecs service ${var.metric_type} less than ${local.low_threshold}%."
   alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn]
 
-  depends_on = [
-    aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic,
-    aws_sns_topic_subscription.ECS_service_CPU_and_Memory_Utilization_SNS_Subscription
-  ]
   dimensions = {
     ServiceName = aws_ecs_service.ecs_service.name
     ClusterName = var.container_runtime
@@ -396,10 +388,6 @@ resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Utilization_SN
   topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn
   protocol  = "email"
   endpoint  = var.endpoint_email
-
-  depends_on = [
-    aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic
-  ]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
