@@ -198,6 +198,33 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
+module "alerts" {
+
+  source = "./modules/alerts"
+
+  container_runtime = module.cluster.ecs_cluster_name
+  #ecs_service_name  = module.app_components.ecs_service_name
+
+  metric_type = var.metric_type
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
+  endpoint_email = var.endpoint_email
+}
+
+
 module "app_components" {
   for_each = var.app_components
 
@@ -225,24 +252,6 @@ module "app_components" {
   lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
   health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
   lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
-
-  metric_type = var.metric_type
-
-  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
-  cpu_utilization_high_period             = var.cpu_utilization_high_period
-  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
-  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
-  cpu_utilization_low_period              = var.cpu_utilization_low_period
-  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
-
-  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
-  memory_utilization_high_period             = var.memory_utilization_high_period
-  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
-  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
-  memory_utilization_low_period              = var.memory_utilization_low_period
-  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
-
-  endpoint_email = var.endpoint_email
 
   enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
 
