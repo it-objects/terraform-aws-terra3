@@ -185,6 +185,7 @@ module "cluster" {
   solution_name          = var.solution_name
   container_runtime_name = "${var.solution_name}-cluster"
   cluster_type           = var.cluster_type
+  launch_type            = var.launch_type
 
   public_subnets         = module.vpc.public_subnets
   vpc_security_group_ids = [module.security_groups.ecs_task_sg]
@@ -209,6 +210,7 @@ module "app_components" {
   solution_name     = var.solution_name
   container_runtime = module.cluster.ecs_cluster_name
   cluster_type      = var.cluster_type
+  launch_type       = var.launch_type
 
   instances = each.value["instances"]
 
