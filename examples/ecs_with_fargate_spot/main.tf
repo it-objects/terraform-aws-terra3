@@ -23,18 +23,11 @@ module "terra3_examples" {
   # Cluster type options
   #cluster_type = "FARGATE"
   #cluster_type = "EC2"
+  cluster_type = "FARGATE_SPOT"
 
   # Choose launch type of the cluster
   #launch_type = "FARGATE"
   #launch_type = "EC2"
-
-  #EC2 cluster configurations
-  cluster_ec2_min_nodes           = 1
-  cluster_ec2_max_nodes           = 2
-  cluster_ec2_instance_type       = "t3a.small"
-  cluster_ec2_desired_capacity    = 1
-  cluster_ec2_detailed_monitoring = false
-  cluster_ec2_volume_size         = 30
 
   app_components = {
 

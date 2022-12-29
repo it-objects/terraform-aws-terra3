@@ -20,13 +20,13 @@ variable "instances" {
 }
 
 variable "cluster_type" {
-  description = "Select FARGATE for cluster type as FARGATE, or select EC2 for cluster type as EC2."
+  description = "Select FARGATE for cluster type as FARGATE, or Select FARGATE_SPOT for cluster type as FARGATE_SPOT,or select EC2 for cluster type as EC2."
   type        = string
   default     = "FARGATE"
 
   validation {
-    condition     = contains(["FARGATE", "EC2"], var.cluster_type)
-    error_message = "Only 'FARGATE', and 'EC2' are allowed."
+    condition     = contains(["FARGATE", "FARGATE_SPOT", "EC2"], var.cluster_type)
+    error_message = "Only 'FARGATE', 'FARGATE_SPOT', and 'EC2' are allowed."
   }
 }
 
