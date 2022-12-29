@@ -318,6 +318,12 @@ variable "nat_instance_types" {
   default     = ["t4g.nano"] # cheapest
 }
 
+variable "enable_alb_logs" {
+  type        = bool
+  description = "Select to enable storing alb logs in s3 bucket."
+  default     = false
+}
+
 variable "create_ecr" {
   type    = bool
   default = false
