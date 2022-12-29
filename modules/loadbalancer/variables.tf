@@ -13,3 +13,9 @@ variable "security_groups" {
   type        = list(string)
   description = "List of security group ids."
 }
+
+variable "enable_alb_logs" {
+  type        = bool
+  description = "Select to enable storing alb logs in s3 bucket."
+  default     = false
+}
