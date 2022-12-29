@@ -20,8 +20,13 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
-  #cluster_type = "ECS_FARGATE"
-  cluster_type = "ECS_EC2"
+  # Cluster type options
+  #cluster_type = "FARGATE"
+  #cluster_type = "EC2"
+
+  # Choose launch type of the cluster
+  #launch_type = "FARGATE"
+  #launch_type = "EC2"
 
   #EC2 cluster configurations
   cluster_ec2_min_nodes           = 1
