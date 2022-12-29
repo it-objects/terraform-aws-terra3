@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.11.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.11.0...v0.11.1) (2022-12-29)
+
+
+### Bug Fixes
+
+* added switch of alb logs in s3 bucket ([9d5a1be](https://github.com/it-objects/terraform-aws-terra3/commit/9d5a1bef80bcf6dc10671b277eee8dccc1658275))
+
 ## [0.11.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.10.0...v0.11.0) (2022-12-20)
 
 
