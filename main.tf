@@ -250,6 +250,7 @@ module "app_components" {
   # CloudWatch alert based on cpu and memory utilization
   cpu_utilization_alert    = var.cpu_utilization_alert
   memory_utilization_alert = var.memory_utilization_alert
+  sns_topic_arn            = local.create_sns_topic == true ? [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn] : null
 
   cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
   cpu_utilization_high_period             = var.cpu_utilization_high_period
@@ -265,7 +266,6 @@ module "app_components" {
   memory_utilization_low_period              = var.memory_utilization_low_period
   memory_utilization_low_threshold           = var.memory_utilization_low_threshold
 
-  endpoint_email = var.endpoint_email
 
   # for cost savings undeploy outside work hours
   enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
@@ -274,7 +274,7 @@ module "app_components" {
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : ""
 
-  depends_on = [module.l7_loadbalancer, module.security_groups]
+  depends_on = [module.l7_loadbalancer, module.security_groups, aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic]
 }
 
 module "bastion_host_ssm" {

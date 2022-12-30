@@ -282,7 +282,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_High" {
   statistic           = "Average"
   threshold           = var.cpu_utilization_high_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.cpu_utilization_high_threshold}%."
-  #alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[count.index].arn]
+  alarm_actions       = var.sns_topic_arn
 
   dimensions = {
     ServiceName = "my_app_componentService"
@@ -301,7 +301,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_Low" {
   statistic           = "Average"
   threshold           = var.cpu_utilization_low_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.cpu_utilization_low_threshold}%."
-  #alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn]
+  alarm_actions       = var.sns_topic_arn
 
   dimensions = {
     ServiceName = "my_app_componentService"
@@ -320,7 +320,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_High" {
   statistic           = "Average"
   threshold           = var.memory_utilization_high_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.memory_utilization_high_threshold}%."
-  #alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn]
+  alarm_actions       = var.sns_topic_arn
 
   dimensions = {
     ServiceName = "my_app_componentService"
@@ -339,7 +339,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_Low" {
   statistic           = "Average"
   threshold           = var.memory_utilization_low_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.memory_utilization_low_threshold}%."
-  #alarm_actions       = [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn]
+  alarm_actions       = var.sns_topic_arn
 
   dimensions = {
     ServiceName = "my_app_componentService"

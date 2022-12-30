@@ -148,6 +148,11 @@ variable "memory_utilization_low_threshold" {
   default     = 20
 }
 
+variable "sns_topic_arn" {
+  type        = set(string)
+  description = "ARN of SNS topic"
+}
+
 # # IAM
 variable "execution_iam_access" {
   description = "A complex object describing additional access beyond AmazonECSTaskExecutionRolePolicy needed to run"

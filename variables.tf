@@ -115,6 +115,11 @@ variable "memory_utilization_low_threshold" {
   default     = 20
 }
 
+variable "sns_topic_arn" {
+  type        = set(string)
+  description = ""
+}
+
 variable "endpoint_email" {
   type        = list(string)
   default     = ["enter-your-email-here@gmail.com"]
