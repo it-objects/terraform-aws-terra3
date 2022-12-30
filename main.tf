@@ -10,6 +10,7 @@ locals {
   create_nat_gateway            = (var.nat != "NO_NAT" && var.nat != "NAT_INSTANCES") ? true : false
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
+  create_alter_nat              = (var.nat == "ALTER_NAT") ? true : false
 
   domain_name = length(module.dns_and_certificates) == 0 ? "" : module.dns_and_certificates[0].domain_name
 }
@@ -96,6 +97,31 @@ module "nat_instances" {
   public_subnets          = module.vpc.public_subnets
   private_subnets         = module.vpc.private_subnets
   vpc_id                  = module.vpc.vpc_id
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Use of alterNAT instances instead of NAT instances to reduce costs on the basis of hourly usage.
+# ---------------------------------------------------------------------------------------------------------------------
+module "alternat_instances" {
+  count = local.create_alter_nat ? 1 : 0
+
+  source = "git::https://github.com/1debit/alternat.git//modules/terraform-aws-alternat?ref=v0.1.0"
+
+  alternat_image_uri = "531874807515.dkr.ecr.eu-central-1.amazonaws.com/alternat"
+  alternat_image_tag = "latest"
+
+  ingress_security_group_ids = var.ingress_security_group_ids
+
+  subnet_suffix     = var.nat_subnet_suffix
+  nat_instance_type = var.nat_instance_types
+
+  private_route_table_ids = module.vpc.private_route_table_ids
+
+  tags = var.tags
+
+  vpc_id                 = module.vpc.vpc_id
+  vpc_private_subnet_ids = module.vpc.private_subnets
+  vpc_public_subnet_ids  = module.vpc.public_subnets
 }
 
 module "l7_loadbalancer" {
