@@ -200,33 +200,22 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
-module "alerts" {
-
-  source = "./modules/alerts"
-
-  container_runtime = module.cluster.ecs_cluster_name
-  #ecs_service_name  = module.app_components.ecs_service_name
-
-  cpu_utilization_alert    = var.cpu_utilization_alert
-  memory_utilization_alert = var.memory_utilization_alert
-
-  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
-  cpu_utilization_high_period             = var.cpu_utilization_high_period
-  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
-  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
-  cpu_utilization_low_period              = var.cpu_utilization_low_period
-  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
-
-  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
-  memory_utilization_high_period             = var.memory_utilization_high_period
-  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
-  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
-  memory_utilization_low_period              = var.memory_utilization_low_period
-  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
-
-  endpoint_email = var.endpoint_email
+locals {
+  create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
 }
 
+#tfsec:ignore:aws-sns-enable-topic-encryption
+resource "aws_sns_topic" "ECS_service_CPU_and_Memory_Utilization_topic" {
+  count = local.create_sns_topic ? 1 : 0
+  name  = "ECS_service_CPU_and_Memory_Utilization_SNS_topic"
+}
+
+resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Utilization_SNS_Subscription" {
+  count     = local.create_sns_topic ? length(var.endpoint_email) : 0
+  topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn
+  protocol  = "email"
+  endpoint  = var.endpoint_email[count.index]
+}
 
 module "app_components" {
   for_each = var.app_components
@@ -257,6 +246,26 @@ module "app_components" {
   lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
 
   enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
+
+  # CloudWatch alert based on cpu and memory utilization
+  cpu_utilization_alert    = var.cpu_utilization_alert
+  memory_utilization_alert = var.memory_utilization_alert
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
+  endpoint_email = var.endpoint_email
 
   # for cost savings undeploy outside work hours
   enable_autoscaling = lookup(each.value, "enable_autoscaling", false)

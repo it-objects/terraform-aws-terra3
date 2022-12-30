@@ -22,3 +22,8 @@ output "redis_endpoint" {
   value       = var.create_elasticache_redis ? aws_elasticache_cluster.redis[0].cache_nodes[0].address : ""
   description = "Return Redis endpoint."
 }
+
+output "sns_topic_arn" {
+  value       = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic.arn
+  description = "SNS topic arn"
+}
