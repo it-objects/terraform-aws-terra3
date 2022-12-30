@@ -113,7 +113,7 @@ module "alternat_instances" {
   ingress_security_group_ids = var.ingress_security_group_ids
 
   subnet_suffix     = var.nat_subnet_suffix
-  nat_instance_type = var.nat_instance_types
+  nat_instance_type = "t4g.nano"
 
   private_route_table_ids = module.vpc.private_route_table_ids
 
