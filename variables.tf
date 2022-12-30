@@ -120,7 +120,7 @@ variable "sns_topic_arn" {
   description = ""
 }
 
-variable "endpoint_email" {
+variable "alert_receivers_email" {
   type        = list(string)
   default     = ["enter-your-email-here@gmail.com"]
   description = "Email address for the endpoint of SNS subscription."

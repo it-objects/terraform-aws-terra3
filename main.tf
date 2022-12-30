@@ -205,16 +205,16 @@ locals {
 }
 
 #tfsec:ignore:aws-sns-enable-topic-encryption
-resource "aws_sns_topic" "ECS_service_CPU_and_Memory_Utilization_topic" {
+resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
   count = local.create_sns_topic ? 1 : 0
-  name  = "ECS_service_CPU_and_Memory_Utilization_SNS_topic"
+  name  = "ecs_service_cpu_and_memory_utilization_topic"
 }
 
-resource "aws_sns_topic_subscription" "ECS_service_CPU_and_Memory_Utilization_SNS_Subscription" {
-  count     = local.create_sns_topic ? length(var.endpoint_email) : 0
-  topic_arn = aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn
+resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
+  count     = local.create_sns_topic ? length(var.alert_receivers_email) : 0
+  topic_arn = aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn
   protocol  = "email"
-  endpoint  = var.endpoint_email[count.index]
+  endpoint  = var.alert_receivers_email[count.index]
 }
 
 module "app_components" {
@@ -232,25 +232,10 @@ module "app_components" {
   total_cpu    = each.value["total_cpu"]
   total_memory = each.value["total_memory"]
 
-  container = each.value["container"]
-
-  # if true the next block's variables are ignored internally
-  internal_service = lookup(each.value, "internal_service", false)
-
-  listener_rule_prio = lookup(each.value, "listener_rule_prio", null)
-  path_mapping       = lookup(each.value, "path_mapping", null)
-  service_port       = lookup(each.value, "service_port", null)
-
-  lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
-  health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
-  lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
-
-  enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
-
   # CloudWatch alert based on cpu and memory utilization
   cpu_utilization_alert    = var.cpu_utilization_alert
   memory_utilization_alert = var.memory_utilization_alert
-  sns_topic_arn            = local.create_sns_topic == true ? [aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic[0].arn] : null
+  sns_topic_arn            = local.create_sns_topic == true ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
 
   cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
   cpu_utilization_high_period             = var.cpu_utilization_high_period
@@ -267,6 +252,21 @@ module "app_components" {
   memory_utilization_low_threshold           = var.memory_utilization_low_threshold
 
 
+  container = each.value["container"]
+
+  # if true the next block's variables are ignored internally
+  internal_service = lookup(each.value, "internal_service", false)
+
+  listener_rule_prio = lookup(each.value, "listener_rule_prio", null)
+  path_mapping       = lookup(each.value, "path_mapping", null)
+  service_port       = lookup(each.value, "service_port", null)
+
+  lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
+  health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
+  lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
+
+  enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
+
   # for cost savings undeploy outside work hours
   enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
 
@@ -274,7 +274,7 @@ module "app_components" {
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : ""
 
-  depends_on = [module.l7_loadbalancer, module.security_groups, aws_sns_topic.ECS_service_CPU_and_Memory_Utilization_topic]
+  depends_on = [module.l7_loadbalancer, module.security_groups]
 }
 
 module "bastion_host_ssm" {

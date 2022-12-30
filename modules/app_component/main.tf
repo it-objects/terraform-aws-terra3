@@ -271,9 +271,9 @@ resource "aws_cloudwatch_log_group" "CloudWatchLogGroup" {
 # AWS CloudWatch alarm
 # to send a notification when the alarm reaches the desired alarm state
 # ---------------------------------------------------------------------------------------------------------------------
-resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_High" {
+resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_high" {
   count               = var.cpu_utilization_alert ? 1 : 0
-  alarm_name          = "ECS_Cpu_Utilization_High_Alarm"
+  alarm_name          = "ecs_service_cpu_utilization_high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.cpu_utilization_high_evaluation_periods
   metric_name         = "CPUUtilization"
@@ -285,14 +285,14 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_High" {
   alarm_actions       = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = "my_app_componentService"
+    ServiceName = aws_ecs_service.ecs_service.name
     ClusterName = var.container_runtime
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_Low" {
+resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_low" {
   count               = var.cpu_utilization_alert ? 1 : 0
-  alarm_name          = "ECS_Cpu_Utilization_Low_Alarm"
+  alarm_name          = "ecs_service_cpu_utilization_low"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.cpu_utilization_low_evaluation_periods
   metric_name         = "CPUUtilization"
@@ -304,14 +304,14 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_CPU_Usage_Low" {
   alarm_actions       = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = "my_app_componentService"
+    ServiceName = aws_ecs_service.ecs_service.name
     ClusterName = var.container_runtime
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_High" {
+resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_high" {
   count               = var.memory_utilization_alert ? 1 : 0
-  alarm_name          = "ECS_Memory_Utilization_High_Alarm"
+  alarm_name          = "ecs_service_memory_utilization_high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.memory_utilization_high_evaluation_periods
   metric_name         = "MemoryUtilization"
@@ -323,14 +323,14 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_High" {
   alarm_actions       = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = "my_app_componentService"
+    ServiceName = aws_ecs_service.ecs_service.name
     ClusterName = var.container_runtime
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_Low" {
+resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
   count               = var.memory_utilization_alert ? 1 : 0
-  alarm_name          = "ECS_Memory_Utilization_Low_Alarm"
+  alarm_name          = "ecs_service_memory_utilization_low"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.memory_utilization_low_evaluation_periods
   metric_name         = "MemoryUtilization"
@@ -342,7 +342,7 @@ resource "aws_cloudwatch_metric_alarm" "ECS_Service_MEMORY_Usage_Low" {
   alarm_actions       = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = "my_app_componentService"
+    ServiceName = aws_ecs_service.ecs_service.name
     ClusterName = var.container_runtime
   }
 }
