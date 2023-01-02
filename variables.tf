@@ -34,13 +34,13 @@ variable "nat" {
 variable "cpu_utilization_alert" {
   description = "Select true to get alert based on CPU Utilisation"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "memory_utilization_alert" {
   description = "Select true to get alert based on MEMORY Utilisation"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "cpu_utilization_high_evaluation_periods" {
@@ -118,6 +118,7 @@ variable "memory_utilization_low_threshold" {
 variable "sns_topic_arn" {
   type        = set(string)
   description = ""
+  default     = []
 }
 
 variable "alert_receivers_email" {
