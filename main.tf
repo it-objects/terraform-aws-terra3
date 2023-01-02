@@ -106,6 +106,8 @@ module "l7_loadbalancer" {
 
   public_subnets  = module.vpc.public_subnets
   security_groups = [module.security_groups.loadbalancer_sg]
+
+  enable_alb_logs = false
 }
 
 module "security_groups" {
@@ -182,6 +184,17 @@ module "cluster" {
 
   solution_name          = var.solution_name
   container_runtime_name = "${var.solution_name}-cluster"
+  cluster_type           = var.cluster_type
+
+  public_subnets         = module.vpc.public_subnets
+  vpc_security_group_ids = [module.security_groups.ecs_task_sg]
+
+  cluster_ec2_min_nodes           = var.cluster_ec2_min_nodes
+  cluster_ec2_max_nodes           = var.cluster_ec2_max_nodes
+  cluster_ec2_instance_type       = var.cluster_ec2_instance_type
+  cluster_ec2_desired_capacity    = var.cluster_ec2_desired_capacity
+  cluster_ec2_detailed_monitoring = var.cluster_ec2_detailed_monitoring
+  cluster_ec2_volume_size         = var.cluster_ec2_volume_size
 
   enable_container_insights = var.enable_container_insights
   enable_ecs_exec           = var.enable_ecs_exec
@@ -195,6 +208,7 @@ module "app_components" {
   name              = each.key
   solution_name     = var.solution_name
   container_runtime = module.cluster.ecs_cluster_name
+  cluster_type      = var.cluster_type
 
   instances = each.value["instances"]
 
@@ -223,7 +237,7 @@ module "app_components" {
 
   lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : ""
 
-  depends_on = [module.l7_loadbalancer]
+  depends_on = [module.l7_loadbalancer, module.security_groups]
 }
 
 module "bastion_host_ssm" {
