@@ -207,7 +207,7 @@ locals {
 resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
   count             = local.create_sns_topic ? 1 : 0
   name              = "ecs_service_cpu_and_memory_utilization_topic"
-  kms_master_key_id = "alias/aws/sns"
+  kms_master_key_id = "/"
 }
 
 resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
