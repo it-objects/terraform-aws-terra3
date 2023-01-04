@@ -1,13 +1,25 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# Amazon Simple Email Service
+# ---------------------------------------------------------------------------------------------------------------------
+# to use an existingRoute 53 domain.
 data "aws_route53_zone" "main" {
   name         = var.hosted_zone_domain
   private_zone = false
 }
 
+# to get an access to start sending emails.
 resource "aws_ses_domain_identity" "ses_domain" {
   count  = var.create_ses ? 1 : 0
   domain = var.domain
 }
 
+resource "aws_ses_domain_mail_from" "main" {
+  count            = var.create_ses ? 1 : 0
+  domain           = aws_ses_domain_identity.ses_domain[0].domain
+  mail_from_domain = "test.${aws_ses_domain_identity.ses_domain[0].domain}"
+}
+
+#DKIM and SPF, which is a way to authenticate your emails
 resource "aws_route53_record" "amazonses_verification_record" {
   count   = var.create_ses ? 1 : 0
   zone_id = data.aws_route53_zone.main.zone_id
@@ -36,12 +48,6 @@ resource "aws_route53_record" "amazonses_dkim_record" {
   records = ["${element(aws_ses_domain_dkim.ses_domain_dkim[0].dkim_tokens, count.index)}.dkim.amazonses.com"]
 }
 
-resource "aws_ses_domain_mail_from" "main" {
-  count            = var.create_ses ? 1 : 0
-  domain           = aws_ses_domain_identity.ses_domain[0].domain
-  mail_from_domain = "test.${aws_ses_domain_identity.ses_domain[0].domain}"
-}
-
 resource "aws_route53_record" "spf_mail_from" {
   count   = var.create_ses ? 1 : 0
   zone_id = data.aws_route53_zone.main.zone_id
@@ -60,6 +66,8 @@ resource "aws_route53_record" "spf_domain" {
   records = ["v=spf1 include:amazonses.com -all"]
 }
 
+# amazon SES sends email using SMTP.
+# to access the Amazon SES SMTP interface is to create an IAM user.
 resource "aws_iam_user" "ses" {
   count = var.create_ses ? 1 : 0
   name  = "${var.name}-iam-user"
@@ -91,6 +99,7 @@ data "aws_iam_policy_document" "send_mail" {
   }
 }
 
+# storing the smtp credentials as a secret.
 resource "aws_secretsmanager_secret" "this" {
   count       = var.create_ses ? 1 : 0
   description = "Secret for ${var.name}"
