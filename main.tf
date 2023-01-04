@@ -345,3 +345,14 @@ module "deployment_user" {
 
   source = "./modules/deployment_user"
 }
+
+
+module "aws_ses" {
+  count = var.create_ses ? 1 : 0
+
+  source           = "./modules/ses"
+  create_ses       = var.create_ses
+  ses_domain_name  = var.ses_domain_name
+  mail_from_domain = var.mail_from_domain
+
+}

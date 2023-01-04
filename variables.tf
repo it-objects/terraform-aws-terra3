@@ -259,3 +259,21 @@ variable "s3_solution_bucket_policy" {
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
 }
+
+variable "create_ses" {
+  type        = bool
+  default     = false
+  description = "Enable it to use amazon simple email service"
+}
+
+variable "ses_domain_name" {
+  type        = string
+  description = "Example: aws-sandbox.terra3.io"
+  default     = ""
+}
+
+variable "mail_from_domain" {
+  description = "Enter your subdomain name."
+  type        = string
+  default     = ""
+}
