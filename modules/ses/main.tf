@@ -30,10 +30,10 @@ resource "aws_ses_domain_dkim" "ses_domain_dkim" {
 resource "aws_route53_record" "amazonses_dkim_record" {
   count   = var.create_ses ? 3 : 0
   zone_id = data.aws_route53_zone.main.zone_id
-  name    = "${element(aws_ses_domain_dkim.ses_domain_dkim[*].dkim_tokens, count.index)}._domainkey.${var.domain}"
+  name    = "${element(aws_ses_domain_dkim.ses_domain_dkim[0].dkim_tokens, count.index)}._domainkey.${var.domain}"
   type    = "CNAME"
   ttl     = "600"
-  records = ["${element(aws_ses_domain_dkim.ses_domain_dkim[*].dkim_tokens, count.index)}.dkim.amazonses.com"]
+  records = ["${element(aws_ses_domain_dkim.ses_domain_dkim[0].dkim_tokens, count.index)}.dkim.amazonses.com"]
 }
 
 resource "aws_ses_domain_mail_from" "main" {
