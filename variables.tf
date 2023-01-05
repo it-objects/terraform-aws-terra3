@@ -259,3 +259,9 @@ variable "s3_solution_bucket_policy" {
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
 }
+
+variable "create_ses" {
+  type        = bool
+  default     = false
+  description = "Enable it to use amazon simple email service"
+}
