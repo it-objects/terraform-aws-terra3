@@ -345,3 +345,53 @@ module "deployment_user" {
 
   source = "./modules/deployment_user"
 }
+
+module "eventbridge" {
+  source  = "terraform-aws-modules/eventbridge/aws"
+  version = "1.17.1"
+
+  create_bus = false
+
+  rules = {
+    crons = {
+      description         = "Trigger for a Lambda"
+      schedule_expression = "cron(0 3 ? * MON-FRI *)"
+    }
+  }
+
+  targets = {
+    crons = [
+      {
+        name  = "lambda-loves-cron"
+        arn   = module.lambda.lambda_function_arn
+        input = jsonencode({ "job" : "cron-by-rate" })
+      }
+    ]
+  }
+}
+
+data "archive_file" "function" {
+  output_path = "${path.module}/post-request.zip"
+  source_file = "${path.module}/post-request.js"
+  type        = "zip"
+}
+
+module "lambda" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 2.0"
+
+  function_name = "https-post-lambda"
+  handler       = "index.lambda_handler"
+  runtime       = "nodejs14.x"
+
+  create_package         = false
+  local_existing_package = data.archive_file.function.output_path
+
+  create_current_version_allowed_triggers = false
+  allowed_triggers = {
+    ScanAmiRule = {
+      principal  = "events.amazonaws.com"
+      source_arn = module.eventbridge.eventbridge_rule_arns["crons"]
+    }
+  }
+}
