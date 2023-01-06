@@ -259,3 +259,48 @@ variable "s3_solution_bucket_policy" {
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
 }
+
+
+
+
+variable "use_an_existing_vpc" {
+  description = "Enables/disables an AWS Application Load Balancer."
+  type        = bool
+  default     = false
+}
+
+variable "external_vpc_id" {
+  type        = any
+  description = "vpc id of existing vpc."
+  default     = ""
+}
+
+variable "external_public_subnets" {
+  type        = list(string)
+  description = "vpc id of existing vpc."
+  default     = []
+}
+
+variable "external_private_subnets" {
+  type        = list(string)
+  description = "vpc id of existing vpc."
+  default     = []
+}
+
+variable "external_vpc_private_route_table_ids" {
+  type        = any
+  description = "vpc id of existing vpc."
+  default     = []
+}
+
+variable "external_db_subnet_group_name" {
+  type        = any
+  description = "vpc id of existing vpc."
+  default     = []
+}
+
+variable "external_elasticache_subnet_ids" {
+  type        = any
+  description = "vpc id of existing vpc."
+  default     = []
+}

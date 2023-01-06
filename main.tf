@@ -11,7 +11,20 @@ locals {
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
+  create_vpc = var.use_an_existing_vpc == false ? true : false
+
   domain_name = length(module.dns_and_certificates) == 0 ? "" : module.dns_and_certificates[0].domain_name
+}
+
+
+locals {
+  vpc_id                  = local.create_vpc == true ? module.vpc[*].vpc_id : var.external_vpc_id
+  public_subnets          = local.create_vpc == true ? module.vpc[*].public_subnets : var.external_public_subnets
+  private_subnets         = local.create_vpc == true ? module.vpc[*].private_subnets : var.external_private_subnets
+  private_route_table_ids = local.create_vpc == true ? module.vpc[*].private_route_table_ids : var.external_vpc_private_route_table_ids
+  db_subnet_group_name    = local.create_vpc == true ? module.vpc[*].database_subnet_group : var.external_db_subnet_group_name
+  elasticache_subnet_ids  = local.create_vpc == true ? module.vpc[*].elasticache_subnets : var.external_elasticache_subnet_ids
+
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -20,6 +33,8 @@ locals {
 # Public IP assignment is enabled for NAT instance option
 # tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs tfsec:ignore:aws-ec2-no-public-ip-subnet
 module "vpc" {
+  count = local.create_vpc ? 1 : 0
+
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "3.16.0"
 
@@ -55,7 +70,7 @@ module "vpc" {
 resource "aws_ssm_parameter" "vpc_id" {
   name  = "/${var.solution_name}/vpc_id"
   type  = "String"
-  value = module.vpc.vpc_id
+  value = local.vpc_id
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -64,13 +79,13 @@ resource "aws_ssm_parameter" "vpc_id" {
 module "vpc_endpoints" {
   source = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
 
-  vpc_id = module.vpc.vpc_id
+  vpc_id = local.vpc_id
 
   endpoints = {
     s3 = {
       service         = "s3"
       tags            = { Name = "s3-vpc-endpoint" }
-      route_table_ids = module.vpc.private_route_table_ids
+      route_table_ids = local.private_route_table_ids
       service_type    = "Gateway"
     }
   }
@@ -92,10 +107,10 @@ module "nat_instances" {
   nat_use_spot_instance = false
   nat_instance_types    = var.nat_instance_types
 
-  private_route_table_ids = module.vpc.private_route_table_ids
-  public_subnets          = module.vpc.public_subnets
-  private_subnets         = module.vpc.private_subnets
-  vpc_id                  = module.vpc.vpc_id
+  private_route_table_ids = local.private_route_table_ids
+  public_subnets          = local.public_subnets
+  private_subnets         = local.private_subnets
+  vpc_id                  = local.vpc_id
 }
 
 module "l7_loadbalancer" {
@@ -104,7 +119,7 @@ module "l7_loadbalancer" {
   source        = "./modules/loadbalancer"
   solution_name = var.solution_name
 
-  public_subnets  = module.vpc.public_subnets
+  public_subnets  = local.public_subnets
   security_groups = [module.security_groups.loadbalancer_sg]
 
   enable_alb_logs = false
@@ -114,7 +129,7 @@ module "security_groups" {
   source = "./modules/securitygroups"
 
   name   = var.solution_name
-  vpc_id = module.vpc.vpc_id
+  vpc_id = local.vpc_id
 
   create_dns_and_certificates = var.create_dns_and_certificates
 }
@@ -186,7 +201,7 @@ module "cluster" {
   container_runtime_name = "${var.solution_name}-cluster"
   cluster_type           = var.cluster_type
 
-  public_subnets         = module.vpc.public_subnets
+  public_subnets         = local.public_subnets
   vpc_security_group_ids = [module.security_groups.ecs_task_sg]
 
   cluster_ec2_min_nodes           = var.cluster_ec2_min_nodes
@@ -265,7 +280,7 @@ module "database" {
   source        = "./modules/database"
   solution_name = var.solution_name
 
-  db_subnet_group_name = module.vpc.database_subnet_group
+  db_subnet_group_name = local.db_subnet_group_name
 
   rds_cluster_database_name  = "${replace(var.solution_name, "-", "")}db" # alphanumeric and lower case
   rds_cluster_identifier     = "${lower(var.solution_name)}_db"
@@ -306,7 +321,7 @@ resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
   count = var.create_elasticache_redis ? 1 : 0
 
   name       = "${var.solution_name}-elasticache-subnet-group"
-  subnet_ids = module.vpc.elasticache_subnets
+  subnet_ids = local.elasticache_subnet_ids
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
