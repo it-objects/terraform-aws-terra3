@@ -260,9 +260,6 @@ variable "s3_solution_bucket_policy" {
   }
 }
 
-
-
-
 variable "use_an_existing_vpc" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool

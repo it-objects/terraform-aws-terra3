@@ -33,3 +33,9 @@ variable "elasticache_cidr_blocks" {
   description = ""
   default     = ["172.72.6.0/24", "172.72.7.0/24"]
 }
+
+variable "use_an_existing_vpc" {
+  description = "Enables/disables an AWS Application Load Balancer."
+  type        = bool
+  default     = false
+}

@@ -10,7 +10,7 @@ locals {
 
 # tfsec:ignore:aws-ec2-no-public-ip-subnet
 module "vpc" {
-
+  #count = var.use_an_existing_vpc ? 1 : 0
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "3.16.0"
 
@@ -39,8 +39,6 @@ module "vpc" {
   enable_dns_support   = true
 }
 
-
-
 module "terra3_examples" {
   source = "../.."
 
@@ -53,6 +51,7 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
+  # Configurable variables to use an existing VPC
   use_an_existing_vpc = true
 
   external_vpc_id                      = module.vpc.vpc_id
@@ -61,8 +60,6 @@ module "terra3_examples" {
   external_vpc_private_route_table_ids = module.vpc.private_route_table_ids
   external_db_subnet_group_name        = module.vpc.database_subnet_group
   external_elasticache_subnet_ids      = module.vpc.elasticache_subnets
-
-
 
   app_components = {
 
