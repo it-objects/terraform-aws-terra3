@@ -5,16 +5,15 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "terra3-test"
+  solution_name = "terra3-example"
 }
 
 # tfsec:ignore:aws-ec2-no-public-ip-subnet
 module "vpc" {
-  #count = var.use_an_existing_vpc ? 1 : 0
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "3.16.0"
 
-  name = "external-vpc"
+  name = "${local.solution_name}-external-vpc"
   cidr = var.cidr
 
   azs             = var.azs
