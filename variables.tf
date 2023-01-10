@@ -293,7 +293,7 @@ variable "external_vpc_private_route_table_ids" {
 variable "external_db_subnet_group_name" {
   type        = any
   description = "vpc id of existing vpc."
-  default     = []
+  default     = ""
 }
 
 variable "external_elasticache_subnet_ids" {
