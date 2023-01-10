@@ -18,12 +18,12 @@ locals {
 locals {
   create_vpc = var.use_an_existing_vpc == false ? true : false
 
-  vpc_id                  = local.create_vpc == true ? module.vpc[*].vpc_id : var.external_vpc_id
-  public_subnets          = local.create_vpc == true ? module.vpc[*].public_subnets : var.external_public_subnets
-  private_subnets         = local.create_vpc == true ? module.vpc[*].private_subnets : var.external_private_subnets
-  private_route_table_ids = local.create_vpc == true ? module.vpc[*].private_route_table_ids : var.external_vpc_private_route_table_ids
-  db_subnet_group_name    = local.create_vpc == true ? module.vpc[*].database_subnet_group : var.external_db_subnet_group_name
-  elasticache_subnet_ids  = local.create_vpc == true ? module.vpc[*].elasticache_subnets : var.external_elasticache_subnet_ids
+  vpc_id                  = local.create_vpc ? module.vpc[0].vpc_id : var.external_vpc_id
+  public_subnets          = local.create_vpc ? module.vpc[0].public_subnets : var.external_public_subnets
+  private_subnets         = local.create_vpc ? module.vpc[0].private_subnets : var.external_private_subnets
+  private_route_table_ids = local.create_vpc ? module.vpc[0].private_route_table_ids : var.external_vpc_private_route_table_ids
+  db_subnet_group_name    = local.create_vpc ? module.vpc[0].database_subnet_group : var.external_db_subnet_group_name
+  elasticache_subnet_ids  = local.create_vpc ? module.vpc[0].elasticache_subnets : var.external_elasticache_subnet_ids
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
