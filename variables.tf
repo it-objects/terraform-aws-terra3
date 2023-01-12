@@ -3,7 +3,7 @@ variable "solution_name" {
   type        = string
 
   validation {
-    condition     = length(var.solution_name) <= 16 && can(regex("^([a-z0-9])+(?:-[a-z0-9]+)*$", var.solution_name))
+    condition     = length(var.solution_name) <= 26 && can(regex("^([a-z0-9])+(?:-[a-z0-9]+)*$", var.solution_name))
     error_message = "Only max. 16 lower-case alphanumeric characters and dashes in between are allowed."
   }
 }
@@ -258,4 +258,22 @@ variable "s3_solution_bucket_policy" {
     condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
+}
+
+variable "enable_https_api_clean_job" {
+  type        = bool
+  description = "Select true to enable clean job at night."
+  default     = false
+}
+
+variable "cron_schedule_expression" {
+  type        = string
+  description = "Enter schedule details of https api call."
+  default     = ""
+}
+
+variable "https_api_call_url" {
+  type        = any
+  description = "Enter url of https api call."
+  default     = ""
 }
