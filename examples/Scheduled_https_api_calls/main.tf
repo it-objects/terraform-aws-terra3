@@ -23,7 +23,7 @@ module "terra3_examples" {
   enable_https_api_clean_job = true
 
   cron_schedule_expression = "cron(0 3 ? * MON-FRI *)"
-  https_api_call_url       = "https://terra3-test.aws-sandbox.it-objects.de/api/nightly-clean-up/"
+  https_api_call_url       = "https://terra3-test.aws-sandbox.it-objects.de/api/nightly-clean-up"
 
   app_components = {
 
