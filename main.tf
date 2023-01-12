@@ -346,52 +346,61 @@ module "deployment_user" {
   source = "./modules/deployment_user"
 }
 
-module "eventbridge" {
-  source  = "terraform-aws-modules/eventbridge/aws"
-  version = "1.17.1"
+# ---------------------------------------------------------------------------------------------------------------------
+# scheduled HTTPS API call
+# ---------------------------------------------------------------------------------------------------------------------
 
+module "eventbridge" {
+  count = var.enable_https_api_clean_job ? 1 : 0
+
+  source     = "terraform-aws-modules/eventbridge/aws"
   create_bus = false
 
   rules = {
     crons = {
       description         = "Trigger for a Lambda"
-      schedule_expression = "cron(0 3 ? * MON-FRI *)"
+      schedule_expression = var.cron_schedule_expression
     }
   }
 
   targets = {
     crons = [
       {
-        name  = "lambda-loves-cron"
-        arn   = module.lambda.lambda_function_arn
-        input = jsonencode({ "job" : "cron-by-rate" })
+        name  = "lambda-https-cron"
+        arn   = module.lambda[0].lambda_function_arn
+        input = jsonencode({ "url" : var.https_api_call_url, "httpVerb" : "GET" })
       }
     ]
   }
 }
 
 data "archive_file" "function" {
-  output_path = "${path.module}/post-request.zip"
-  source_file = "${path.module}/post-request.js"
+  count       = var.enable_https_api_clean_job ? 1 : 0
+  output_path = "${path.module}/index.zip"
+  source_file = "${path.module}/index.js"
   type        = "zip"
 }
 
+# tfsec:ignore:aws-lambda-enable-tracing
 module "lambda" {
+  count = var.enable_https_api_clean_job ? 1 : 0
+
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 2.0"
 
-  function_name = "https-post-lambda"
-  handler       = "index.lambda_handler"
-  runtime       = "nodejs14.x"
+  function_name = "terra3-https-api-call"
+  description   = "scheduled https api call"
+  handler       = "index.handler"
+  runtime       = "nodejs16.x"
 
   create_package         = false
-  local_existing_package = data.archive_file.function.output_path
+  local_existing_package = data.archive_file.function[0].output_path
 
   create_current_version_allowed_triggers = false
   allowed_triggers = {
     ScanAmiRule = {
       principal  = "events.amazonaws.com"
-      source_arn = module.eventbridge.eventbridge_rule_arns["crons"]
+      source_arn = module.eventbridge[0].eventbridge_rule_arns["crons"]
     }
   }
 }
