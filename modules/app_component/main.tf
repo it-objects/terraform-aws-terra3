@@ -272,8 +272,8 @@ resource "aws_cloudwatch_log_group" "CloudWatchLogGroup" {
 # to send a notification when the alarm reaches the desired alarm state
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_high" {
-  count               = var.cpu_utilization_alert ? 1 : 0
-  alarm_name          = "ecs_service_cpu_utilization_high"
+  count               = var.cpu_utilization_alert && var.cpu_utilization_high_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_cpu_high_${var.name}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.cpu_utilization_high_evaluation_periods
   metric_name         = "CPUUtilization"
@@ -283,6 +283,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_high" {
   threshold           = var.cpu_utilization_high_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.cpu_utilization_high_threshold}%."
   alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
 
   dimensions = {
     ServiceName = aws_ecs_service.ecs_service.name
@@ -291,8 +292,8 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_low" {
-  count               = var.cpu_utilization_alert ? 1 : 0
-  alarm_name          = "ecs_service_cpu_utilization_low"
+  count               = var.cpu_utilization_alert && var.cpu_utilization_low_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_cpu_low_${var.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.cpu_utilization_low_evaluation_periods
   metric_name         = "CPUUtilization"
@@ -302,6 +303,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_low" {
   threshold           = var.cpu_utilization_low_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.cpu_utilization_low_threshold}%."
   alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
 
   dimensions = {
     ServiceName = aws_ecs_service.ecs_service.name
@@ -310,8 +312,8 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_low" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_high" {
-  count               = var.memory_utilization_alert ? 1 : 0
-  alarm_name          = "ecs_service_memory_utilization_high"
+  count               = var.memory_utilization_alert && var.memory_utilization_high_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_mem_high_${var.name}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.memory_utilization_high_evaluation_periods
   metric_name         = "MemoryUtilization"
@@ -321,6 +323,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_high" {
   threshold           = var.memory_utilization_high_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.memory_utilization_high_threshold}%."
   alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
 
   dimensions = {
     ServiceName = aws_ecs_service.ecs_service.name
@@ -329,8 +332,8 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
-  count               = var.memory_utilization_alert ? 1 : 0
-  alarm_name          = "ecs_service_memory_utilization_low"
+  count               = var.memory_utilization_alert && var.memory_utilization_low_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_mem_low_${var.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.memory_utilization_low_evaluation_periods
   metric_name         = "MemoryUtilization"
@@ -340,6 +343,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
   threshold           = var.memory_utilization_low_threshold
   alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.memory_utilization_low_threshold}%."
   alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
 
   dimensions = {
     ServiceName = aws_ecs_service.ecs_service.name

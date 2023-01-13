@@ -204,10 +204,11 @@ locals {
   create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
 }
 
+# Disable for now. In a further iteration to be added and cw needs access to KMS key.
+# tfsec:ignore:aws-sns-enable-topic-encryption
 resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
-  count             = local.create_sns_topic ? 1 : 0
-  name              = "ecs_service_cpu_and_memory_utilization_topic"
-  kms_master_key_id = "/sns_topic_key"
+  count = local.create_sns_topic ? 1 : 0
+  name  = "ecs_service_cpu_and_memory_utilization_topic"
 }
 
 resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
@@ -235,7 +236,7 @@ module "app_components" {
   # CloudWatch alert based on cpu and memory utilization
   cpu_utilization_alert    = var.cpu_utilization_alert
   memory_utilization_alert = var.memory_utilization_alert
-  sns_topic_arn            = local.create_sns_topic == true ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
+  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
 
   cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
   cpu_utilization_high_period             = var.cpu_utilization_high_period
