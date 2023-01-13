@@ -260,20 +260,20 @@ variable "s3_solution_bucket_policy" {
   }
 }
 
-variable "enable_https_api_clean_job" {
+variable "enable_scheduled_api_call" {
   type        = bool
-  description = "Select true to enable clean job at night."
+  description = "Select true to enable scheduled api call."
   default     = false
 }
 
-variable "cron_schedule_expression" {
+variable "scheduled_api_call_crontab" {
   type        = string
-  description = "Enter schedule details of https api call."
+  description = "Enter schedule details of scheduled api call in crontab format."
   default     = ""
 }
 
-variable "https_api_call_url" {
-  type        = any
-  description = "Enter url of https api call."
+variable "scheduled_api_call_url" {
+  type        = string
+  description = "Enter url of scheduled api call."
   default     = ""
 }

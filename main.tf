@@ -351,7 +351,7 @@ module "deployment_user" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "eventbridge" {
-  count = var.enable_https_api_clean_job ? 1 : 0
+  count = var.enable_scheduled_api_call ? 1 : 0
 
   source     = "terraform-aws-modules/eventbridge/aws"
   create_bus = false
@@ -359,7 +359,7 @@ module "eventbridge" {
   rules = {
     crons = {
       description         = "Trigger for a Lambda"
-      schedule_expression = var.cron_schedule_expression
+      schedule_expression = var.scheduled_api_call_crontab
     }
   }
 
@@ -368,14 +368,14 @@ module "eventbridge" {
       {
         name  = "lambda-https-cron"
         arn   = module.lambda[0].lambda_function_arn
-        input = jsonencode({ "url" : var.https_api_call_url, "httpVerb" : "GET" })
+        input = jsonencode({ "url" : var.scheduled_api_call_url, "httpVerb" : "GET" })
       }
     ]
   }
 }
 
 data "archive_file" "function" {
-  count       = var.enable_https_api_clean_job ? 1 : 0
+  count       = var.enable_scheduled_api_call ? 1 : 0
   output_path = "${path.module}/index.zip"
   source_file = "${path.module}/index.js"
   type        = "zip"
@@ -383,7 +383,7 @@ data "archive_file" "function" {
 
 # tfsec:ignore:aws-lambda-enable-tracing
 module "lambda" {
-  count = var.enable_https_api_clean_job ? 1 : 0
+  count = var.enable_scheduled_api_call ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 2.0"
