@@ -90,7 +90,7 @@ variable "cpu_utilization_high_period" {
 
 variable "cpu_utilization_high_threshold" {
   type        = number
-  description = "The maximum percentage of CPU utilization average"
+  description = "The maximum percentage of CPU utilization average. Set to 0 to disable alarm."
   default     = 90
 }
 
@@ -108,8 +108,8 @@ variable "cpu_utilization_low_period" {
 
 variable "cpu_utilization_low_threshold" {
   type        = number
-  description = "The minimum percentage of CPU utilization average"
-  default     = 20
+  description = "The minimum percentage of CPU utilization average. Set to 0 to disable alarm."
+  default     = 0
 }
 
 variable "memory_utilization_high_evaluation_periods" {
@@ -126,7 +126,7 @@ variable "memory_utilization_high_period" {
 
 variable "memory_utilization_high_threshold" {
   type        = number
-  description = "The maximum percentage of Memory utilization average"
+  description = "The maximum percentage of memory utilization average. Set to 0 to disable alarm."
   default     = 90
 }
 
@@ -144,8 +144,8 @@ variable "memory_utilization_low_period" {
 
 variable "memory_utilization_low_threshold" {
   type        = number
-  description = "The minimum percentage of Memory utilization average"
-  default     = 20
+  description = "The minimum percentage of memory utilization average. Set to 0 to disable alarm."
+  default     = 0
 }
 
 variable "sns_topic_arn" {
