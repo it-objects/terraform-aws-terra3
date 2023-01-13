@@ -200,6 +200,24 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
+locals {
+  create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
+}
+
+# Disable for now. In a further iteration to be added and cw needs access to KMS key.
+# tfsec:ignore:aws-sns-enable-topic-encryption
+resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
+  count = local.create_sns_topic ? 1 : 0
+  name  = "ecs_service_cpu_and_memory_utilization_topic"
+}
+
+resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
+  count     = local.create_sns_topic ? length(var.alert_receivers_email) : 0
+  topic_arn = aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn
+  protocol  = "email"
+  endpoint  = var.alert_receivers_email[count.index]
+}
+
 module "app_components" {
   for_each = var.app_components
 
@@ -214,6 +232,26 @@ module "app_components" {
 
   total_cpu    = each.value["total_cpu"]
   total_memory = each.value["total_memory"]
+
+  # CloudWatch alert based on cpu and memory utilization
+  cpu_utilization_alert    = var.cpu_utilization_alert
+  memory_utilization_alert = var.memory_utilization_alert
+  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
 
   container = each.value["container"]
 
