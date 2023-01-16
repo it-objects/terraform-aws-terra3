@@ -262,18 +262,18 @@ variable "s3_solution_bucket_policy" {
 
 variable "create_ses" {
   type        = bool
+  description = "Enable it to use AWS simple email service."
   default     = false
-  description = "Enable it to use amazon simple email service"
 }
 
 variable "ses_domain_name" {
   type        = string
-  description = "Example: aws-sandbox.terra3.io"
+  description = "Define domain name to be verified."
   default     = ""
 }
 
-variable "mail_from_domain" {
-  description = "Enter your subdomain name."
+variable "ses_mail_from_domain" {
+  description = "Define mail from domain name. Usually the same as the ses_domain_name."
   type        = string
   default     = ""
 }
