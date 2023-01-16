@@ -31,9 +31,111 @@ variable "nat" {
   }
 }
 
+variable "cpu_utilization_alert" {
+  description = "Select true to get alert based on CPU Utilisation"
+  type        = bool
+  default     = false
+}
+
+variable "memory_utilization_alert" {
+  description = "Select true to get alert based on MEMORY Utilisation"
+  type        = bool
+  default     = false
+}
+
+variable "cpu_utilization_high_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "cpu_utilization_high_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "cpu_utilization_high_threshold" {
+  type        = number
+  description = "The maximum percentage of CPU utilization average"
+  default     = 90
+}
+
+variable "cpu_utilization_low_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "cpu_utilization_low_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "cpu_utilization_low_threshold" {
+  type        = number
+  description = "The minimum percentage of CPU utilization average"
+  default     = 30
+}
+
+variable "memory_utilization_high_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "memory_utilization_high_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "memory_utilization_high_threshold" {
+  type        = number
+  description = "The maximum percentage of Memory utilization average"
+  default     = 90
+}
+
+variable "memory_utilization_low_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "memory_utilization_low_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "memory_utilization_low_threshold" {
+  type        = number
+  description = "The minimum percentage of Memory utilization average"
+  default     = 20
+}
+
+variable "sns_topic_arn" {
+  type        = set(string)
+  description = ""
+  default     = []
+}
+
+variable "alert_receivers_email" {
+  type        = list(string)
+  default     = []
+  description = "Email address for the endpoint of SNS subscription."
+}
+
 variable "create_load_balancer" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool
+  default     = false
+}
+
+variable "enable_alb_logs" {
+  type        = bool
+  description = "Select to enable storing alb logs in s3 bucket."
   default     = false
 }
 
@@ -228,12 +330,6 @@ variable "nat_instance_types" {
   default     = ["t4g.nano"] # cheapest
 }
 
-variable "enable_alb_logs" {
-  type        = bool
-  description = "Select to enable storing alb logs in s3 bucket."
-  default     = false
-}
-
 variable "create_ecr" {
   type    = bool
   default = false
@@ -258,6 +354,24 @@ variable "s3_solution_bucket_policy" {
     condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
+}
+
+variable "create_ses" {
+  type        = bool
+  description = "Enable it to use AWS simple email service."
+  default     = false
+}
+
+variable "ses_domain_name" {
+  type        = string
+  description = "Define domain name to be verified."
+  default     = ""
+}
+
+variable "ses_mail_from_domain" {
+  description = "Define mail from domain name. Usually the same as the ses_domain_name."
+  type        = string
+  default     = ""
 }
 
 variable "use_an_existing_vpc" {
