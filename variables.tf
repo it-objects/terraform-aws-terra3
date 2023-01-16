@@ -355,3 +355,21 @@ variable "s3_solution_bucket_policy" {
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
 }
+
+variable "create_ses" {
+  type        = bool
+  description = "Enable it to use AWS simple email service."
+  default     = false
+}
+
+variable "ses_domain_name" {
+  type        = string
+  description = "Define domain name to be verified."
+  default     = ""
+}
+
+variable "ses_mail_from_domain" {
+  description = "Define mail from domain name. Usually the same as the ses_domain_name."
+  type        = string
+  default     = ""
+}
