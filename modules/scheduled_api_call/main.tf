@@ -1,4 +1,5 @@
 module "scheduled_api_call" {
+  count  = var.enable_eventbridge_scheduled_Api_call ? 1 : 0
   source = "registry.terraform.io/terraform-aws-modules/eventbridge/aws"
 
   # Schedules can only be created on default bus
@@ -53,6 +54,56 @@ module "scheduled_api_call" {
       invocation_endpoint              = var.scheduled_api_call_url
       http_method                      = var.scheduled_api_call_http_method
       invocation_rate_limit_per_second = 2
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# scheduled HTTPS API call
+# ---------------------------------------------------------------------------------------------------------------------
+module "eventbridge" {
+  count = var.enable_scheduled_https_api_call ? 1 : 0
+
+  source     = "terraform-aws-modules/eventbridge/aws"
+  create_bus = false
+
+  rules = {
+    crons = {
+      description         = "Trigger for a Lambda"
+      schedule_expression = var.scheduled_https_api_call_crontab
+    }
+  }
+
+  targets = {
+    crons = [
+      {
+        name  = "${var.solution_name}-lambda-https-cron"
+        arn   = module.lambda[0].lambda_function_arn
+        input = jsonencode({ "url" : var.scheduled_https_api_call_url, "httpVerb" : "GET" })
+      }
+    ]
+  }
+}
+
+# tfsec:ignore:aws-lambda-enable-tracing
+module "lambda" {
+  count = var.enable_scheduled_https_api_call ? 1 : 0
+
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 2.0"
+
+  function_name  = "${var.solution_name}-scheduled-https-api-call"
+  description    = "scheduled https api call"
+  handler        = "api_call.handler"
+  runtime        = "nodejs16.x"
+  source_path    = "${path.module}/api_call.js"
+  create_package = false
+
+  create_current_version_allowed_triggers = false
+  allowed_triggers = {
+    ScanAmiRule = {
+      principal  = "events.amazonaws.com"
+      source_arn = module.eventbridge[0].eventbridge_rule_arns["crons"]
     }
   }
 }

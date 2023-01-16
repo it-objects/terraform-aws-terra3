@@ -3,7 +3,7 @@ variable "solution_name" {
   type        = string
 
   validation {
-    condition     = length(var.solution_name) <= 26 && can(regex("^([a-z0-9])+(?:-[a-z0-9]+)*$", var.solution_name))
+    condition     = length(var.solution_name) <= 16 && can(regex("^([a-z0-9])+(?:-[a-z0-9]+)*$", var.solution_name))
     error_message = "Only max. 16 lower-case alphanumeric characters and dashes in between are allowed."
   }
 }
@@ -260,19 +260,19 @@ variable "s3_solution_bucket_policy" {
   }
 }
 
-variable "enable_scheduled_api_call" {
+variable "enable_scheduled_https_api_call" {
   type        = bool
   description = "Select true to enable scheduled api call."
   default     = false
 }
 
-variable "scheduled_api_call_crontab" {
+variable "scheduled_https_api_call_crontab" {
   type        = string
   description = "Enter schedule details of scheduled api call in crontab format."
   default     = ""
 }
 
-variable "scheduled_api_call_url" {
+variable "scheduled_https_api_call_url" {
   type        = string
   description = "Enter url of scheduled api call."
   default     = ""

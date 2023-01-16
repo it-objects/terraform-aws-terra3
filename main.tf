@@ -349,58 +349,14 @@ module "deployment_user" {
 # ---------------------------------------------------------------------------------------------------------------------
 # scheduled HTTPS API call
 # ---------------------------------------------------------------------------------------------------------------------
+module "scheduled_api_call" {
+  count = var.enable_scheduled_https_api_call ? 1 : 0
 
-module "eventbridge" {
-  count = var.enable_scheduled_api_call ? 1 : 0
+  source        = "./modules/scheduled_api_call"
+  solution_name = var.solution_name
 
-  source     = "terraform-aws-modules/eventbridge/aws"
-  create_bus = false
-
-  rules = {
-    crons = {
-      description         = "Trigger for a Lambda"
-      schedule_expression = var.scheduled_api_call_crontab
-    }
-  }
-
-  targets = {
-    crons = [
-      {
-        name  = "lambda-https-cron"
-        arn   = module.lambda[0].lambda_function_arn
-        input = jsonencode({ "url" : var.scheduled_api_call_url, "httpVerb" : "GET" })
-      }
-    ]
-  }
-}
-
-data "archive_file" "function" {
-  count       = var.enable_scheduled_api_call ? 1 : 0
-  output_path = "${path.module}/index.zip"
-  source_file = "${path.module}/index.js"
-  type        = "zip"
-}
-
-# tfsec:ignore:aws-lambda-enable-tracing
-module "lambda" {
-  count = var.enable_scheduled_api_call ? 1 : 0
-
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 2.0"
-
-  function_name = "terra3-https-api-call"
-  description   = "scheduled https api call"
-  handler       = "index.handler"
-  runtime       = "nodejs16.x"
-
-  create_package         = false
-  local_existing_package = data.archive_file.function[0].output_path
-
-  create_current_version_allowed_triggers = false
-  allowed_triggers = {
-    ScanAmiRule = {
-      principal  = "events.amazonaws.com"
-      source_arn = module.eventbridge[0].eventbridge_rule_arns["crons"]
-    }
-  }
+  # Scheduled https api call
+  enable_scheduled_https_api_call  = var.enable_scheduled_https_api_call
+  scheduled_https_api_call_crontab = var.scheduled_https_api_call_crontab
+  scheduled_https_api_call_url     = var.scheduled_https_api_call_url
 }
