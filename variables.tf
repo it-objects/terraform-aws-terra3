@@ -133,6 +133,12 @@ variable "create_load_balancer" {
   default     = false
 }
 
+variable "enable_alb_logs" {
+  type        = bool
+  description = "Select to enable storing alb logs in s3 bucket."
+  default     = false
+}
+
 variable "create_dns_and_certificates" {
   description = "Creates DNS entries and ACM certificates to be consumed by other resources."
   type        = bool
@@ -322,12 +328,6 @@ variable "nat_instance_types" {
   type        = list(string)
   description = ""
   default     = ["t4g.nano"] # cheapest
-}
-
-variable "enable_alb_logs" {
-  type        = bool
-  description = "Select to enable storing alb logs in s3 bucket."
-  default     = false
 }
 
 variable "create_ecr" {

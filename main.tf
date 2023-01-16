@@ -107,7 +107,7 @@ module "l7_loadbalancer" {
   public_subnets  = module.vpc.public_subnets
   security_groups = [module.security_groups.loadbalancer_sg]
 
-  enable_alb_logs = false
+  enable_alb_logs = var.enable_alb_logs
 }
 
 module "security_groups" {
