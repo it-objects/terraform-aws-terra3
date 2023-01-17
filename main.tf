@@ -107,7 +107,7 @@ module "l7_loadbalancer" {
   public_subnets  = module.vpc.public_subnets
   security_groups = [module.security_groups.loadbalancer_sg]
 
-  enable_alb_logs = false
+  enable_alb_logs = var.enable_alb_logs
 }
 
 module "security_groups" {
@@ -185,7 +185,6 @@ module "cluster" {
   solution_name          = var.solution_name
   container_runtime_name = "${var.solution_name}-cluster"
   cluster_type           = var.cluster_type
-  launch_type            = var.launch_type
 
   public_subnets         = module.vpc.public_subnets
   vpc_security_group_ids = [module.security_groups.ecs_task_sg]
@@ -201,6 +200,24 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
+locals {
+  create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
+}
+
+# Disable for now. In a further iteration to be added and cw needs access to KMS key.
+# tfsec:ignore:aws-sns-enable-topic-encryption
+resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
+  count = local.create_sns_topic ? 1 : 0
+  name  = "ecs_service_cpu_and_memory_utilization_topic"
+}
+
+resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
+  count     = local.create_sns_topic ? length(var.alert_receivers_email) : 0
+  topic_arn = aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn
+  protocol  = "email"
+  endpoint  = var.alert_receivers_email[count.index]
+}
+
 module "app_components" {
   for_each = var.app_components
 
@@ -210,12 +227,31 @@ module "app_components" {
   solution_name     = var.solution_name
   container_runtime = module.cluster.ecs_cluster_name
   cluster_type      = var.cluster_type
-  launch_type       = var.launch_type
 
   instances = each.value["instances"]
 
   total_cpu    = each.value["total_cpu"]
   total_memory = each.value["total_memory"]
+
+  # CloudWatch alert based on cpu and memory utilization
+  cpu_utilization_alert    = var.cpu_utilization_alert
+  memory_utilization_alert = var.memory_utilization_alert
+  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
 
   container = each.value["container"]
 
@@ -346,4 +382,29 @@ module "deployment_user" {
   count = var.create_deployment_user ? 1 : 0
 
   source = "./modules/deployment_user"
+}
+
+module "aws_ses" {
+  count = var.create_ses ? 1 : 0
+
+  source           = "./modules/ses"
+  create_ses       = var.create_ses
+  ses_domain_name  = var.ses_domain_name
+  mail_from_domain = var.ses_mail_from_domain
+
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# scheduled HTTPS API call
+# ---------------------------------------------------------------------------------------------------------------------
+module "scheduled_api_call" {
+  count = var.enable_scheduled_https_api_call ? 1 : 0
+
+  source        = "./modules/scheduled_api_call"
+  solution_name = var.solution_name
+
+  # Scheduled https api call
+  enable_scheduled_https_api_call  = var.enable_scheduled_https_api_call
+  scheduled_https_api_call_crontab = var.scheduled_https_api_call_crontab
+  scheduled_https_api_call_url     = var.scheduled_https_api_call_url
 }
