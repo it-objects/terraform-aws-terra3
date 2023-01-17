@@ -381,37 +381,37 @@ variable "use_an_existing_vpc" {
 }
 
 variable "external_vpc_id" {
-  type        = any
+  type        = string
   description = "vpc id of existing vpc."
   default     = ""
 }
 
 variable "external_public_subnets" {
   type        = list(string)
-  description = "vpc id of existing vpc."
+  description = "Public subnets of existing vpc."
   default     = []
 }
 
 variable "external_private_subnets" {
   type        = list(string)
-  description = "vpc id of existing vpc."
+  description = "Private subnets of existing vpc."
   default     = []
 }
 
 variable "external_vpc_private_route_table_ids" {
-  type        = any
-  description = "vpc id of existing vpc."
+  type        = list(string)
+  description = "Private rout table ids of existing vpc."
   default     = []
 }
 
 variable "external_db_subnet_group_name" {
-  type        = any
-  description = "vpc id of existing vpc."
+  type        = string
+  description = "Database subnet group name of existing vpc."
   default     = ""
 }
 
 variable "external_elasticache_subnet_ids" {
-  type        = any
-  description = "vpc id of existing vpc."
+  type        = list(string)
+  description = "Elasticache subnet ids of existing vpc."
   default     = []
 }
