@@ -65,7 +65,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   execution_role_arn       = aws_iam_role.ExecutionRole.arn
   task_role_arn            = aws_iam_role.task.arn
   network_mode             = "awsvpc"
-  requires_compatibilities = [var.launch_type]
+  requires_compatibilities = [local.launch_type]
 
   # Fargate cpu/mem must match available options: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
   cpu    = var.total_cpu
