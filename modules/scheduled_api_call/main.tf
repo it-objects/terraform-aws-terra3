@@ -32,12 +32,11 @@ module "lambda" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 2.0"
 
-  function_name  = "${var.solution_name}-scheduled-https-api-call"
-  description    = "scheduled https api call"
-  handler        = "api_call.handler"
-  runtime        = "nodejs16.x"
-  source_path    = "${path.module}/api_call.js"
-  create_package = false
+  function_name = "${var.solution_name}-scheduled-https-api-call"
+  description   = "scheduled https api call"
+  handler       = "api_call.handler"
+  runtime       = "nodejs16.x"
+  source_path   = "${path.module}/api_call.js"
 
   create_current_version_allowed_triggers = false
   allowed_triggers = {
