@@ -43,7 +43,7 @@ resource "aws_ecs_cluster" "cluster" {
 
 resource "aws_ecs_cluster_capacity_providers" "cluster_capacity_provider" {
   cluster_name       = aws_ecs_cluster.cluster.name
-  capacity_providers = [local.ecs_capacity_providers] # FARGATE | FARGATE_SPOT | EC2 (for EC2_SPOT Ec2 will be used here and changed only in launch template)
+  capacity_providers = [local.ecs_capacity_providers] # FARGATE | FARGATE_SPOT | EC2 (for EC2_SPOT, Ec2 will be used here and changed only in launch template)
 
   default_capacity_provider_strategy {
     base              = 1

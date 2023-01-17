@@ -30,17 +30,6 @@ variable "cluster_type" {
   }
 }
 
-variable "launch_type" {
-  description = "Select FARGATE for launch type as FARGATE, or select EC2 for launch type as EC2."
-  type        = string
-  default     = "FARGATE"
-
-  validation {
-    condition     = contains(["FARGATE", "EC2"], var.launch_type)
-    error_message = "Only 'FARGATE', and 'EC2' are allowed."
-  }
-}
-
 variable "total_cpu" {
   type = number
 }
