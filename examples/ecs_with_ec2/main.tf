@@ -24,10 +24,6 @@ module "terra3_examples" {
   #cluster_type = "FARGATE"
   cluster_type = "EC2"
 
-  # Choose launch type of the cluster
-  #launch_type = "FARGATE"
-  launch_type = "EC2"
-
   #EC2 cluster configurations
   cluster_ec2_min_nodes           = 1
   cluster_ec2_max_nodes           = 2

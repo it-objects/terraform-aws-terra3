@@ -1,10 +1,7 @@
 locals {
-  kms_key_id                 = (var.enable_ecs_exec && var.solution_kms_key_id == "") ? aws_kms_key.container_runtime_kms_key[0].key_id : var.solution_kms_key_id
-  create_ecs_with_ec2        = var.launch_type == "EC2" ? true : false
-  ecs_capacity_providers     = var.launch_type == "EC2" ? aws_ecs_capacity_provider.terra3_ec2_capacity_provider[0].name : var.cluster_type
-  ec2_instance_market_option = var.cluster_type == "EC2_SPOT" ? "spot" : null
-
-
+  kms_key_id             = (var.enable_ecs_exec && var.solution_kms_key_id == "") ? aws_kms_key.container_runtime_kms_key[0].key_id : var.solution_kms_key_id
+  create_ecs_with_ec2    = var.cluster_type == "EC2" ? true : false
+  ecs_capacity_providers = var.cluster_type == "EC2" ? aws_ecs_capacity_provider.terra3_ec2_capacity_provider[0].name : var.cluster_type
 }
 
 #tfsec:ignore:aws-kms-auto-rotate-keys
@@ -46,7 +43,7 @@ resource "aws_ecs_cluster" "cluster" {
 
 resource "aws_ecs_cluster_capacity_providers" "cluster_capacity_provider" {
   cluster_name       = aws_ecs_cluster.cluster.name
-  capacity_providers = [local.ecs_capacity_providers]
+  capacity_providers = [local.ecs_capacity_providers] # FARGATE | FARGATE_SPOT | EC2 (for EC2_SPOT Ec2 will be used here and changed only in launch template)
 
   default_capacity_provider_strategy {
     base              = 1

@@ -9,12 +9,15 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # Service definition, auto heals if task shuts down
 # ---------------------------------------------------------------------------------------------------------------------
+locals {
+  launch_type = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? "FARGATE" : "EC2"
+}
 resource "aws_ecs_service" "ecs_service" {
   name            = "${var.name}Service"
   cluster         = data.aws_ecs_cluster.selected.arn
   task_definition = aws_ecs_task_definition.ecs_task_definition.arn
   desired_count   = var.instances
-  launch_type     = var.launch_type
+  launch_type     = local.launch_type # FARGATE | EC2
 
   health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
