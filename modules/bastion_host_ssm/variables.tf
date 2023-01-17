@@ -5,3 +5,7 @@ variable "solution_name" {
 variable "environment_name" {
   type = string
 }
+
+variable "vpc_id" {
+  type = string
+}

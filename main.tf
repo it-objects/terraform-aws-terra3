@@ -14,12 +14,25 @@ locals {
   domain_name = length(module.dns_and_certificates) == 0 ? "" : module.dns_and_certificates[0].domain_name
 }
 
+
+locals {
+  # Variable definitions of using existing VPC or create VPC
+  vpc_id                  = var.use_an_existing_vpc ? var.external_vpc_id : module.vpc[0].vpc_id
+  public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : module.vpc[0].public_subnets
+  private_subnets         = var.use_an_existing_vpc ? var.external_private_subnets : module.vpc[0].private_subnets
+  private_route_table_ids = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].private_route_table_ids
+  db_subnet_group_name    = var.use_an_existing_vpc ? var.external_db_subnet_group_name : module.vpc[0].database_subnet_group
+  elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Public/Private cross-AZ VPC setup. Default CIDR use /20 allowing up to 4094 IPs per subnet
 # ---------------------------------------------------------------------------------------------------------------------
 # Public IP assignment is enabled for NAT instance option
 # tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs tfsec:ignore:aws-ec2-no-public-ip-subnet
 module "vpc" {
+  count = !var.use_an_existing_vpc ? 1 : 0
+
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "3.16.0"
 
@@ -55,7 +68,7 @@ module "vpc" {
 resource "aws_ssm_parameter" "vpc_id" {
   name  = "/${var.solution_name}/vpc_id"
   type  = "String"
-  value = module.vpc.vpc_id
+  value = local.vpc_id
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -64,13 +77,13 @@ resource "aws_ssm_parameter" "vpc_id" {
 module "vpc_endpoints" {
   source = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
 
-  vpc_id = module.vpc.vpc_id
+  vpc_id = local.vpc_id
 
   endpoints = {
     s3 = {
       service         = "s3"
       tags            = { Name = "s3-vpc-endpoint" }
-      route_table_ids = module.vpc.private_route_table_ids
+      route_table_ids = local.private_route_table_ids
       service_type    = "Gateway"
     }
   }
@@ -92,10 +105,10 @@ module "nat_instances" {
   nat_use_spot_instance = false
   nat_instance_types    = var.nat_instance_types
 
-  private_route_table_ids = module.vpc.private_route_table_ids
-  public_subnets          = module.vpc.public_subnets
-  private_subnets         = module.vpc.private_subnets
-  vpc_id                  = module.vpc.vpc_id
+  private_route_table_ids = local.private_route_table_ids
+  public_subnets          = local.public_subnets
+  private_subnets         = local.private_subnets
+  vpc_id                  = local.vpc_id
 }
 
 module "l7_loadbalancer" {
@@ -104,17 +117,17 @@ module "l7_loadbalancer" {
   source        = "./modules/loadbalancer"
   solution_name = var.solution_name
 
-  public_subnets  = module.vpc.public_subnets
+  public_subnets  = local.public_subnets
   security_groups = [module.security_groups.loadbalancer_sg]
 
-  enable_alb_logs = false
+  enable_alb_logs = var.enable_alb_logs
 }
 
 module "security_groups" {
   source = "./modules/securitygroups"
 
   name   = var.solution_name
-  vpc_id = module.vpc.vpc_id
+  vpc_id = local.vpc_id
 
   create_dns_and_certificates = var.create_dns_and_certificates
 }
@@ -185,9 +198,8 @@ module "cluster" {
   solution_name          = var.solution_name
   container_runtime_name = "${var.solution_name}-cluster"
   cluster_type           = var.cluster_type
-  launch_type            = var.launch_type
 
-  public_subnets         = module.vpc.public_subnets
+  public_subnets         = local.public_subnets
   vpc_security_group_ids = [module.security_groups.ecs_task_sg]
 
   cluster_ec2_min_nodes           = var.cluster_ec2_min_nodes
@@ -201,6 +213,24 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
+locals {
+  create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
+}
+
+# Disable for now. In a further iteration to be added and cw needs access to KMS key.
+# tfsec:ignore:aws-sns-enable-topic-encryption
+resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
+  count = local.create_sns_topic ? 1 : 0
+  name  = "ecs_service_cpu_and_memory_utilization_topic"
+}
+
+resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
+  count     = local.create_sns_topic ? length(var.alert_receivers_email) : 0
+  topic_arn = aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn
+  protocol  = "email"
+  endpoint  = var.alert_receivers_email[count.index]
+}
+
 module "app_components" {
   for_each = var.app_components
 
@@ -210,12 +240,31 @@ module "app_components" {
   solution_name     = var.solution_name
   container_runtime = module.cluster.ecs_cluster_name
   cluster_type      = var.cluster_type
-  launch_type       = var.launch_type
 
   instances = each.value["instances"]
 
   total_cpu    = each.value["total_cpu"]
   total_memory = each.value["total_memory"]
+
+  # CloudWatch alert based on cpu and memory utilization
+  cpu_utilization_alert    = var.cpu_utilization_alert
+  memory_utilization_alert = var.memory_utilization_alert
+  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
 
   container = each.value["container"]
 
@@ -249,8 +298,9 @@ module "bastion_host_ssm" {
 
   solution_name    = var.solution_name
   environment_name = var.solution_name
+  vpc_id           = local.vpc_id
 
-  depends_on = [module.vpc, module.security_groups]
+  depends_on = [module.security_groups]
 }
 
 locals {
@@ -267,7 +317,7 @@ module "database" {
   source        = "./modules/database"
   solution_name = var.solution_name
 
-  db_subnet_group_name = module.vpc.database_subnet_group
+  db_subnet_group_name = local.db_subnet_group_name
 
   rds_cluster_database_name  = "${replace(var.solution_name, "-", "")}db" # alphanumeric and lower case
   rds_cluster_identifier     = "${lower(var.solution_name)}_db"
@@ -308,7 +358,7 @@ resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
   count = var.create_elasticache_redis ? 1 : 0
 
   name       = "${var.solution_name}-elasticache-subnet-group"
-  subnet_ids = module.vpc.elasticache_subnets
+  subnet_ids = local.elasticache_subnet_ids
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -346,4 +396,29 @@ module "deployment_user" {
   count = var.create_deployment_user ? 1 : 0
 
   source = "./modules/deployment_user"
+}
+
+module "aws_ses" {
+  count = var.create_ses ? 1 : 0
+
+  source           = "./modules/ses"
+  create_ses       = var.create_ses
+  ses_domain_name  = var.ses_domain_name
+  mail_from_domain = var.ses_mail_from_domain
+
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# scheduled HTTPS API call
+# ---------------------------------------------------------------------------------------------------------------------
+module "scheduled_api_call" {
+  count = var.enable_scheduled_https_api_call ? 1 : 0
+
+  source        = "./modules/scheduled_api_call"
+  solution_name = var.solution_name
+
+  # Scheduled https api call
+  enable_scheduled_https_api_call  = var.enable_scheduled_https_api_call
+  scheduled_https_api_call_crontab = var.scheduled_https_api_call_crontab
+  scheduled_https_api_call_url     = var.scheduled_https_api_call_url
 }
