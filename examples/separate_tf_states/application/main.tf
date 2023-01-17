@@ -15,7 +15,7 @@ module "terra3_examples" {
 
   app_components = {
 
-    my_app_component = {
+    t3-two-states-component = {
 
       instances = 1
 

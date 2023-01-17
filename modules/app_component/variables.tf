@@ -58,11 +58,6 @@ variable "container" {
   }))
 }
 
-variable "lb_domain_name" {
-  description = "Domain name of loadbalancer if set."
-  default     = ""
-}
-
 #  CloudWatch alert based on cpu and memory utilization
 variable "cpu_utilization_alert" {
   description = "Select true to get alert based on CPU Utilisation"
@@ -255,4 +250,9 @@ variable "s3_solution_bucket_access" {
   type        = bool
   default     = false
   description = "Gives component access to solution bucket."
+}
+
+variable "enable_custom_domain" {
+  type    = bool
+  default = false
 }

@@ -1,5 +1,5 @@
 locals {
-  create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
+  create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert ? true : false
 }
 
 module "app_components" {
@@ -36,7 +36,6 @@ module "app_components" {
   memory_utilization_low_period              = var.memory_utilization_low_period
   memory_utilization_low_threshold           = var.memory_utilization_low_threshold
 
-
   container = each.value["container"]
 
   # if true the next block's variables are ignored internally
@@ -57,5 +56,5 @@ module "app_components" {
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
-  lb_domain_name = data.aws_ssm_parameter.create_dns_and_certificates.value == "true" ? "lb.${data.aws_ssm_parameter.domain_name.value}" : ""
+  enable_custom_domain = var.enable_custom_domain
 }

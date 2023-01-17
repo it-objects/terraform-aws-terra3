@@ -139,7 +139,7 @@ variable "enable_alb_logs" {
   default     = false
 }
 
-variable "create_dns_and_certificates" {
+variable "enable_custom_domain" {
   description = "Creates DNS entries and ACM certificates to be consumed by other resources."
   type        = bool
   default     = false

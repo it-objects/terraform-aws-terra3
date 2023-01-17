@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  route53_zone_id = "<PLEASE ENTER HERE THE HOSTED ZONE ID>"
+  route53_zone_id = "Z038774514STH6Q52B21H"
   solution_name   = "terra3-example3"
 }
 
@@ -16,7 +16,7 @@ module "terra3_examples" {
   enable_account_best_practices = true
 
   # if set to true, domain_name or domain of zone is required
-  create_dns_and_certificates = true
+  enable_custom_domain = true
 
   # domain name of hosted zone to which we have full access
   # domain_name = local.custom_domain_name
@@ -25,7 +25,7 @@ module "terra3_examples" {
   # configure your environment here
   create_load_balancer = true
   create_bastion_host  = true
-  create_database      = true
+  create_database      = false
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"

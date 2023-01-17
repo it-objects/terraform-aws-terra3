@@ -19,3 +19,19 @@ variable "enable_alb_logs" {
   description = "Select to enable storing alb logs in s3 bucket."
   default     = false
 }
+
+variable "enable_custom_domain" {
+  description = "Indicates whether to use a custom domain or the AWS default domains for CloudFront and ALB."
+  type        = bool
+  default     = false
+}
+
+variable "hosted_zone_id" {
+  description = ""
+  type        = string
+}
+
+variable "domain_name" {
+  description = ""
+  type        = string
+}

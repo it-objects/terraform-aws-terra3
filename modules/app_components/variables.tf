@@ -104,3 +104,14 @@ variable "alert_receivers_email" {
   default     = []
   description = "Email address for the endpoint of SNS subscription."
 }
+
+variable "two_states_approach" {
+  type        = bool
+  default     = true
+  description = "Internal variable that indicates whether this is internally or externally called."
+}
+
+variable "enable_custom_domain" {
+  type    = bool
+  default = false
+}

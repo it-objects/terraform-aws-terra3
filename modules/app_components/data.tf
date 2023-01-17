@@ -38,8 +38,8 @@ data "aws_ssm_parameter" "domain_name" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Determine domain_name from ssm param store
 # ---------------------------------------------------------------------------------------------------------------------
-data "aws_ssm_parameter" "create_dns_and_certificates" {
-  name = "/${var.solution_name}/create_dns_and_certificates"
+data "aws_ssm_parameter" "enable_custom_domain" {
+  name = "/${var.solution_name}/enable_custom_domain"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

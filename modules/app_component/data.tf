@@ -15,11 +15,17 @@ data "aws_ssm_parameter" "alb_arn" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-## Determine certificate arn from fqdn
+# Determine loadbalancer listener arn from ssm param store
 # ---------------------------------------------------------------------------------------------------------------------
-data "aws_acm_certificate" "certificate" {
-  count  = var.lb_domain_name == "" ? 0 : 1
-  domain = var.lb_domain_name
+data "aws_ssm_parameter" "alb_listener_443_arn" {
+  name = "/${var.solution_name}/alb_listener_443_arn"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Determine loadbalancer listener arn from ssm param store
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_ssm_parameter" "alb_listener_80_arn" {
+  name = "/${var.solution_name}/alb_listener_80_arn"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
