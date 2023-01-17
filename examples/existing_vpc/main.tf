@@ -1,11 +1,41 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is an example with Cluster type options.
-# Here, cluster_type can be selected as "ECS_FARGATE" or "ECS_EC2".
-# Default cluster_type is "ECS_FARGATE".
+# This is example 2 showcasing Terra3's capabilities.
+#
+# Outcome: Like example 1 + a container runtime and no custom domain
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "terra3-ecs"
+  solution_name = "terra3-example"
+}
+
+# tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs tfsec:ignore:aws-ec2-no-public-ip-subnet
+module "vpc" {
+  source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
+  version = "3.16.0"
+
+  name = "${local.solution_name}-external-vpc"
+  cidr = var.cidr
+
+  azs             = var.azs
+  public_subnets  = var.public_subnets_cidr_blocks
+  private_subnets = var.private_subnets_cidr_blocks
+
+  public_subnet_tags = {
+    "Tier" : "public"
+  }
+
+  private_subnet_tags = {
+    "Tier" : "private"
+  }
+
+  create_database_subnet_group = true
+  database_subnets             = var.database_cidr_blocks
+
+  create_elasticache_subnet_group = true
+  elasticache_subnets             = var.elasticache_cidr_blocks
+
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 }
 
 module "terra3_examples" {
@@ -20,17 +50,15 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
-  # Cluster type options
-  #cluster_type = "FARGATE"
-  cluster_type = "EC2"
+  # Configurable variables to use an existing VPC
+  use_an_existing_vpc = true
 
-  #EC2 cluster configurations
-  cluster_ec2_min_nodes           = 1
-  cluster_ec2_max_nodes           = 2
-  cluster_ec2_instance_type       = "t3a.small"
-  cluster_ec2_desired_capacity    = 1
-  cluster_ec2_detailed_monitoring = false
-  cluster_ec2_volume_size         = 30
+  external_vpc_id                      = module.vpc.vpc_id
+  external_public_subnets              = module.vpc.public_subnets
+  external_private_subnets             = module.vpc.private_subnets
+  external_vpc_private_route_table_ids = module.vpc.private_route_table_ids
+  external_db_subnet_group_name        = module.vpc.database_subnet_group
+  external_elasticache_subnet_ids      = module.vpc.elasticache_subnets
 
   app_components = {
 

@@ -6,21 +6,12 @@ data "aws_security_group" "bastion_host_ssm_sg" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Determine VPC id from VPC name (${var.solution_name}-vpc)
-# ---------------------------------------------------------------------------------------------------------------------
-data "aws_vpc" "selected" {
-  tags = {
-    Name = "${var.solution_name}-vpc"
-  }
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 # fetch private subnet ids using the vpc_id
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_subnets" "private_subnets" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.selected.id]
+    values = [var.vpc_id]
   }
 
   tags = {

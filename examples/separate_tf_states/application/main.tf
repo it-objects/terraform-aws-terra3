@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "two-states-infra"
+  solution_name = "t3-two-states"
 }
 
 module "terra3_examples" {

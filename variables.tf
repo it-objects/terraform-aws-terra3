@@ -228,13 +228,13 @@ variable "database" {
 }
 
 variable "cluster_type" {
-  description = "Select ECS_FARGATE for cluster type as FARGATE, or select ECS_EC2 for cluster type as EC2."
+  description = "Select FARGATE for cluster type as FARGATE, or select EC2 for cluster type as EC2."
   type        = string
-  default     = "ECS_FARGATE"
+  default     = "FARGATE"
 
   validation {
-    condition     = contains(["ECS_FARGATE", "ECS_EC2"], var.cluster_type)
-    error_message = "Only 'ECS_FARGATE', and 'ECS_EC2' are allowed."
+    condition     = contains(["FARGATE", "EC2"], var.cluster_type)
+    error_message = "Only 'FARGATE', and 'EC2' are allowed."
   }
 }
 
@@ -371,5 +371,65 @@ variable "ses_domain_name" {
 variable "ses_mail_from_domain" {
   description = "Define mail from domain name. Usually the same as the ses_domain_name."
   type        = string
+  default     = ""
+}
+
+variable "use_an_existing_vpc" {
+  description = "Enables/disables an AWS Application Load Balancer."
+  type        = bool
+  default     = false
+}
+
+variable "external_vpc_id" {
+  type        = string
+  description = "vpc id of existing vpc."
+  default     = ""
+}
+
+variable "external_public_subnets" {
+  type        = list(string)
+  description = "Public subnets of existing vpc."
+  default     = []
+}
+
+variable "external_private_subnets" {
+  type        = list(string)
+  description = "Private subnets of existing vpc."
+  default     = []
+}
+
+variable "external_vpc_private_route_table_ids" {
+  type        = list(string)
+  description = "Private route table ids of existing vpc."
+  default     = []
+}
+
+variable "external_db_subnet_group_name" {
+  type        = string
+  description = "Database subnet group name of existing vpc."
+  default     = ""
+}
+
+variable "external_elasticache_subnet_ids" {
+  type        = list(string)
+  description = "Elasticache subnet ids of existing vpc."
+  default     = []
+}
+
+variable "enable_scheduled_https_api_call" {
+  type        = bool
+  description = "Select true to enable scheduled api call."
+  default     = false
+}
+
+variable "scheduled_https_api_call_crontab" {
+  type        = string
+  description = "Enter schedule details of scheduled api call in crontab format."
+  default     = ""
+}
+
+variable "scheduled_https_api_call_url" {
+  type        = string
+  description = "Enter url of scheduled api call."
   default     = ""
 }
