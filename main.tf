@@ -16,14 +16,13 @@ locals {
 
 
 locals {
-
+  # Variable definitions of using existing VPC or create VPC
   vpc_id                  = var.use_an_existing_vpc ? var.external_vpc_id : module.vpc[0].vpc_id
   public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : module.vpc[0].public_subnets
   private_subnets         = var.use_an_existing_vpc ? var.external_private_subnets : module.vpc[0].private_subnets
   private_route_table_ids = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].private_route_table_ids
   db_subnet_group_name    = var.use_an_existing_vpc ? var.external_db_subnet_group_name : module.vpc[0].database_subnet_group
   elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
-
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -32,7 +31,7 @@ locals {
 # Public IP assignment is enabled for NAT instance option
 # tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs tfsec:ignore:aws-ec2-no-public-ip-subnet
 module "vpc" {
-  count = var.use_an_existing_vpc != true ? 1 : 0
+  count = !var.use_an_existing_vpc ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "3.16.0"
