@@ -11,7 +11,13 @@ locals {
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
-  domain_name = length(module.dns_and_certificates) == 0 ? "" : module.dns_and_certificates[0].domain_name
+  domain_name = var.create_dns_and_certificates ? module.dns_and_certificates[0].domain_name : ""
+}
+
+resource "aws_ssm_parameter" "domain_name" {
+  name  = "/${var.solution_name}/domain_name"
+  type  = "String"
+  value = var.create_dns_and_certificates ? local.domain_name : "-"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -143,6 +149,12 @@ module "dns_and_certificates" {
   }
 }
 
+resource "aws_ssm_parameter" "create_dns_and_certificates" {
+  name  = "/${var.solution_name}/create_dns_and_certificates"
+  type  = "String"
+  value = var.create_dns_and_certificates
+}
+
 module "cloudfront_cdn" {
   source        = "./modules/cloudfront_cdn"
   solution_name = var.solution_name
@@ -200,6 +212,12 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
+resource "aws_ssm_parameter" "cluster_type" {
+  name  = "/${var.solution_name}/cluster_type"
+  type  = "String"
+  value = var.cluster_type
+}
+
 locals {
   create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
 }
@@ -209,6 +227,12 @@ locals {
 resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
   count = local.create_sns_topic ? 1 : 0
   name  = "ecs_service_cpu_and_memory_utilization_topic"
+}
+
+resource "aws_ssm_parameter" "sns_alerts_topic_arn" {
+  name  = "/${var.solution_name}/sns_alerts_topic_arn"
+  type  = "String"
+  value = local.create_sns_topic ? aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn : "-"
 }
 
 resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
@@ -273,7 +297,7 @@ module "app_components" {
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
-  lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : ""
+  lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : "-"
 
   depends_on = [module.l7_loadbalancer, module.security_groups]
 }
