@@ -398,7 +398,6 @@ module "deployment_user" {
   source = "./modules/deployment_user"
 }
 
-
 module "aws_ses" {
   count = var.create_ses ? 1 : 0
 
@@ -407,4 +406,19 @@ module "aws_ses" {
   ses_domain_name  = var.ses_domain_name
   mail_from_domain = var.ses_mail_from_domain
 
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# scheduled HTTPS API call
+# ---------------------------------------------------------------------------------------------------------------------
+module "scheduled_api_call" {
+  count = var.enable_scheduled_https_api_call ? 1 : 0
+
+  source        = "./modules/scheduled_api_call"
+  solution_name = var.solution_name
+
+  # Scheduled https api call
+  enable_scheduled_https_api_call  = var.enable_scheduled_https_api_call
+  scheduled_https_api_call_crontab = var.scheduled_https_api_call_crontab
+  scheduled_https_api_call_url     = var.scheduled_https_api_call_url
 }

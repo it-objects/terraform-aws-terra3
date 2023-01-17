@@ -400,7 +400,7 @@ variable "external_private_subnets" {
 
 variable "external_vpc_private_route_table_ids" {
   type        = list(string)
-  description = "Private rout table ids of existing vpc."
+  description = "Private route table ids of existing vpc."
   default     = []
 }
 
@@ -414,4 +414,22 @@ variable "external_elasticache_subnet_ids" {
   type        = list(string)
   description = "Elasticache subnet ids of existing vpc."
   default     = []
+}
+
+variable "enable_scheduled_https_api_call" {
+  type        = bool
+  description = "Select true to enable scheduled api call."
+  default     = false
+}
+
+variable "scheduled_https_api_call_crontab" {
+  type        = string
+  description = "Enter schedule details of scheduled api call in crontab format."
+  default     = ""
+}
+
+variable "scheduled_https_api_call_url" {
+  type        = string
+  description = "Enter url of scheduled api call."
+  default     = ""
 }
