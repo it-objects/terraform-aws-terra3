@@ -357,47 +357,48 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
 # Create autoscaling target linked to ECS
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_target" "ecs_target" {
-  max_capacity       = 3
-  min_capacity       = 1
+  count              = var.enable_ecs_autoscaling ? 1 : 0
+  max_capacity       = var.ecs_autoscaling_max_capacity
+  min_capacity       = var.ecs_autoscaling_min_capacity
   resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
-  role_arn           = aws_iam_role.ecs-autoscale-role.arn
+  role_arn           = aws_iam_role.ecs-autoscale-role[0].arn
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Scale up based on CPU and MEMORY Utilisation
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_policy" "ecs_target_cpu" {
-  count              = var.metric_type == "CPU_UTILISATION" ? 1 : 0
-  name               = "application-scaling-policy-cpu"
+  count              = var.enable_ecs_autoscaling && var.ecs_autoscaling_metric_type == "CPU_UTILISATION" ? 1 : 0
+  name               = "${var.name}-auto-scaling-policy-cpu"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
-  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+  resource_id        = aws_appautoscaling_target.ecs_target[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target[0].service_namespace
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-    target_value = 90
+    target_value = var.ecs_autoscaling_target_value
   }
   depends_on = [aws_appautoscaling_target.ecs_target]
 }
 
 resource "aws_appautoscaling_policy" "ecs_target_memory" {
-  count              = var.metric_type == "MEMORY_UTILISATION" ? 1 : 0
-  name               = "application-scaling-policy-memory"
+  count              = var.enable_ecs_autoscaling && var.ecs_autoscaling_metric_type == "MEMORY_UTILISATION" ? 1 : 0
+  name               = "${var.name}-auto-scaling-policy-memory"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
-  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+  resource_id        = aws_appautoscaling_target.ecs_target[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target[0].service_namespace
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-    target_value = 90
+    target_value = var.ecs_autoscaling_target_value
   }
   depends_on = [aws_appautoscaling_target.ecs_target]
 }
@@ -405,7 +406,8 @@ resource "aws_appautoscaling_policy" "ecs_target_memory" {
 # IAM Role Definitions
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role" "ecs-autoscale-role" {
-  name = "ecs-scale-application-role"
+  count = var.enable_ecs_autoscaling ? 1 : 0
+  name  = "${var.name}-ecs-auto-scaling-role"
 
   assume_role_policy = <<EOF
 {
@@ -424,7 +426,8 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "ecs-autoscale" {
-  role       = aws_iam_role.ecs-autoscale-role.id
+  count      = var.enable_ecs_autoscaling ? 1 : 0
+  role       = aws_iam_role.ecs-autoscale-role[0].id
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"
 }
 

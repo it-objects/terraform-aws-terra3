@@ -240,7 +240,12 @@ module "app_components" {
   solution_name     = var.solution_name
   container_runtime = module.cluster.ecs_cluster_name
   cluster_type      = var.cluster_type
-  metric_type       = var.metric_type
+
+  enable_ecs_autoscaling       = var.enable_ecs_autoscaling
+  ecs_autoscaling_metric_type  = var.ecs_autoscaling_metric_type
+  ecs_autoscaling_max_capacity = var.ecs_autoscaling_max_capacity
+  ecs_autoscaling_min_capacity = var.ecs_autoscaling_min_capacity
+  ecs_autoscaling_target_value = var.ecs_autoscaling_target_value
 
   instances = each.value["instances"]
 
