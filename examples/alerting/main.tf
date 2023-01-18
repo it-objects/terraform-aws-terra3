@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is an example with Cluster type options.
-# Here, cluster_type can be selected as "ECS_FARGATE" or "ECS_EC2".
-# Default cluster_type is "ECS_FARGATE".
+# This is an example showcasing Terra3's alerting feature.
+#
+# Outcome: Like example 1 + a container runtime and no custom domain + alerting
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "terra3-ecs"
+  solution_name = "terra3-alerting"
 }
 
 module "terra3_examples" {
@@ -20,17 +20,18 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
-  # Cluster type options
-  #cluster_type = "FARGATE"
-  cluster_type = "EC2"
+  # enable CPU utilization alerts;
+  alert_receivers_email = ["test@example.com.fake"] # an SNS confirmation mail needs to be confirmed before receiving alerts
+  cpu_utilization_alert = true                      # minimal setup to enable alerts with defaults
 
-  #EC2 cluster configurations
-  cluster_ec2_min_nodes           = 1
-  cluster_ec2_max_nodes           = 2
-  cluster_ec2_instance_type       = "t3a.small"
-  cluster_ec2_desired_capacity    = 1
-  cluster_ec2_detailed_monitoring = false
-  cluster_ec2_volume_size         = 30
+  # disable memory utilization alerts but show possible settings; the same are available for cpu_utilization
+  memory_utilization_alert                   = false # false disables all follow-up settings for this specific alert
+  memory_utilization_high_evaluation_periods = 3     # how many times before switching state
+  memory_utilization_high_period             = 300   # seconds before re-evaluation
+  memory_utilization_high_threshold          = 90    # 90% of total amount of memory threshold
+  memory_utilization_low_evaluation_periods  = 3     # how many times before switching state
+  memory_utilization_low_period              = 300   # seconds before re-evaluation
+  memory_utilization_low_threshold           = 0     # threshold of 0 disables alarm completely
 
   app_components = {
 
@@ -48,6 +49,26 @@ module "terra3_examples" {
 
       listener_rule_prio = 200
       path_mapping       = "/api/*"
+      service_port       = 80
+
+      # for cost savings undeploy outside work hours
+      enable_autoscaling = true
+    }
+
+    my_app_component2 = {
+
+      instances = 1
+
+      total_cpu    = 256
+      total_memory = 512
+
+      container = [
+        module.container_my_main,
+        module.container_my_sidecar
+      ]
+
+      listener_rule_prio = 300
+      path_mapping       = "/api2/*"
       service_port       = 80
 
       # for cost savings undeploy outside work hours

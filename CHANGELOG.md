@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.13.0...v0.14.0) (2023-01-17)
+
+
+### Features
+
+* add option to enable AWS ECS also with EC2 instances instead of Fargate ([4dea29c](https://github.com/it-objects/terraform-aws-terra3/commit/4dea29c129906c1cc402af4197f854a57225a779))
+
+## [0.13.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.12.0...v0.13.0) (2023-01-17)
+
+
+### Features
+
+* allow to use Terra3 with an existing VPC ([3c473a9](https://github.com/it-objects/terraform-aws-terra3/commit/3c473a9a90b7de9c66f55e988f2484c2a151d15b))
+
+## [0.12.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.11.2...v0.12.0) (2023-01-17)
+
+
+### Features
+
+* adding scheduled api calls for e.g. maintenance activities (currently limited to unauthorized GET requests) ([b7ef9b9](https://github.com/it-objects/terraform-aws-terra3/commit/b7ef9b9e756c77b908586964a995c94b89848071))
+
+### [0.11.2](https://github.com/it-objects/terraform-aws-terra3/compare/v0.11.1...v0.11.2) (2022-12-29)
+
+
+### Bug Fixes
+
+* storing alb logs disabled. ([96b976b](https://github.com/it-objects/terraform-aws-terra3/commit/96b976b0f23d45c2a7b0c13dd36ffdea533ca75b))
+
 ### [0.11.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.11.0...v0.11.1) (2022-12-29)
 
 

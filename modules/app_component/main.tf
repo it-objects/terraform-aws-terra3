@@ -10,14 +10,14 @@
 # Service definition, auto heals if task shuts down
 # ---------------------------------------------------------------------------------------------------------------------
 locals {
-  ecs_launch_type = var.cluster_type == "ECS_FARGATE" ? "FARGATE" : "EC2"
+  launch_type = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? "FARGATE" : "EC2"
 }
 resource "aws_ecs_service" "ecs_service" {
   name            = "${var.name}Service"
   cluster         = data.aws_ecs_cluster.selected.arn
   task_definition = aws_ecs_task_definition.ecs_task_definition.arn
   desired_count   = var.instances
-  launch_type     = local.ecs_launch_type
+  launch_type     = local.launch_type # FARGATE | EC2
 
   health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
@@ -65,7 +65,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   execution_role_arn       = aws_iam_role.ExecutionRole.arn
   task_role_arn            = aws_iam_role.task.arn
   network_mode             = "awsvpc"
-  requires_compatibilities = [local.ecs_launch_type]
+  requires_compatibilities = [local.launch_type]
 
   # Fargate cpu/mem must match available options: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
   cpu    = var.total_cpu
@@ -267,6 +267,89 @@ resource "aws_cloudwatch_log_group" "CloudWatchLogGroup" {
   }
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# AWS CloudWatch alarm
+# to send a notification when the alarm reaches the desired alarm state
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_high" {
+  count               = var.cpu_utilization_alert && var.cpu_utilization_high_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_cpu_high_${var.name}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = var.cpu_utilization_high_evaluation_periods
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = var.cpu_utilization_high_period
+  statistic           = "Average"
+  threshold           = var.cpu_utilization_high_threshold
+  alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.cpu_utilization_high_threshold}%."
+  alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
+
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_low" {
+  count               = var.cpu_utilization_alert && var.cpu_utilization_low_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_cpu_low_${var.name}"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = var.cpu_utilization_low_period
+  statistic           = "Average"
+  threshold           = var.cpu_utilization_low_threshold
+  alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.cpu_utilization_low_threshold}%."
+  alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
+
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_high" {
+  count               = var.memory_utilization_alert && var.memory_utilization_high_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_mem_high_${var.name}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = var.memory_utilization_high_evaluation_periods
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = var.memory_utilization_high_period
+  statistic           = "Average"
+  threshold           = var.memory_utilization_high_threshold
+  alarm_description   = "This metric monitors ecs service cpu utilization exceeding ${var.memory_utilization_high_threshold}%."
+  alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
+
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
+  count               = var.memory_utilization_alert && var.memory_utilization_low_threshold != 0 ? 1 : 0
+  alarm_name          = "ecs_svc_mem_low_${var.name}"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = var.memory_utilization_low_period
+  statistic           = "Average"
+  threshold           = var.memory_utilization_low_threshold
+  alarm_description   = "This metric monitors ecs service cpu utilization less than ${var.memory_utilization_low_threshold}%."
+  alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
+
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
+}
 # ---------------------------------------------------------------------------------------------------------------------
 # Autoscaling based on CPU and MEMORY Utilisation for scaling up and down to save costs.
 # ---------------------------------------------------------------------------------------------------------------------

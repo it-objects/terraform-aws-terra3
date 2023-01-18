@@ -31,9 +31,111 @@ variable "nat" {
   }
 }
 
+variable "cpu_utilization_alert" {
+  description = "Select true to get alert based on CPU Utilisation"
+  type        = bool
+  default     = false
+}
+
+variable "memory_utilization_alert" {
+  description = "Select true to get alert based on MEMORY Utilisation"
+  type        = bool
+  default     = false
+}
+
+variable "cpu_utilization_high_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "cpu_utilization_high_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "cpu_utilization_high_threshold" {
+  type        = number
+  description = "The maximum percentage of CPU utilization average"
+  default     = 90
+}
+
+variable "cpu_utilization_low_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "cpu_utilization_low_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "cpu_utilization_low_threshold" {
+  type        = number
+  description = "The minimum percentage of CPU utilization average"
+  default     = 30
+}
+
+variable "memory_utilization_high_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "memory_utilization_high_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "memory_utilization_high_threshold" {
+  type        = number
+  description = "The maximum percentage of Memory utilization average"
+  default     = 90
+}
+
+variable "memory_utilization_low_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "memory_utilization_low_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "memory_utilization_low_threshold" {
+  type        = number
+  description = "The minimum percentage of Memory utilization average"
+  default     = 20
+}
+
+variable "sns_topic_arn" {
+  type        = set(string)
+  description = ""
+  default     = []
+}
+
+variable "alert_receivers_email" {
+  type        = list(string)
+  default     = []
+  description = "Email address for the endpoint of SNS subscription."
+}
+
 variable "create_load_balancer" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool
+  default     = false
+}
+
+variable "enable_alb_logs" {
+  type        = bool
+  description = "Select to enable storing alb logs in s3 bucket."
   default     = false
 }
 
@@ -126,13 +228,13 @@ variable "database" {
 }
 
 variable "cluster_type" {
-  description = "Select ECS_FARGATE for cluster type as FARGATE, or select ECS_EC2 for cluster type as EC2."
+  description = "Select FARGATE for cluster type as FARGATE, or select EC2 for cluster type as EC2."
   type        = string
-  default     = "ECS_FARGATE"
+  default     = "FARGATE"
 
   validation {
-    condition     = contains(["ECS_FARGATE", "ECS_EC2"], var.cluster_type)
-    error_message = "Only 'ECS_FARGATE', and 'ECS_EC2' are allowed."
+    condition     = contains(["FARGATE", "EC2"], var.cluster_type)
+    error_message = "Only 'FARGATE', and 'EC2' are allowed."
   }
 }
 
@@ -239,12 +341,6 @@ variable "nat_instance_types" {
   default     = ["t4g.nano"] # cheapest
 }
 
-variable "enable_alb_logs" {
-  type        = bool
-  description = "Select to enable storing alb logs in s3 bucket."
-  default     = false
-}
-
 variable "create_ecr" {
   type    = bool
   default = false
@@ -269,4 +365,82 @@ variable "s3_solution_bucket_policy" {
     condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
     error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
   }
+}
+
+variable "create_ses" {
+  type        = bool
+  description = "Enable it to use AWS simple email service."
+  default     = false
+}
+
+variable "ses_domain_name" {
+  type        = string
+  description = "Define domain name to be verified."
+  default     = ""
+}
+
+variable "ses_mail_from_domain" {
+  description = "Define mail from domain name. Usually the same as the ses_domain_name."
+  type        = string
+  default     = ""
+}
+
+variable "use_an_existing_vpc" {
+  description = "Enables/disables an AWS Application Load Balancer."
+  type        = bool
+  default     = false
+}
+
+variable "external_vpc_id" {
+  type        = string
+  description = "vpc id of existing vpc."
+  default     = ""
+}
+
+variable "external_public_subnets" {
+  type        = list(string)
+  description = "Public subnets of existing vpc."
+  default     = []
+}
+
+variable "external_private_subnets" {
+  type        = list(string)
+  description = "Private subnets of existing vpc."
+  default     = []
+}
+
+variable "external_vpc_private_route_table_ids" {
+  type        = list(string)
+  description = "Private route table ids of existing vpc."
+  default     = []
+}
+
+variable "external_db_subnet_group_name" {
+  type        = string
+  description = "Database subnet group name of existing vpc."
+  default     = ""
+}
+
+variable "external_elasticache_subnet_ids" {
+  type        = list(string)
+  description = "Elasticache subnet ids of existing vpc."
+  default     = []
+}
+
+variable "enable_scheduled_https_api_call" {
+  type        = bool
+  description = "Select true to enable scheduled api call."
+  default     = false
+}
+
+variable "scheduled_https_api_call_crontab" {
+  type        = string
+  description = "Enter schedule details of scheduled api call in crontab format."
+  default     = ""
+}
+
+variable "scheduled_https_api_call_url" {
+  type        = string
+  description = "Enter url of scheduled api call."
+  default     = ""
 }

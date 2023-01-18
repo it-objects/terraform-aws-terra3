@@ -22,7 +22,7 @@ resource "aws_lb" "this" {
 
 # tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "lb-logs" {
-  count  = var.enable_alb_logs == true ? 1 : 0
+  count  = var.enable_alb_logs ? 1 : 0
   bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
 }
 # ---------------------------------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ resource "aws_s3_bucket" "lb-logs" {
 # TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_public_access_block" "block" {
-  count  = var.enable_alb_logs == true ? 1 : 0
+  count  = var.enable_alb_logs ? 1 : 0
   bucket = aws_s3_bucket.lb-logs[0].bucket
 
   block_public_acls       = true
@@ -41,7 +41,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
 
 # tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption_config" {
-  count  = var.enable_alb_logs == true ? 1 : 0
+  count  = var.enable_alb_logs ? 1 : 0
   bucket = aws_s3_bucket.lb-logs[0].id
 
   rule {
@@ -52,9 +52,21 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption_con
 }
 
 resource "aws_s3_bucket_acl" "lb-logs-acl" {
-  count  = var.enable_alb_logs == true ? 1 : 0
+  count  = var.enable_alb_logs ? 1 : 0
   bucket = aws_s3_bucket.lb-logs[0].id
   acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "allow-lb" {
+  count  = var.enable_alb_logs ? 1 : 0
+  bucket = aws_s3_bucket.lb-logs[0].id
+  policy = data.aws_iam_policy_document.allow-lb[0].json
+}
+
+resource "random_string" "random_s3_alb_logs_postfix" {
+  length    = 4
+  special   = false
+  min_lower = 4
 }
 
 data "aws_iam_policy_document" "allow-lb" {
@@ -87,18 +99,6 @@ data "aws_iam_policy_document" "allow-lb" {
       "${aws_s3_bucket.lb-logs[0].arn}/*"
     ]
   }
-}
-
-resource "aws_s3_bucket_policy" "allow-lb" {
-  count  = var.enable_alb_logs == true ? 1 : 0
-  bucket = aws_s3_bucket.lb-logs[0].id
-  policy = data.aws_iam_policy_document.allow-lb[0].json
-}
-
-resource "random_string" "random_s3_alb_logs_postfix" {
-  length    = 4
-  special   = false
-  min_lower = 4
 }
 
 resource "aws_ssm_parameter" "environment_alb_arn" {
