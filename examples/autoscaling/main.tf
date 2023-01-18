@@ -20,8 +20,7 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
-  # Choose the metric type to perform auto scaling based on.
-
+  # configure ecs fargate container autoscaling based on cpu and memory utilisation.
   enable_ecs_autoscaling       = true
   ecs_autoscaling_metric_type  = "CPU_UTILISATION" #default
   ecs_autoscaling_max_capacity = 3
