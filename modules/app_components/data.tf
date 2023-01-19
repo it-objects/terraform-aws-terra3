@@ -1,10 +1,24 @@
 data "aws_region" "current_region" {} # Find region, e.g. us-east-1
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Determine cluster name
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_ssm_parameter" "cluster_name" {
+  name = "/${var.solution_name}/${var.solution_name}-cluster/container_runtime_ecs_cluster_name"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Determine cluster id from name (${var.solution_name}-cluster)
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_ecs_cluster" "selected" {
-  cluster_name = var.container_runtime
+  cluster_name = data.aws_ssm_parameter.cluster_name.value
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Determine cluster type
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_ssm_parameter" "cluster_type" {
+  name = "/${var.solution_name}/cluster_type"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -15,18 +29,33 @@ data "aws_ssm_parameter" "alb_arn" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Determine loadbalancer listener arn from ssm param store
+# Determine domain_name from ssm param store
 # ---------------------------------------------------------------------------------------------------------------------
-data "aws_ssm_parameter" "alb_listener_443_arn" {
-  name = "/${var.solution_name}/alb_listener_443_arn"
+data "aws_ssm_parameter" "domain_name" {
+  name = "/${var.solution_name}/domain_name"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Determine loadbalancer listener arn from ssm param store
+# Determine domain_name from ssm param store
 # ---------------------------------------------------------------------------------------------------------------------
-data "aws_ssm_parameter" "alb_listener_80_arn" {
-  name = "/${var.solution_name}/alb_listener_80_arn"
+data "aws_ssm_parameter" "enable_custom_domain" {
+  name = "/${var.solution_name}/enable_custom_domain"
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Determine sns alerts topic arn from ssm param store
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_ssm_parameter" "sns_alerts_topic_arn" {
+  name = "/${var.solution_name}/sns_alerts_topic_arn"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+## Determine certificate arn from fqdn
+# ---------------------------------------------------------------------------------------------------------------------
+#data "aws_acm_certificate" "certificate" {
+#  count  = var.lb_domain_name == "" ? 0 : 1
+#  domain = var.lb_domain_name
+#}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Determine VPC id from VPC name (${var.solution_name}-vpc)
@@ -69,15 +98,15 @@ data "aws_security_group" "postgres_marker_sg" {
   name = "${var.solution_name}_postgres_access_marker_sg"
 }
 
-data "aws_ssm_parameter" "ssm_container_runtime_kms_key_id" {
-  count = var.enable_ecs_exec ? 1 : 0
-  name  = "/${var.solution_name}/${var.container_runtime}/container_runtime_kms_key_id"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# Determine KMS key
-# ---------------------------------------------------------------------------------------------------------------------
-data "aws_kms_key" "solution_key" {
-  count  = var.enable_ecs_exec ? 1 : 0
-  key_id = data.aws_ssm_parameter.ssm_container_runtime_kms_key_id[0].value
-}
+#data "aws_ssm_parameter" "ssm_container_runtime_kms_key_id" {
+#  count = var.enable_ecs_exec ? 1 : 0
+#  name  = "/${var.solution_name}/${var.container_runtime}/container_runtime_kms_key_id"
+#}
+#
+## ---------------------------------------------------------------------------------------------------------------------
+## Determine KMS key
+## ---------------------------------------------------------------------------------------------------------------------
+#data "aws_kms_key" "solution_key" {
+#  count  = var.enable_ecs_exec ? 1 : 0
+#  key_id = data.aws_ssm_parameter.ssm_container_runtime_kms_key_id[0].value
+#}

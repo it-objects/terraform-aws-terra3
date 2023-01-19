@@ -11,7 +11,13 @@ locals {
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
-  domain_name = length(module.dns_and_certificates) == 0 ? "" : module.dns_and_certificates[0].domain_name
+  domain_name = var.enable_custom_domain ? module.dns_and_certificates[0].domain_name : ""
+}
+
+resource "aws_ssm_parameter" "domain_name" {
+  name  = "/${var.solution_name}/domain_name"
+  type  = "String"
+  value = var.enable_custom_domain ? local.domain_name : "-"
 }
 
 
@@ -121,6 +127,10 @@ module "l7_loadbalancer" {
   security_groups = [module.security_groups.loadbalancer_sg]
 
   enable_alb_logs = var.enable_alb_logs
+
+  enable_custom_domain = var.enable_custom_domain
+  hosted_zone_id       = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
+  domain_name          = var.enable_custom_domain ? module.dns_and_certificates[0].domain_name : ""
 }
 
 module "security_groups" {
@@ -129,7 +139,7 @@ module "security_groups" {
   name   = var.solution_name
   vpc_id = local.vpc_id
 
-  create_dns_and_certificates = var.create_dns_and_certificates
+  create_dns_and_certificates = var.enable_custom_domain
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -138,22 +148,25 @@ module "security_groups" {
 # - hosted zone to be created within account
 # ---------------------------------------------------------------------------------------------------------------------
 module "dns_and_certificates" {
-  count = var.create_dns_and_certificates ? 1 : 0
+  count = var.enable_custom_domain ? 1 : 0
 
   source = "./modules/dns_and_certificates"
 
-  environment = var.solution_name
+  solution_name = var.solution_name
 
   route53_subdomain = var.solution_name
   route53_zone_id   = var.route53_zone_id
   domain            = var.domain_name
 
-  create_load_balancer = var.create_load_balancer
-  lb_dns_name          = length(module.l7_loadbalancer) == 0 ? "" : module.l7_loadbalancer[0].lb_dns_name
-
   providers = {
     aws.useast1 = aws.useast1
   }
+}
+
+resource "aws_ssm_parameter" "enable_custom_domain" {
+  name  = "/${var.solution_name}/enable_custom_domain"
+  type  = "String"
+  value = var.enable_custom_domain
 }
 
 module "cloudfront_cdn" {
@@ -164,7 +177,7 @@ module "cloudfront_cdn" {
   domain          = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].domain_name
   certificate_arn = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].cloudfront_certificate_arn
 
-  calculated_zone_id = var.create_dns_and_certificates ? module.dns_and_certificates[0].hosted_zone_id : ""
+  calculated_zone_id = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
 
   enable_s3_for_static_website = var.enable_s3_for_static_website
 
@@ -213,6 +226,12 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
+resource "aws_ssm_parameter" "cluster_type" {
+  name  = "/${var.solution_name}/cluster_type"
+  type  = "String"
+  value = var.cluster_type
+}
+
 locals {
   create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
 }
@@ -224,71 +243,17 @@ resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
   name  = "ecs_service_cpu_and_memory_utilization_topic"
 }
 
+resource "aws_ssm_parameter" "sns_alerts_topic_arn" {
+  name  = "/${var.solution_name}/sns_alerts_topic_arn"
+  type  = "String"
+  value = local.create_sns_topic ? aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn : "-"
+}
+
 resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
   count     = local.create_sns_topic ? length(var.alert_receivers_email) : 0
   topic_arn = aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn
   protocol  = "email"
   endpoint  = var.alert_receivers_email[count.index]
-}
-
-module "app_components" {
-  for_each = var.app_components
-
-  source = "./modules/app_component"
-
-  name              = each.key
-  solution_name     = var.solution_name
-  container_runtime = module.cluster.ecs_cluster_name
-  cluster_type      = var.cluster_type
-
-  instances = each.value["instances"]
-
-  total_cpu    = each.value["total_cpu"]
-  total_memory = each.value["total_memory"]
-
-  # CloudWatch alert based on cpu and memory utilization
-  cpu_utilization_alert    = var.cpu_utilization_alert
-  memory_utilization_alert = var.memory_utilization_alert
-  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
-
-  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
-  cpu_utilization_high_period             = var.cpu_utilization_high_period
-  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
-  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
-  cpu_utilization_low_period              = var.cpu_utilization_low_period
-  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
-
-  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
-  memory_utilization_high_period             = var.memory_utilization_high_period
-  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
-  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
-  memory_utilization_low_period              = var.memory_utilization_low_period
-  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
-
-
-  container = each.value["container"]
-
-  # if true the next block's variables are ignored internally
-  internal_service = lookup(each.value, "internal_service", false)
-
-  listener_rule_prio = lookup(each.value, "listener_rule_prio", null)
-  path_mapping       = lookup(each.value, "path_mapping", null)
-  service_port       = lookup(each.value, "service_port", null)
-
-  lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
-  health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
-  lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
-
-  enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
-
-  # for cost savings undeploy outside work hours
-  enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
-
-  s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
-
-  lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : ""
-
-  depends_on = [module.l7_loadbalancer, module.security_groups]
 }
 
 module "bastion_host_ssm" {
@@ -421,4 +386,41 @@ module "scheduled_api_call" {
   enable_scheduled_https_api_call  = var.enable_scheduled_https_api_call
   scheduled_https_api_call_crontab = var.scheduled_https_api_call_crontab
   scheduled_https_api_call_url     = var.scheduled_https_api_call_url
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# app components called from within the same module (can also be used externally, see separate_state_example)
+# ---------------------------------------------------------------------------------------------------------------------
+module "app_components" {
+  source = "./modules/app_components"
+
+  app_components = var.app_components
+
+  solution_name = var.solution_name
+
+  two_states_approach = false # overwriting default to indicate one state approach
+
+  enable_custom_domain = var.enable_custom_domain
+
+  # CloudWatch alert based on cpu and memory utilization
+  cpu_utilization_alert    = var.cpu_utilization_alert
+  memory_utilization_alert = var.memory_utilization_alert
+  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
+  # needed because for the ability to run separately, this module relies on querying information via data fields
+  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain]
 }

@@ -107,34 +107,13 @@ resource "aws_lb_target_group" "target_group" {
   }
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# HTTPS (Port 443) listener + rules
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_lb_listener" "port_443" {
-  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
-
-  load_balancer_arn = data.aws_ssm_parameter.alb_arn.value
-  port              = "443"
-  protocol          = "HTTPS"
-  certificate_arn   = data.aws_acm_certificate.certificate[0].arn
-  ssl_policy        = "ELBSecurityPolicy-FS-1-2-Res-2020-10"
-
-  # if no attached rule matches, do this
-  default_action {
-    type = "redirect"
-    redirect {
-      host        = var.default_redirect_url
-      protocol    = "HTTPS"
-      port        = "443"
-      status_code = "HTTP_302"
-    }
-  }
-}
-
+## ---------------------------------------------------------------------------------------------------------------------
+## HTTPS (Port 443) listener rules
+## ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "https_listener_rule" {
-  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
+  count = var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_443[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_443_arn.value
   priority     = var.listener_rule_prio
 
   action {
@@ -155,9 +134,9 @@ resource "aws_lb_listener_rule" "https_listener_rule" {
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
-  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
+  count = var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_443[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_443_arn.value
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
 
   action {
@@ -181,32 +160,10 @@ resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
   }
 }
 
-
-# ---------------------------------------------------------------------------------------------------------------------
-# HTTP (Port 80) listener + rules
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_lb_listener" "port_80" {
-  count = var.internal_service ? 0 : 1
-
-  load_balancer_arn = data.aws_ssm_parameter.alb_arn.value
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type = "redirect"
-    redirect {
-      host        = "terra3.io"
-      protocol    = "HTTPS"
-      port        = "443"
-      status_code = "HTTP_302"
-    }
-  }
-}
-
 resource "aws_lb_listener_rule" "http_listener_rule" {
-  count = var.internal_service ? 0 : 1
+  count = !var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_80[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_80_arn.value
   priority     = var.listener_rule_prio
 
   action {
@@ -227,9 +184,9 @@ resource "aws_lb_listener_rule" "http_listener_rule" {
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "http_trailing_slash_redirect" {
-  count = var.internal_service ? 0 : 1
+  count = !var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_80[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_80_arn.value
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
 
   action {

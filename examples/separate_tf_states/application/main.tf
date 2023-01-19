@@ -1,38 +1,21 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is example 3 showcasing Terra3's capabilities.
+# This is example 2 showcasing Terra3's capabilities.
 #
-# Outcome: Like example 2 + with a containers AND a custom domain.
+# Outcome: Like example 1 + a container runtime and no custom domain
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  route53_zone_id = "<PLEASE ENTER HERE THE HOSTED ZONE ID>"
-  solution_name   = "terra3-example3"
+  solution_name = "t3-two-states"
 }
 
 module "terra3_examples" {
-  source = "../.."
+  source = "../../../modules/app_components"
 
-  solution_name                 = local.solution_name
-  enable_account_best_practices = true
-
-  # if set to true, domain_name or domain of zone is required
-  enable_custom_domain = true
-
-  # domain name of hosted zone to which we have full access
-  # domain_name = local.custom_domain_name
-  route53_zone_id = local.route53_zone_id
-
-  # configure your environment here
-  create_load_balancer = true
-  create_bastion_host  = true
-  create_database      = false
-
-  # dependency: required for downloading container images
-  nat = "NAT_INSTANCES"
+  solution_name = local.solution_name
 
   app_components = {
 
-    my_app_component = {
+    t3-two-states-component = {
 
       instances = 1
 
@@ -61,7 +44,7 @@ module "terra3_examples" {
 # - Names need to be different when used together
 # ---------------------------------------------------------------------------------------------------------------------
 module "container_my_main" {
-  source = "../../modules/container"
+  source = "../../../modules/container"
 
   name = "my_main_container"
 
@@ -83,7 +66,7 @@ module "container_my_main" {
 }
 
 module "container_my_sidecar" {
-  source = "../../modules/container"
+  source = "../../../modules/container"
 
   name = "my_sidecar"
 

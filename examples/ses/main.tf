@@ -17,7 +17,7 @@ module "terra3_examples" {
   enable_account_best_practices = true
 
   # if set to true, domain_name or domain of zone is required
-  create_dns_and_certificates = true
+  enable_custom_domain = true
 
   # domain name of hosted zone to which we have full access
   # domain_name = local.custom_domain_name
