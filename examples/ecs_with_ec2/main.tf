@@ -22,7 +22,8 @@ module "terra3_examples" {
 
   # Cluster type options
   #cluster_type = "FARGATE"
-  cluster_type = "EC2"
+  cluster_type = "FARGATE_SPOT"
+  #cluster_type = "EC2"
 
   #EC2 cluster configurations
   cluster_ec2_min_nodes           = 1
