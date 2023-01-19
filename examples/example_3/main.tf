@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  route53_zone_id = "Z038774514STH6Q52B21H"
+  route53_zone_id = "<PLEASE ENTER HERE THE HOSTED ZONE ID>"
   solution_name   = "terra3-example3"
 }
 
