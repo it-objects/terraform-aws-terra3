@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.14.0...v0.15.0) (2023-01-19)
+
+
+### Features
+
+* allow setting up two tf states, one for infra scope and one for application scope to reduce blast radius ([cb223a0](https://github.com/it-objects/terraform-aws-terra3/commit/cb223a00a3faa6a4cfa35f96ba42fe71cf896f2f))
+
 ## [0.14.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.13.0...v0.14.0) (2023-01-17)
 
 
