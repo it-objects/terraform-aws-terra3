@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.15.0...v0.16.0) (2023-01-23)
+
+
+### Features
+
+* added output arn of s3 solution bucket. ([#21](https://github.com/it-objects/terraform-aws-terra3/issues/21)) ([94c15d7](https://github.com/it-objects/terraform-aws-terra3/commit/94c15d7f129fb85feee719cd7454147be6340021))
+
 ## [0.15.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.14.0...v0.15.0) (2023-01-19)
 
 
