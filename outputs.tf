@@ -13,6 +13,11 @@ output "s3_solution_bucket_name" {
   description = "Return solution bucket's URL."
 }
 
+output "s3_solution_bucket_arn" {
+  value       = module.s3_solution_bucket[0].s3_bucket_arn
+  description = "Return solution bucket's ARN."
+}
+
 output "db_credentials" {
   value       = var.create_database ? module.database[0].db_credentials : ""
   description = "Return DB credentials as JSON."
