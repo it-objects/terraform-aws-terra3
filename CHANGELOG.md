@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.16.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.16.0...v0.16.1) (2023-01-24)
+
+
+### Bug Fixes
+
+* avoid error if no S3 solution bucket is created ([2b3f1a2](https://github.com/it-objects/terraform-aws-terra3/commit/2b3f1a26cdc01eb9e59d75a32021575785cf1c1f))
+
 ## [0.16.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.15.0...v0.16.0) (2023-01-23)
 
 
