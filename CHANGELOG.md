@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.16.1...v0.17.0) (2023-01-24)
+
+
+### Features
+
+* adding option for injecting secrets to app_component ([#22](https://github.com/it-objects/terraform-aws-terra3/issues/22)) ([d7cc43a](https://github.com/it-objects/terraform-aws-terra3/commit/d7cc43a170df501dfd261704ab90cb272130a9ab))
+
 ### [0.16.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.16.0...v0.16.1) (2023-01-24)
 
 
