@@ -1,5 +1,4 @@
 locals {
-
   # -------------------------------------------------------------------------------------------------------------------
   # Sort environment variables so terraform will not try to recreate on each plan/apply
   # -------------------------------------------------------------------------------------------------------------------
@@ -15,9 +14,22 @@ locals {
       value = lookup(local.env_vars_as_map, key)
     }
   ]
+  environment = length(local.sorted_environment_vars) > 0 ? local.sorted_environment_vars : null
 
   # -------------------------------------------------------------------------------------------------------------------
-  # https://www.terraform.io/docs/configuration/expressions.html#null
+  # Sort secrets so terraform will not try to recreate on each plan/apply
   # -------------------------------------------------------------------------------------------------------------------
-  environment = length(local.sorted_environment_vars) > 0 ? local.sorted_environment_vars : null
+  secrets_keys        = var.map_secrets != null ? keys(var.map_secrets) : var.secrets != null ? [for m in var.secrets : lookup(m, "name")] : []
+  secrets_values      = var.map_secrets != null ? values(var.map_secrets) : var.secrets != null ? [for m in var.secrets : lookup(m, "value")] : []
+  secrets_as_map      = zipmap(local.secrets_keys, local.secrets_values)
+  sorted_secrets_keys = sort(local.secrets_keys)
+
+  sorted_secrets = [
+    for key in local.sorted_secrets_keys :
+    {
+      name      = key
+      valueFrom = lookup(local.secrets_as_map, key)
+    }
+  ]
+  secrets = length(local.sorted_secrets) > 0 ? local.sorted_secrets : null
 }

@@ -18,12 +18,12 @@ output "port_mappings" {
   value = var.port_mappings
 }
 
-output "map_environment" {
-  value = var.map_environment
-}
-
 output "environment" {
   value = local.environment
+}
+
+output "secrets" {
+  value = local.secrets
 }
 
 output "command" {

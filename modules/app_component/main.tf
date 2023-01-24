@@ -12,6 +12,7 @@
 locals {
   launch_type = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? "FARGATE" : "EC2"
 }
+
 resource "aws_ecs_service" "ecs_service" {
   name            = "${var.name}Service"
   cluster         = data.aws_ecs_cluster.selected.arn

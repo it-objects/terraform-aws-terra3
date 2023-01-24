@@ -11,6 +11,7 @@ locals {
 
       portMappings = single_container.port_mappings
       environment  = single_container.environment
+      secrets      = single_container.secrets
 
       command = single_container.command
 
@@ -31,10 +32,8 @@ locals {
       containerPort = 80
     }]
 
-    environment = [{
-      "name" : "my_var_name_default",
-      "value" : "my_var_value_default",
-    }]
+    environment = []
+    secrets     = []
 
     command = null
 
