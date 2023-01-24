@@ -14,6 +14,10 @@ output "container_memory" {
   value = var.container_memory
 }
 
+output "container_memory_reservation" {
+  value = var.container_memory_reservation
+}
+
 output "port_mappings" {
   value = var.port_mappings
 }
