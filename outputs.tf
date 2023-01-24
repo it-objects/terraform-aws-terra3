@@ -14,7 +14,7 @@ output "s3_solution_bucket_name" {
 }
 
 output "s3_solution_bucket_arn" {
-  value       = module.s3_solution_bucket[0].s3_bucket_arn
+  value       = var.create_s3_solution_bucket ? module.s3_solution_bucket[0].s3_bucket_arn : ""
   description = "Return solution bucket's ARN."
 }
 
