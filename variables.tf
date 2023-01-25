@@ -145,6 +145,12 @@ variable "enable_custom_domain" {
   default     = false
 }
 
+variable "default_redirect_url" {
+  description = "In case a URL cannot be matched by the LB, the request should be redirected to this URL."
+  type        = string
+  default     = "terra3.io"
+}
+
 variable "add_default_index_html" {
   description = "Should a default index.html be created in the S3 bucket serving the static web page?"
   type        = bool

@@ -129,6 +129,7 @@ module "l7_loadbalancer" {
   enable_alb_logs = var.enable_alb_logs
 
   enable_custom_domain = var.enable_custom_domain
+  default_redirect_url = var.default_redirect_url
   hosted_zone_id       = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
   domain_name          = var.enable_custom_domain ? module.dns_and_certificates[0].domain_name : ""
 }

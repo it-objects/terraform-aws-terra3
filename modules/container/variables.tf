@@ -16,6 +16,11 @@ variable "container_memory" {
   type = number
 }
 
+variable "container_memory_reservation" {
+  type    = number
+  default = null
+}
+
 variable "port_mappings" {
   type = list(object({
     containerPort = number

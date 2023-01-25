@@ -9,6 +9,8 @@ locals {
       cpu    = single_container.container_cpu
       memory = single_container.container_memory
 
+      memoryReservation = single_container.container_memory_reservation
+
       portMappings = single_container.port_mappings
       environment  = single_container.environment
       secrets      = single_container.secrets

@@ -26,6 +26,12 @@ variable "enable_custom_domain" {
   default     = false
 }
 
+variable "default_redirect_url" {
+  description = "In case a URL cannot be matched by the LB, the request should be redirected to this URL."
+  type        = string
+  default     = "terra3.io"
+}
+
 variable "hosted_zone_id" {
   description = ""
   type        = string

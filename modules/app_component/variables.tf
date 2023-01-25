@@ -40,10 +40,11 @@ variable "total_memory" {
 
 variable "container" {
   type = list(object({
-    name             = string
-    container_image  = string
-    container_cpu    = number
-    container_memory = number
+    name                         = string
+    container_image              = string
+    container_cpu                = number
+    container_memory             = number
+    container_memory_reservation = number
     port_mappings = list(object({
       containerPort = number
       protocol      = string
