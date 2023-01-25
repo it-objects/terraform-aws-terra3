@@ -47,6 +47,21 @@ variable "environment" {
   default     = []
 }
 
+variable "map_secrets" {
+  type        = map(string)
+  description = "The secret references to pass to the container. This is a map of string: {key: value}. map_secrets overrides environment"
+  default     = null
+}
+
+variable "secrets" {
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  description = "The secret references to pass to the container. This is a list of maps. map_secrets overrides environment"
+  default     = []
+}
+
 variable "essential" {
   type        = bool
   description = "Determines whether all other containers in a task are stopped, if this container fails or stops for any reason. Due to how Terraform type casts booleans in json it is required to double quote this value"

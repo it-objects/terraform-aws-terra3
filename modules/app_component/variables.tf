@@ -53,6 +53,10 @@ variable "container" {
       name  = string
       value = string
     }))
+    secrets = list(object({
+      name      = string
+      valueFrom = string
+    }))
     command                = list(string)
     essential              = bool
     readonlyRootFilesystem = bool
