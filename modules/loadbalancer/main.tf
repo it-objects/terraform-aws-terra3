@@ -36,7 +36,7 @@ resource "aws_lb_listener" "port_443" {
   default_action {
     type = "redirect"
     redirect {
-      host        = "terra3.io"
+      host        = var.default_redirect_url
       protocol    = "HTTPS"
       port        = "443"
       status_code = "HTTP_302"
@@ -63,7 +63,7 @@ resource "aws_lb_listener" "port_80" {
   default_action {
     type = "redirect"
     redirect {
-      host        = "terra3.io"
+      host        = var.default_redirect_url
       protocol    = "HTTPS"
       port        = "443"
       status_code = "HTTP_302"
