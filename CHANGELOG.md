@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.18.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.17.0...v0.18.0) (2023-01-25)
+
+
+### Features
+
+* adding configurations for memory_reservation and default_redirect_url ([e51988b](https://github.com/it-objects/terraform-aws-terra3/commit/e51988b1c947038bffc2df8b165cd5dd75f24ad9))
+
 ## [0.17.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.16.1...v0.17.0) (2023-01-24)
 
 
