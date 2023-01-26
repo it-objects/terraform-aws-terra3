@@ -60,6 +60,7 @@ variable "container" {
     command                = list(string)
     essential              = bool
     readonlyRootFilesystem = bool
+    log_configuration      = any
   }))
 }
 

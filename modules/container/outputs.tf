@@ -41,3 +41,7 @@ output "essential" {
 output "readonlyRootFilesystem" {
   value = var.readonlyRootFilesystem
 }
+
+output "log_configuration" {
+  value = var.log_configuration
+}

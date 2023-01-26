@@ -20,6 +20,8 @@ locals {
       essential = single_container.essential
 
       readonlyRootFilesystem = single_container.readonlyRootFilesystem
+
+      logConfiguration = single_container.log_configuration
     }
   )])
 
