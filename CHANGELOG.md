@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.18.0...v0.19.0) (2023-01-26)
+
+
+### Features
+
+* adding database credentials to SSM parameter. ([#24](https://github.com/it-objects/terraform-aws-terra3/issues/24)) ([af90a58](https://github.com/it-objects/terraform-aws-terra3/commit/af90a5893d37feafd92a8d6e2cc3d5b7e2f92dbc))
+
 ## [0.18.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.17.0...v0.18.0) (2023-01-25)
 
 
