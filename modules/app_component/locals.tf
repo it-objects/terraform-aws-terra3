@@ -1,7 +1,7 @@
 locals {
   # loop through all container definitions (and merge with default)
   # later entries overwrite former entries
-  json_map = jsonencode(concat(var.enable_firelens_container ? [local.firelens_container_definition] : [], [for single_container in var.container : merge(
+  json_map = jsonencode(concat([for single_container in var.container : merge(
     local.default_container_definition,
     {
       name   = single_container.name
@@ -23,7 +23,8 @@ locals {
 
       logConfiguration = single_container.log_configuration
     }
-  )]))
+    )], var.enable_firelens_container ? [local.firelens_container_definition] : []
+  ))
 
   default_container_definition = {
     name   = "default_name"
@@ -62,9 +63,11 @@ locals {
   }
 
   firelens_container_definition = {
-    name   = "firelens_container"
-    image  = "533243300146.dkr.ecr.eu-central-1.amazonaws.com/newrelic/logging-firelens-fluentbit"
-    memory = 50
+    name      = "firelens_container"
+    image     = "533243300146.dkr.ecr.eu-central-1.amazonaws.com/newrelic/logging-firelens-fluentbit"
+    cpu       = 20
+    memory    = 50
+    essential = true
 
     memoryReservation = 50
 

@@ -31,12 +31,6 @@ variable "nat" {
   }
 }
 
-variable "enable_firelens_container" {
-  description = "Select true to enable firelens container."
-  type        = bool
-  default     = false
-}
-
 variable "cpu_utilization_alert" {
   description = "Select true to get alert based on CPU Utilisation"
   type        = bool
