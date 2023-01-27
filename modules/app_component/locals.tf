@@ -1,7 +1,7 @@
 locals {
   # loop through all container definitions (and merge with default)
   # later entries overwrite former entries
-  json_map = jsonencode([for single_container in var.container : merge(
+  json_map = jsonencode(concat([for single_container in var.container : merge(
     local.default_container_definition,
     {
       name   = single_container.name
@@ -20,8 +20,11 @@ locals {
       essential = single_container.essential
 
       readonlyRootFilesystem = single_container.readonlyRootFilesystem
+
+      logConfiguration = single_container.log_configuration
     }
-  )])
+    )], var.enable_firelens_container ? [local.firelens_container_definition] : []
+  ))
 
   default_container_definition = {
     name   = "default_name"
@@ -55,6 +58,31 @@ locals {
         awslogs-group : "${var.name}LogGroup",
         awslogs-region : data.aws_region.current_region.name,
         awslogs-stream-prefix : var.solution_name
+      }
+    }
+  }
+
+  firelens_container_definition = {
+    name      = "firelens_container"
+    image     = "533243300146.dkr.ecr.eu-central-1.amazonaws.com/newrelic/logging-firelens-fluentbit"
+    cpu       = 20
+    memory    = 50
+    essential = true
+
+    memoryReservation = 50
+
+    "firelensConfiguration" : {
+      "type" : "fluentbit",
+      "options" : {
+        "enable-ecs-log-metadata" : "true"
+      }
+    },
+    "logConfiguration" : {
+      "logDriver" : "awslogs",
+      "options" : {
+        awslogs-group : "${var.name}LogGroup",
+        awslogs-region : data.aws_region.current_region.name,
+        awslogs-stream-prefix : "api"
       }
     }
   }

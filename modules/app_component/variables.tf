@@ -60,7 +60,14 @@ variable "container" {
     command                = list(string)
     essential              = bool
     readonlyRootFilesystem = bool
+    log_configuration      = any
   }))
+}
+
+variable "enable_firelens_container" {
+  description = "Select true to enable firelens container."
+  type        = bool
+  default     = false
 }
 
 #  CloudWatch alert based on cpu and memory utilization

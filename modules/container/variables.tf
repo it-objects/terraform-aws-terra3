@@ -79,3 +79,16 @@ variable "readonlyRootFilesystem" {
   description = "Best practice is to enable it, but causes issues in some cases."
   default     = false
 }
+
+# https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_LogConfiguration.html
+variable "log_configuration" {
+  type        = any
+  description = "Log configuration options to send to a custom log driver for the container."
+  default     = null
+}
+
+variable "enable_firelens_container" {
+  description = "Select true to enable firelens container."
+  type        = bool
+  default     = false
+}
