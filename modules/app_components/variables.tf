@@ -115,3 +115,9 @@ variable "enable_custom_domain" {
   type    = bool
   default = false
 }
+
+variable "enable_firelens_container" {
+  description = "Select true to enable firelens container."
+  type        = bool
+  default     = false
+}

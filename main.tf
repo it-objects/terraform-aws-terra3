@@ -403,6 +403,8 @@ module "app_components" {
 
   enable_custom_domain = var.enable_custom_domain
 
+  enable_firelens_container = var.enable_firelens_container
+
   # CloudWatch alert based on cpu and memory utilization
   cpu_utilization_alert    = var.cpu_utilization_alert
   memory_utilization_alert = var.memory_utilization_alert

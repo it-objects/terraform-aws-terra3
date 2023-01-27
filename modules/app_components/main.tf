@@ -38,6 +38,8 @@ module "app_components" {
 
   container = each.value["container"]
 
+  enable_firelens_container = var.enable_firelens_container
+
   execution_iam_access = lookup(each.value, "execution_iam_access", null)
 
   # if true the next block's variables are ignored internally

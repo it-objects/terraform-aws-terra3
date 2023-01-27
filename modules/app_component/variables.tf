@@ -64,6 +64,12 @@ variable "container" {
   }))
 }
 
+variable "enable_firelens_container" {
+  description = "Select true to enable firelens container."
+  type        = bool
+  default     = false
+}
+
 #  CloudWatch alert based on cpu and memory utilization
 variable "cpu_utilization_alert" {
   description = "Select true to get alert based on CPU Utilisation"

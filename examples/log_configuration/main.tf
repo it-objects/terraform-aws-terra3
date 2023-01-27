@@ -32,6 +32,8 @@ module "terra3_examples" {
       total_cpu    = 256
       total_memory = 512
 
+      enable_firelens_container = true
+
       container = [
         module.container_my_main,
         module.container_my_sidecar
