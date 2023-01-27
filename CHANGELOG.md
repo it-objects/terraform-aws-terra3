@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.20.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.0...v0.20.1) (2023-01-27)
+
+
+### Bug Fixes
+
+* added default value of firelens container ([#26](https://github.com/it-objects/terraform-aws-terra3/issues/26)) ([74bf9d6](https://github.com/it-objects/terraform-aws-terra3/commit/74bf9d609dfd3ab9e294fd5c33a912cc84f22dce))
+
 ## [0.20.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.19.0...v0.20.0) (2023-01-27)
 
 
