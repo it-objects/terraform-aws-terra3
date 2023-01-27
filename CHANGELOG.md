@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.20.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.19.0...v0.20.0) (2023-01-27)
+
+
+### Features
+
+* added logconfiguration as configurable and firelensconfiguration as an option ([#25](https://github.com/it-objects/terraform-aws-terra3/issues/25)) ([8a0380b](https://github.com/it-objects/terraform-aws-terra3/commit/8a0380b02ab0d43a63ccb7f889d0bb5465788dcd))
+
 ## [0.19.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.18.0...v0.19.0) (2023-01-26)
 
 
