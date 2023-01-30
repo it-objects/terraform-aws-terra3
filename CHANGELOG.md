@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.21.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.2...v0.21.0) (2023-01-30)
+
+
+### Features
+
+* adding switch for creating subdomain or use hosted zone's domain name ([fe739f8](https://github.com/it-objects/terraform-aws-terra3/commit/fe739f83f706a3ac94e1fb7b69779c96988147f2))
+
 ### [0.20.2](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.1...v0.20.2) (2023-01-30)
 
 
