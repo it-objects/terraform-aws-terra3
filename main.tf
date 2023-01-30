@@ -159,6 +159,8 @@ module "dns_and_certificates" {
   route53_zone_id   = var.route53_zone_id
   domain            = var.domain_name
 
+  create_subdomain = var.create_subdomain
+
   providers = {
     aws.useast1 = aws.useast1
   }

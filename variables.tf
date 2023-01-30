@@ -163,6 +163,12 @@ variable "route53_zone_id" {
   default     = ""
 }
 
+variable "create_subdomain" {
+  type        = bool
+  description = "Creates either a subdomain using the solution_name or uses the hosted zone's domain."
+  default     = true
+}
+
 variable "single_az_setup" {
   description = "Multi-AZ is default."
   type        = bool

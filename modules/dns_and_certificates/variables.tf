@@ -12,6 +12,12 @@ variable "route53_zone_id" {
   description = "Put in here the zone id of the Hosted Zone to which the subdomain should be added"
 }
 
+variable "create_subdomain" {
+  type        = bool
+  description = "Creates either a subdomain using the solution_name or uses the hosted zone's domain."
+  default     = true
+}
+
 variable "domain" {
   type        = string
   description = "Domain of hosted zone."
@@ -19,8 +25,8 @@ variable "domain" {
 
 variable "create_load_balancer" {
   type        = bool
+  description = "Indicates whether load balancer has been created."
   default     = false
-  description = "Enables/disables an AWS Application Load Balancer."
 }
 
 variable "lb_dns_name" {

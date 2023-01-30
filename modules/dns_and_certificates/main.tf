@@ -25,7 +25,7 @@ data "aws_route53_zone" "imported_hostedzone" {
 # cert for root domain in Virgina required by CloudFront
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_acm_certificate" "domain_certificate" {
-  domain_name               = "${var.solution_name}.${local.domain_name}"
+  domain_name               = var.create_subdomain ? "${var.solution_name}.${local.domain_name}" : local.domain_name
   validation_method         = "DNS"
   subject_alternative_names = compact([var.alias_domain_name, var.alias_domain_name_2])
 
