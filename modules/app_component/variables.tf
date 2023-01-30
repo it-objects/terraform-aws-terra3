@@ -38,30 +38,9 @@ variable "total_memory" {
   type = number
 }
 
+# validation is ensured in container module
 variable "container" {
-  type = list(object({
-    name                         = string
-    container_image              = string
-    container_cpu                = number
-    container_memory             = number
-    container_memory_reservation = number
-    port_mappings = list(object({
-      containerPort = number
-      protocol      = string
-    }))
-    environment = list(object({
-      name  = string
-      value = string
-    }))
-    secrets = list(object({
-      name      = string
-      valueFrom = string
-    }))
-    command                = list(string)
-    essential              = bool
-    readonlyRootFilesystem = bool
-    log_configuration      = any
-  }))
+  type = any
 }
 
 variable "enable_firelens_container" {
