@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.20.2](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.1...v0.20.2) (2023-01-30)
+
+
+### Bug Fixes
+
+* container definitions with certain log_configuration declarations were not accepted ([efba249](https://github.com/it-objects/terraform-aws-terra3/commit/efba249345de5385df20116c72d94bc9972f160a))
+
 ### [0.20.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.0...v0.20.1) (2023-01-27)
 
 
