@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.22.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.21.0...v0.22.0) (2023-02-03)
+
+
+### Features
+
+* **cdn:** adding option to add cloudfront function to s3 static website bucket ([7d242b6](https://github.com/it-objects/terraform-aws-terra3/commit/7d242b615054669db8757aa3bb056df694094252))
+
+
+### Bug Fixes
+
+* **examples:** examples with create_load_balancer = false currently don't work with latest version. This fixes this issue temporarily by pinning version to older version of Terra3 ([6051696](https://github.com/it-objects/terraform-aws-terra3/commit/60516963b934dd3c0b4a28d3702376737c1a8f82))
+
 ## [0.21.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.2...v0.21.0) (2023-01-30)
 
 
