@@ -24,7 +24,7 @@ module "terra3_examples" {
   route53_zone_id = local.route53_zone_id
 
   # configure your environment here
-  create_load_balancer = false
+  create_load_balancer = true
   create_bastion_host  = false
   create_database      = false
 

@@ -11,7 +11,8 @@ locals {
 }
 
 module "terra3_examples" {
-  source = "../.."
+  source  = "it-objects/terra3/aws"
+  version = "0.10.0"
 
   solution_name                 = local.solution_name
   enable_account_best_practices = true
