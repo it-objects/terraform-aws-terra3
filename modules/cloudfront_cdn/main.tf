@@ -111,6 +111,10 @@ locals {
       use_forwarded_values     = false
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
       cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+
+      function_association = var.s3_static_website_bucket_cf_function_arn == "" ? {} : {
+        viewer-request : { function_arn : var.s3_static_website_bucket_cf_function_arn }
+      }
     }]
   ])
 
@@ -321,13 +325,13 @@ resource "random_string" "random_s3_postfix" {
 # CloudFront Function to add index.html to subdirectories
 # Source: https://aws.amazon.com/de/blogs/networking-and-content-delivery/implementing-default-directory-indexes-in-amazon-s3-backed-amazon-cloudfront-origins-using-cloudfront-functions/
 # ---------------------------------------------------------------------------------------------------------------------
-#resource "aws_cloudfront_function" "cf_function_rewrite_default_index_request" {
-#  name    = "${var.solution_name}-RewriteDefaultIndexRequest"
-#  runtime = "cloudfront-js-1.0"
-#  comment = "CloudFront Function to add index.html to subdirectories."
-#  publish = true
-#  code    = file("${path.module}/cf_functions/rewritedefaultindexrequest.js")
-#}
+resource "aws_cloudfront_function" "cf_function_rewrite_default_index_request" {
+  name    = "${var.solution_name}-RewriteDefaultIndexRequest"
+  runtime = "cloudfront-js-1.0"
+  comment = "CloudFront Function to add index.html to subdirectories."
+  publish = true
+  code    = file("${path.module}/cf_functions/rewritedefaultindexrequest.js")
+}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AWS S3 bucket

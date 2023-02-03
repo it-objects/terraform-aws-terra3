@@ -182,7 +182,8 @@ module "cloudfront_cdn" {
 
   calculated_zone_id = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
 
-  enable_s3_for_static_website = var.enable_s3_for_static_website
+  enable_s3_for_static_website             = var.enable_s3_for_static_website
+  s3_static_website_bucket_cf_function_arn = var.s3_static_website_bucket_cf_function_arn
 
   s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
 

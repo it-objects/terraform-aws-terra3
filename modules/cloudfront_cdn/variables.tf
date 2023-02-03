@@ -35,6 +35,12 @@ variable "enable_s3_for_static_website" {
   default     = true
 }
 
+variable "s3_static_website_bucket_cf_function_arn" {
+  type        = string
+  description = "String that defines cloudfront function for static website bucket."
+  default     = ""
+}
+
 variable "s3_solution_bucket_cf_behaviours" {
   type        = list(any)
   description = "Option that exposes S3 solution bucket via Cloudfront with different behaviours."

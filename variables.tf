@@ -216,6 +216,12 @@ variable "enable_s3_for_static_website" {
   default     = true
 }
 
+variable "s3_static_website_bucket_cf_function_arn" {
+  type        = string
+  description = "String that defines cloudfront function for static website bucket."
+  default     = ""
+}
+
 variable "enable_ecs_exec" {
   description = "Enables ECS Exec which allows SSH into containers for debugging purposes."
   type        = bool
