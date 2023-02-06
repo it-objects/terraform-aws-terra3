@@ -543,6 +543,16 @@ data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
       identifiers = [aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].iam_arn]
     }
   }
+
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [var.s3_solution_bucket_arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].iam_arn]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "s3_solution_bucket_policy" {
