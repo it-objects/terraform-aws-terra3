@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.24.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.23.0...v0.24.0) (2023-02-06)
+
+
+### Features
+
+* **cloudfront:** increase SPA compatibility by adding listbucket to S3 policy to avoid 403 and return 404 instead also to s3_static_website_bucket ([f0922ad](https://github.com/it-objects/terraform-aws-terra3/commit/f0922adc3ef12937dfa9aae157f746c43ecec881))
+
 ## [0.23.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.22.0...v0.23.0) (2023-02-06)
 
 
