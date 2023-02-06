@@ -516,11 +516,11 @@ data "aws_iam_policy_document" "s3_static_website_policy_document" {
 
   statement {
     actions   = ["s3:ListBucket"]
-    resources = [var.s3_solution_bucket_arn]
+    resources = [aws_s3_bucket.s3_static_website[0].arn]
 
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].iam_arn]
+      identifiers = [aws_cloudfront_origin_access_identity.origin_access_identity[0].iam_arn]
     }
   }
 }
