@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.24.2](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.1...v0.24.2) (2023-02-06)
+
+
+### Bug Fixes
+
+* expose more output variables required for using gitlab_aws_oidc ([0a30d6d](https://github.com/it-objects/terraform-aws-terra3/commit/0a30d6dc44e1cc2a04980142ba9ed35b653e1ba6))
+
 ### [0.24.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.0...v0.24.1) (2023-02-06)
 
 
