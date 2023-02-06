@@ -322,18 +322,6 @@ resource "random_string" "random_s3_postfix" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# CloudFront Function to add index.html to subdirectories
-# Source: https://aws.amazon.com/de/blogs/networking-and-content-delivery/implementing-default-directory-indexes-in-amazon-s3-backed-amazon-cloudfront-origins-using-cloudfront-functions/
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_cloudfront_function" "cf_function_rewrite_default_index_request" {
-  name    = "${var.solution_name}-RewriteDefaultIndexRequest"
-  runtime = "cloudfront-js-1.0"
-  comment = "CloudFront Function to add index.html to subdirectories."
-  publish = true
-  code    = file("${path.module}/cf_functions/rewritedefaultindexrequest.js")
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 # AWS S3 bucket
 # TF: https://www.terraform.io/docs/providers/aws/r/s3_bucket.html
 # AWS: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
