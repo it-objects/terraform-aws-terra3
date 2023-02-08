@@ -1,7 +1,7 @@
 Overview
 ========
 
-Welcome to Terra3 (beta) - An opinionated Terraform module for ramping-up 3-tier architectures in AWS in no time!
+Welcome to Terra3 - An opinionated Terraform module for ramping-up 3-tier architectures in AWS in no time!
 
 This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and provision a complete stack with
 
@@ -36,12 +36,6 @@ These are module features that allow cloud engineers to customize the AWS infras
 * Transport encryption between Cloudfront and the Application Loadbalancer (if custom_domain is enabled)
 
 * and many more...
-
-**Beta phase**
-While the internal sub-modules are used by us in production, the single Terraform module, that bundles all sub-modules
-behind neat module parameters such as app_modules and containers, is a completely new development. It should be considered
-as beta for now, until we release the first major version, expected to be generally available end of January 2023. Subscribe
-to the GitHub project to hear about the release! Any feedback from you is welcome!
 
 
 What is Terra3
