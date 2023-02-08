@@ -353,6 +353,12 @@ variable "create_ecr" {
   default = false
 }
 
+variable "ecr_custom_name" {
+  description = "Custom name for ECR repo. Otherwise, solution name is taken."
+  type        = string
+  default     = ""
+}
+
 variable "ecr_access_for_account_id" {
   type    = string
   default = ""

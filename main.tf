@@ -336,10 +336,9 @@ resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
 module "ecr" {
   count = var.create_ecr ? 1 : 0
 
-  source        = "./modules/ecr"
-  solution_name = var.solution_name
+  source = "./modules/ecr"
 
-  ecr_name              = "${var.solution_name}-api"
+  ecr_name              = length(var.ecr_custom_name) > 3 ? var.ecr_custom_name : var.solution_name
   access_for_account_id = var.ecr_access_for_account_id # allow production account
 }
 
