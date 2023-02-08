@@ -63,11 +63,23 @@ locals {
   }
 
   firelens_container_definition = {
-    name      = "firelens_container"
-    image     = "533243300146.dkr.ecr.eu-central-1.amazonaws.com/newrelic/logging-firelens-fluentbit"
-    cpu       = 20
-    memory    = 50
-    essential = true
+    name   = "firelens_container"
+    image  = "533243300146.dkr.ecr.eu-central-1.amazonaws.com/newrelic/logging-firelens-fluentbit"
+    cpu    = 20
+    memory = 50
+
+    portMappings = []
+
+    environment = []
+    secrets     = []
+
+    command = null
+
+    essential   = true
+    mountPoints = []
+    volumesFrom = []
+
+    user = "0" # avoids tf state drift, as this is added by default
 
     memoryReservation = 50
 
