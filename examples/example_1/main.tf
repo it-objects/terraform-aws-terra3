@@ -11,13 +11,12 @@ locals {
 }
 
 module "terra3_examples" {
-  source  = "it-objects/terra3/aws"
-  version = "0.10.0"
+  source = "../.."
 
   solution_name                 = local.solution_name
   enable_account_best_practices = true
 
   # configure your environment here
-  create_load_balancer = false
+  create_load_balancer = true
   nat                  = "NO_NAT" # default value
 }

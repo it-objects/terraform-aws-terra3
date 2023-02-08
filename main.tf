@@ -134,6 +134,14 @@ module "l7_loadbalancer" {
   domain_name          = var.enable_custom_domain ? module.dns_and_certificates[0].domain_name : ""
 }
 
+resource "aws_ssm_parameter" "environment_alb_arn" {
+  count = !var.create_load_balancer ? 1 : 0
+
+  name  = "/${var.solution_name}/alb_arn"
+  type  = "String"
+  value = "-"
+}
+
 module "security_groups" {
   source = "./modules/securitygroups"
 
@@ -425,5 +433,5 @@ module "app_components" {
   memory_utilization_low_threshold           = var.memory_utilization_low_threshold
 
   # needed because for the ability to run separately, this module relies on querying information via data fields
-  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain]
+  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
 }
