@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.26.0...v1.0.0) (2023-02-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* Terra3 v1.0 GA
+
+### Miscellaneous Chores
+
+* reverting change of example ([28a0c44](https://github.com/it-objects/terraform-aws-terra3/commit/28a0c44023d3d9caaa3ebca907e5de97698c3908))
+
 ## [0.26.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.25.1...v0.26.0) (2023-02-08)
 
 
