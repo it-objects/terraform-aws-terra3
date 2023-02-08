@@ -6,6 +6,7 @@
 
 locals {
   solution_name = "t3-two-states"
+  test          = data.aws_ssm_parameter.db_credentials_arn.value
 }
 
 module "terra3_examples" {
@@ -26,6 +27,7 @@ module "terra3_examples" {
         module.container_my_main,
         module.container_my_sidecar
       ]
+      enable_firelens_container = true
 
       listener_rule_prio = 200
       path_mapping       = "/api/*"
@@ -58,8 +60,15 @@ module "container_my_main" {
   }]
 
   map_environment = {
-    "my_var_name" : "my_var_value",
+    "my_var_name" : local.test,
     "my_var_name2" : "my_var_value2",
+  }
+
+  log_configuration = {
+    "logDriver" : "awsfirelens",
+    "options" : {
+      Name : "newrelic"
+    }
   }
 
   readonlyRootFilesystem = false # disable because of entrypoint script
