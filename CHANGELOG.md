@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.26.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.25.1...v0.26.0) (2023-02-08)
+
+
+### Features
+
+* **modules:** update modules to latest versions ([39486fd](https://github.com/it-objects/terraform-aws-terra3/commit/39486fd80a221e84292ab2d8659f6feda53516d9))
+
 ### [0.25.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.25.0...v0.25.1) (2023-02-08)
 
 
