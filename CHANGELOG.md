@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.25.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.25.0...v0.25.1) (2023-02-08)
+
+
+### Bug Fixes
+
+* **alb:** fix issue when application load balancer is disabled and remove workaround for example 1 ([efa593c](https://github.com/it-objects/terraform-aws-terra3/commit/efa593c3f976bca3c07511f38316ba6f8cf4f509))
+
 ## [0.25.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.2...v0.25.0) (2023-02-08)
 
 
