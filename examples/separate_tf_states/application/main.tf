@@ -6,7 +6,6 @@
 
 locals {
   solution_name = "t3-two-states"
-  test          = data.aws_ssm_parameter.db_credentials_arn.value
 }
 
 module "terra3_examples" {
@@ -60,7 +59,7 @@ module "container_my_main" {
   }]
 
   map_environment = {
-    "my_var_name" : local.test,
+    "my_var_name1" : "my_var_value1",
     "my_var_name2" : "my_var_value2",
   }
 

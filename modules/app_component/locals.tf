@@ -1,4 +1,5 @@
 locals {
+
   # loop through all container definitions (and merge with default)
   # later entries overwrite former entries
   json_map = jsonencode(concat([for single_container in var.container : merge(
