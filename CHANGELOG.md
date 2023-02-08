@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.25.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.2...v0.25.0) (2023-02-08)
+
+
+### Features
+
+* **ecr:** add parameter that allows to add a custom ECR name. per default, the solution name is taken. ([bb2f829](https://github.com/it-objects/terraform-aws-terra3/commit/bb2f829ae7dbd167690281b5dab1e81b77807e73))
+
 ### [0.24.2](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.1...v0.24.2) (2023-02-06)
 
 
