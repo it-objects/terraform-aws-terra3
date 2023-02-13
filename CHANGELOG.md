@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.0.0...v1.1.0) (2023-02-13)
+
+
+### Features
+
+* **vpc:** output VPC related ids ([8532b41](https://github.com/it-objects/terraform-aws-terra3/commit/8532b4190768b1a59f1cd244ecf7f5647a0e7355))
+
 ## [1.0.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.26.0...v1.0.0) (2023-02-08)
 
 
