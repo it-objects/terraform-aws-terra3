@@ -39,5 +39,36 @@ output "redis_endpoint" {
 }
 
 output "ecr_arn" {
-  value = try(module.ecr[0].ecr_arn, "")
+  value       = try(module.ecr[0].ecr_arn, "")
+  description = "Return ARN of ecr if enabled."
+}
+
+output "vpc_id" {
+  value       = local.vpc_id
+  description = "Return vpc_id of VPC in use."
+}
+
+output "public_subnets" {
+  value       = local.public_subnets
+  description = "Return public_subnets of VPC in use."
+}
+
+output "private_subnets" {
+  value       = local.private_subnets
+  description = "Return private_subnets of VPC in use."
+}
+
+output "private_route_table_ids" {
+  value       = local.private_route_table_ids
+  description = "Return private_route_table_ids of VPC in use."
+}
+
+output "db_subnet_group_name" {
+  value       = local.db_subnet_group_name
+  description = "Return db_subnet_group_name of VPC in use."
+}
+
+output "elasticache_subnet_ids" {
+  value       = local.elasticache_subnet_ids
+  description = "Return elasticache_subnet_ids of VPC in use."
 }
