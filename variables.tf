@@ -187,6 +187,42 @@ variable "create_database" {
   default     = false
 }
 
+variable "database_allocated_storage" {
+  description = "allocated_storage"
+  type        = number
+  default     = 20
+}
+
+variable "database_max_allocated_storage" {
+  description = "max_allocated_storage"
+  type        = number
+  default     = 20
+}
+
+variable "database_backup_retention_period" {
+  description = "Number of days to retain backups"
+  type        = number
+  default     = 1
+}
+
+variable "database_deletion_protection" {
+  description = "If the cluster should have deletion protection enabled"
+  type        = bool
+  default     = false
+}
+
+variable "database_multi_az" {
+  description = "Multi Availability Zones"
+  type        = bool
+  default     = true
+}
+
+variable "database_instance_instance_class" {
+  description = "Database instance type"
+  type        = string
+  default     = "db.t3.small"
+}
+
 variable "create_s3_solution_bucket" {
   description = "Creates an AWS S3 bucket and gives access to it from ECS containers."
   type        = bool

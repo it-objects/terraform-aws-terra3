@@ -304,13 +304,13 @@ module "database" {
   rds_cluster_security_group_ids = local.rds_cluster_security_group_ids
 
   # adapt these for prod! Now optimized for for testing and low costs
-  rds_cluster_allocated_storage       = 20
-  rds_cluster_max_allocated_storage   = 25
-  rds_cluster_backup_retention_period = "7"            # at least 7 days or more for prod
-  rds_cluster_deletion_protection     = false          # true for prod env
-  rds_cluster_multi_az                = false          # true for ha prod envs
-  rds_cluster_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
-  rds_cluster_storage_encrypted       = true           # true for prod env or non-db.t2x.micro free tier instance
+  rds_cluster_allocated_storage       = var.database_allocated_storage
+  rds_cluster_max_allocated_storage   = var.database_max_allocated_storage
+  rds_cluster_backup_retention_period = var.database_backup_retention_period # at least 7 days or more for prod
+  rds_cluster_deletion_protection     = var.database_deletion_protection     # true for prod env
+  rds_cluster_multi_az                = var.database_multi_az                # true for ha prod envs
+  rds_cluster_instance_instance_class = var.database_instance_instance_class # db.t3.* for prod env
+  rds_cluster_storage_encrypted       = true                                 # true for prod env or non-db.t2x.micro free tier instance
 
   rds_cluster_enable_cloudwatch_logs_export = local.rds_cluster_enable_cloudwatch_logs_export
 }
