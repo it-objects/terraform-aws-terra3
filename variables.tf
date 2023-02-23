@@ -422,6 +422,12 @@ variable "ses_mail_from_domain" {
   default     = ""
 }
 
+variable "set_cluster_name_for_k8s_subnet_tagging" {
+  description = "Enables/disables proper tagging for subnet discovery in case of using K8s and AWS ELB."
+  type        = string
+  default     = ""
+}
+
 variable "use_an_existing_vpc" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool
