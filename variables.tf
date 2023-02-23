@@ -127,6 +127,30 @@ variable "alert_receivers_email" {
   description = "Email address for the endpoint of SNS subscription."
 }
 
+variable "task_count_alert" {
+  description = "Select true to get alert based on ecs running task"
+  type        = bool
+  default     = false
+}
+
+variable "task_count_threshold" {
+  type        = number
+  description = "The minimum running ecs tasks."
+  default     = 1
+}
+
+variable "task_count_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "task_count_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
 variable "create_load_balancer" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool
