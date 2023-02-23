@@ -121,7 +121,7 @@ resource "aws_launch_template" "nat_template" {
   # -------------------------------------------------------------------------------------------------------------------
 
   # count defines a loop along all AZ's
-  count = length(var.public_subnets_cidr_blocks)
+  count = length(var.azs)
 
   # We're only setting the name_prefix here,
   # Terraform will add a random string at the end to keep it unique.
@@ -178,7 +178,7 @@ resource "aws_launch_template" "nat_template" {
 resource "aws_autoscaling_group" "this" {
 
   # count defines a loop along all AZ's
-  count = length(var.public_subnets_cidr_blocks)
+  count = length(var.azs)
 
   # -------------------------------------------------------------------------------------------------------------------
   # Force a redeployment when launch configuration changes.

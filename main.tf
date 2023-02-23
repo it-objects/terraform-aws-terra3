@@ -49,7 +49,6 @@ module "vpc" {
   public_subnets  = var.public_subnets_cidr_blocks
   private_subnets = var.private_subnets_cidr_blocks
 
-
   public_subnet_tags = var.set_cluster_name_for_k8s_subnet_tagging == "" ? {
     Tier = "public"
     } : {
@@ -66,11 +65,11 @@ module "vpc" {
     Tier                                                                   = "private"
   }
 
-  create_database_subnet_group = true
-  database_subnets             = var.database_cidr_blocks
+  create_database_subnet_group = var.create_database
+  database_subnets             = var.create_database ? var.database_cidr_blocks : []
 
-  create_elasticache_subnet_group = true
-  elasticache_subnets             = var.elasticache_cidr_blocks
+  create_elasticache_subnet_group = var.create_elasticache_redis
+  elasticache_subnets             = var.create_elasticache_redis ? var.elasticache_cidr_blocks : []
 
   enable_dns_hostnames = true
   enable_dns_support   = true
