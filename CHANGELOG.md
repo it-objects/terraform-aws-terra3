@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.2.0...v1.3.0) (2023-02-23)
+
+
+### Features
+
+* activate option for single AZ ([cb705d3](https://github.com/it-objects/terraform-aws-terra3/commit/cb705d398578fd02245c4d8423ac519a079bbcfa))
+* add option to disable custom error messages in Cloudfront in cases where API responses are masked by a custom error response on 404. ([7b838bd](https://github.com/it-objects/terraform-aws-terra3/commit/7b838bd4381f861ca2221e83d26e6cc09e0ddf6d))
+
 ## [1.2.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.1.0...v1.2.0) (2023-02-23)
 
 
