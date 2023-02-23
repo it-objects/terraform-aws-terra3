@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.1.0...v1.2.0) (2023-02-23)
+
+
+### Features
+
+* add option to set subnet tags as required by eks and elb ([ac6cd0f](https://github.com/it-objects/terraform-aws-terra3/commit/ac6cd0fa7f0b4d934bc4f551e79b858cd9f80d44))
+
 ## [1.1.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.0.0...v1.1.0) (2023-02-13)
 
 
