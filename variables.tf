@@ -222,6 +222,12 @@ variable "s3_static_website_bucket_cf_function_arn" {
   default     = ""
 }
 
+variable "disable_custom_error_response" {
+  type        = bool
+  default     = false
+  description = "Needs to be enabled in cases where API responses are masked by a custom error response on 404."
+}
+
 variable "enable_ecs_exec" {
   description = "Enables ECS Exec which allows SSH into containers for debugging purposes."
   type        = bool

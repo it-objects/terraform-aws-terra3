@@ -29,6 +29,12 @@ variable "add_default_index_html" {
   default = true
 }
 
+variable "disable_custom_error_response" {
+  type        = bool
+  default     = false
+  description = "Needs to be enabled in cases where API responses are masked by a custom error response on 404."
+}
+
 variable "enable_s3_for_static_website" {
   description = "Creates an AWS S3 bucket and serve static webpages from it."
   type        = bool

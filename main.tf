@@ -202,6 +202,7 @@ module "cloudfront_cdn" {
   s3_static_website_bucket_cf_function_arn = var.s3_static_website_bucket_cf_function_arn
 
   s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
+  disable_custom_error_response    = var.disable_custom_error_response
 
   s3_solution_bucket_name        = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
   s3_solution_bucket_arn         = try(module.s3_solution_bucket[0].s3_bucket_arn, "")

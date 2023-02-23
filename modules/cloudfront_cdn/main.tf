@@ -308,10 +308,14 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   # needs to be added for SPA's
   # source: https://stackoverflow.com/questions/44318922/receive-accessdenied-when-trying-to-access-a-page-via-the-full-url-on-my-website
   # -------------------------------------------------------------------------------------------------------------------
-  custom_error_response {
-    error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
+  dynamic "custom_error_response" {
+    for_each = var.disable_custom_error_response ? [] : [true]
+
+    content {
+      error_code         = 404
+      response_code      = 200
+      response_page_path = "/index.html"
+    }
   }
 }
 
