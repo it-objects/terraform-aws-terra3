@@ -49,12 +49,21 @@ module "vpc" {
   public_subnets  = var.public_subnets_cidr_blocks
   private_subnets = var.private_subnets_cidr_blocks
 
-  public_subnet_tags = {
-    "Tier" : "public"
+
+  public_subnet_tags = var.set_cluster_name_for_k8s_subnet_tagging == "" ? {
+    Tier = "public"
+    } : {
+    "kubernetes.io/role/elb"                                               = "1"      # required annotations for ALB controller
+    "kubernetes.io/cluster/${var.set_cluster_name_for_k8s_subnet_tagging}" = "shared" # required annotations for ALB controller
+    Tier                                                                   = "public"
   }
 
-  private_subnet_tags = {
-    "Tier" : "private"
+  private_subnet_tags = var.set_cluster_name_for_k8s_subnet_tagging == "" ? {
+    Tier = "private"
+    } : {
+    "kubernetes.io/role/internal-elb"                                      = "1"      # required annotations for ALB controller
+    "kubernetes.io/cluster/${var.set_cluster_name_for_k8s_subnet_tagging}" = "shared" # required annotations for ALB controller
+    Tier                                                                   = "private"
   }
 
   create_database_subnet_group = true
