@@ -33,6 +33,15 @@ module "terra3_examples" {
   memory_utilization_low_period              = 300   # seconds before re-evaluation
   memory_utilization_low_threshold           = 0     # threshold of 0 disables alarm completely
 
+  # enable alerting based on the task count with predefined cloudwatch metrics.
+  task_count_alert              = true # false = default
+  task_count_threshold          = 1    # 1 = default
+  task_count_evaluation_periods = 1    # how many times before switching state
+  task_count_period             = 60   # seconds before re-evaluation
+
+  # when container insight is enabled, it uses metrics of container insights for task count alarm.
+  enable_container_insights = false
+
   app_components = {
 
     my_app_component = {

@@ -139,6 +139,36 @@ variable "sns_topic_arn" {
   description = "ARN of SNS topic"
 }
 
+variable "task_count_alert" {
+  description = "Select true to get alert based on ecs running task"
+  type        = bool
+  default     = false
+}
+
+variable "task_count_threshold" {
+  type        = number
+  description = "The minimum running ecs tasks."
+  default     = 1
+}
+
+variable "task_count_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "task_count_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "enable_container_insights" {
+  description = "Enables/disables more detailed logging via Container Insights for ECS."
+  type        = bool
+  default     = false
+}
+
 # # IAM
 variable "execution_iam_access" {
   description = "A complex object describing additional access beyond AmazonECSTaskExecutionRolePolicy needed to run"

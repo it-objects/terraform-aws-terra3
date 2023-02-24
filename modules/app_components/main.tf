@@ -36,6 +36,12 @@ module "app_components" {
   memory_utilization_low_period              = var.memory_utilization_low_period
   memory_utilization_low_threshold           = var.memory_utilization_low_threshold
 
+  task_count_alert              = var.task_count_alert
+  task_count_threshold          = var.task_count_threshold
+  task_count_evaluation_periods = var.task_count_evaluation_periods
+  task_count_period             = var.task_count_period
+  enable_container_insights     = var.enable_container_insights
+
   container = each.value["container"]
 
   enable_firelens_container = lookup(each.value, "enable_firelens_container", false)

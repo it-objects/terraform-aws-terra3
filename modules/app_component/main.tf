@@ -309,6 +309,34 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
   }
 }
 
+locals {
+  metric_name        = !var.enable_container_insights ? "CPUUtilization" : "RunningTaskCount"
+  namespace          = !var.enable_container_insights ? "AWS/ECS" : "ECS/ContainerInsights"
+  statistics         = !var.enable_container_insights ? "SampleCount" : "Average"
+  treat_missing_data = !var.enable_container_insights ? "breaching" : "missing"
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_running_task_count" {
+  count               = var.task_count_alert ? 1 : 0
+  alarm_name          = "ecs_running_task_count_${var.name}"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = var.task_count_evaluation_periods
+  metric_name         = local.metric_name
+  namespace           = local.namespace
+  period              = var.task_count_period
+  statistic           = local.statistics
+  threshold           = var.task_count_threshold
+  alarm_description   = "This metric send alert when running ecs task count is less than ${var.task_count_threshold} for ${var.task_count_period} seconds."
+  alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
+  treat_missing_data  = local.treat_missing_data
+
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Autoscaling logic for scaling up and down to save costs and for resets
 # ---------------------------------------------------------------------------------------------------------------------
