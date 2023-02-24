@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.3.0...v1.4.0) (2023-02-24)
+
+
+### Features
+
+* added more options to configure the database ([#27](https://github.com/it-objects/terraform-aws-terra3/issues/27)) ([586de72](https://github.com/it-objects/terraform-aws-terra3/commit/586de7298b577c237bea90fe03c5fbd68bb8c07d))
+
 ## [1.3.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.2.0...v1.3.0) (2023-02-23)
 
 
