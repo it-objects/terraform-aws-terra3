@@ -214,7 +214,7 @@ variable "database_deletion_protection" {
 variable "database_multi_az" {
   description = "Multi Availability Zones"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "database_instance_instance_class" {

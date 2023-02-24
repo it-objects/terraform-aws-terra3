@@ -21,7 +21,7 @@ module "terra3_examples" {
 
   database_allocated_storage       = 20
   database_max_allocated_storage   = 25
-  database_backup_retention_period = "7"            # at least 7 days or more for prod
+  database_backup_retention_period = 7              # at least 7 days or more for prod
   database_deletion_protection     = false          # true for prod env
   database_multi_az                = false          # true for ha prod envs
   database_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
