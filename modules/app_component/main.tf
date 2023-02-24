@@ -317,7 +317,7 @@ locals {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_running_task_count" {
-  count               = var.task_count_alert == true ? 1 : 0
+  count               = var.task_count_alert ? 1 : 0
   alarm_name          = "ecs_running_task_count_${var.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.task_count_evaluation_periods
