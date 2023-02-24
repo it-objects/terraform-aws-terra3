@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.4.0...v1.5.0) (2023-02-24)
+
+
+### Features
+
+* added option to enable alert based on ecs running task count ([#28](https://github.com/it-objects/terraform-aws-terra3/issues/28)) ([69f4690](https://github.com/it-objects/terraform-aws-terra3/commit/69f4690cbd2c181e895ebc93cacf67f583c57f09))
+
 ## [1.4.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.3.0...v1.4.0) (2023-02-24)
 
 
