@@ -450,3 +450,14 @@ module "app_components" {
   # needed because for the ability to run separately, this module relies on querying information via data fields
   depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
 }
+
+module "global_scale_down" {
+  source = "./modules/global_scale_down"
+
+  enable_environment_hibernation_sleep_schedule = var.enable_environment_hibernation_sleep_schedule
+
+  solution_name = var.solution_name
+
+  environment_hibernation_sleep_schedule  = var.environment_hibernation_sleep_schedule
+  environment_hibernation_wakeup_schedule = var.environment_hibernation_wakeup_schedule
+}
