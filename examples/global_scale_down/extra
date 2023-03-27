@@ -1,0 +1,196 @@
+import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+
+export const handler = async(event) => {
+
+    console.log(JSON.stringify(event));
+    let url = event.url;
+    let desiredcount = event.Desired;
+
+    const ecs_input = {
+      "cluster": "scale-down-cluster",
+      "service": "my_app_componentService",
+      "taskDefinition": "my_app_component",
+      "desiredCount": desiredcount,
+    };
+    const ecs_command = new UpdateServiceCommand(ecs_input);
+    const ecs_client = new ECSClient();
+    await ecs_client.send(ecs_command);
+};
+
+{
+  "desired": {}
+}
+
+
+import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+
+
+
+export const handler = async(event, context) => {
+
+    const myObj = {firstname:"John", lastname:"Doe"};
+    console.log("EVENT_1: %s", JSON.stringify(myObj));
+
+    console.log("EVENT_1: %s", JSON.stringify(event.Min));
+
+    console.log(JSON.stringify(event));
+
+    console.log(JSON.stringify(event, context));
+
+    let url = event.url;
+
+    console.log(JSON.stringify(event.Desired))
+
+    const desiredcount = (JSON.stringify(event.Desired));
+
+    const ecs_input = {
+      "cluster": "scale-down-cluster",
+      "service": "my_app_componentService",
+      "taskDefinition": "my_app_component",
+      "desiredCount": desiredcount,
+    };
+    const ecs_command = new UpdateServiceCommand(ecs_input);
+    const ecs_client = new ECSClient();
+    await ecs_client.send(ecs_command);
+};
+
+
+#########################################################################################################################
+
+import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+export const handler = async(event, context) => {
+
+    //const myObj = {firstname:"John", lastname:"Doe"};
+    //console.log("EVENT_1: %s", JSON.stringify(myObj));
+
+    //console.log("EVENT_1: %s", JSON.stringify(event.Min));
+
+
+    console.log(event);
+
+    console.log(JSON.stringify(event, context));
+
+
+    let desired = event.desired
+    console.log("desired_count: %s", desired)
+
+    //const desiredcount = (JSON.stringify(event.Desired));
+
+    const ecs_input = {
+      "cluster": "scale-down-cluster",
+      "service": "my_app_componentService",
+      "taskDefinition": "my_app_component",
+      "desiredCount": desired,
+    };
+    const ecs_command = new UpdateServiceCommand(ecs_input);
+    const ecs_client = new ECSClient();
+    await ecs_client.send(ecs_command);
+};
+
+
+
+
+    //console.log(event);
+    console.log(JSON.stringify(event, context));
+    let min = (event.min);
+    let desired = event.desired;
+    let max = event.max;
+
+    console.log("min: %s", min);
+    console.log("desired_count: %s", desired);
+    console.log("max: %s", max);
+
+
+
+
+
+
+
+
+
+
+
+import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
+import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+import { RDSClient, StopDBInstanceCommand } from "@aws-sdk/client-rds";
+
+export const handler = async(event, context) => {
+
+    console.log(event);
+
+    //console.log(JSON.stringify(event, context));
+    let desired = event.desired;
+    let min = event.min;
+    let max = event.max;
+
+    console.log("desired_count: %s", event.desired);
+    console.log("min_count: %s", min);
+    console.log("max_count: %s", max);
+
+    const nat_asg_input_1 = {
+      "AutoScalingGroupName": "nat-instance-template-eu-central-1a-20230322083709069600000010-asg",
+      "MaxSize": min,
+      "MinSize": min,
+      "DesiredCapacity":min,
+    };
+    const nat_asg_command_1 = new UpdateAutoScalingGroupCommand(nat_asg_input_1);
+    const nat_asg_client_1 = new AutoScalingClient();
+    await nat_asg_client_1.send(nat_asg_command_1);
+
+
+    const nat_asg_input_2 = {
+      "AutoScalingGroupName": "nat-instance-template-eu-central-1b-2023032208370906960000000e-asg",
+      "MaxSize": max,
+      "MinSize": max,
+      "DesiredCapacity":max,
+    };
+    const nat_asg_command_2 = new UpdateAutoScalingGroupCommand(nat_asg_input_2);
+    const nat_asg_client_2 = new AutoScalingClient();
+    await nat_asg_client_2.send(nat_asg_command_2);
+
+
+    const main_asg_input = {
+      "AutoScalingGroupName": "scale-down_autoscaling_group",
+      "MaxSize": desired,
+      "MinSize": desired,
+      "DesiredCapacity":desired,
+    };
+    const main_asg_command = new UpdateAutoScalingGroupCommand(main_asg_input);
+    const main_asg_client_3 = new AutoScalingClient();
+    await main_asg_client_3.send(main_asg_command);
+
+    const ecs_input = {
+      "cluster": "scale-down-cluster",
+      "service": "my_app_componentService",
+      "taskDefinition": "my_app_component",
+      "desiredCount": max,
+    };
+    const ecs_command = new UpdateServiceCommand(ecs_input);
+    const ecs_client = new ECSClient();
+    await ecs_client.send(ecs_command);
+};
+
+
+
+
+
+
+
+
+
+
+import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+
+export const handler = async(event) => {
+
+
+    const ecs_input = {
+      "cluster": event.clustername,
+      "service": "my_app_componentService",
+      "taskDefinition": "my_app_component",
+      "desiredCount": event.min
+    };
+    const ecs_command = new UpdateServiceCommand(ecs_input);
+    const ecs_client = new ECSClient();
+    await ecs_client.send(ecs_command);
+};
