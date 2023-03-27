@@ -13,3 +13,7 @@ output "db_secrets_version_arn" {
 output "db_credentials" {
   value = local.secret_string
 }
+
+output "db_identifier" {
+  value = aws_db_instance.db.identifier #aws_ssm_parameter.db_identifier.value  #scaledowndb
+}
