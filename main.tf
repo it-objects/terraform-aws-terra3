@@ -290,7 +290,7 @@ module "bastion_host_ssm" {
 }
 
 locals {
-  rds_cluster_engine_version                = var.database == "mysql" ? "8.0.30" : "14.5"
+  rds_cluster_engine_version                = var.database == "mysql" ? "8.0.32" : "14.5"
   rds_cluster_security_group_ids            = var.database == "mysql" ? [module.security_groups.mysql_db_sg] : [module.security_groups.postgres_db_sg]
   rds_cluster_enable_cloudwatch_logs_export = var.database == "mysql" ? ["audit"] : ["postgresql"]
 }
