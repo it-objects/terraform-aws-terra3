@@ -452,6 +452,7 @@ module "app_components" {
 }
 
 module "global_scale_down" {
+  #for_each = module.app_components
   source = "./modules/global_scale_down"
 
   enable_environment_hibernation_sleep_schedule = var.enable_environment_hibernation_sleep_schedule
@@ -460,4 +461,14 @@ module "global_scale_down" {
 
   environment_hibernation_sleep_schedule  = var.environment_hibernation_sleep_schedule
   environment_hibernation_wakeup_schedule = var.environment_hibernation_wakeup_schedule
+
+  #Referncing all the resources
+
+  db_identifier = module.database[0].db_identifier
+
+  cluster_name             = module.cluster.ecs_cluster_name
+  ecs_service_names        = "my_app_componentService" #var.app_components.keys
+  ecs_task_definition_name = module.app_components.ecs_task_definition_name
+  ecs_desire_task_count    = module.app_components.ecs_desire_task_count
+
 }
