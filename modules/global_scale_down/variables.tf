@@ -19,3 +19,28 @@ variable "environment_hibernation_wakeup_schedule" {
   description = "Enter schedule details of wakeup schedule."
   default     = ""
 }
+
+variable "cluster_name" {
+  description = ""
+  type        = string
+}
+
+variable "ecs_service_names" {
+  description = ""
+  type        = string #list(string)
+}
+
+variable "ecs_task_definition_name" {
+  description = ""
+  type        = string
+}
+
+variable "ecs_desire_task_count" {
+  description = ""
+  type        = number
+}
+
+variable "db_identifier" {
+  description = ""
+  type        = string
+}
