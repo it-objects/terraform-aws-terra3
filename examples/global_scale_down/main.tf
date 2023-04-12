@@ -27,9 +27,9 @@ module "terra3_examples" {
   database_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
 
 
-  enable_environment_hibernation_sleep_schedule = false
-  environment_hibernation_sleep_schedule        = "cron(0 22 * * ? *)"
-  environment_hibernation_wakeup_schedule       = "cron(0 6 * * ? *)"
+  enable_environment_hibernation_sleep_schedule = true
+  environment_hibernation_sleep_schedule        = "cron(00 16 * * ? *)"
+  environment_hibernation_wakeup_schedule       = "cron(00 06 * * ? *)"
 
 
   # dependency: required for downloading container images

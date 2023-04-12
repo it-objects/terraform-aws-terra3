@@ -451,8 +451,26 @@ module "app_components" {
   depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
 }
 
+locals {
+  ecs_service_names = [
+    for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name
+  ]
+
+  ecs_desire_task_counts = [
+    for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count
+  ]
+
+  db_instance_name = (var.create_database == true) ? module.database[0].db_instance_name : ""
+
+  nat_instances_autoscaling_group_names = flatten(module.nat_instances[*].nat_instances_autoscaling_group_names)
+  nat_instances_asg_max_capacity        = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)
+  nat_instances_asg_min_capacity        = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
+  nat_instances_asg_desired_capacity    = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
+}
+
+
 module "global_scale_down" {
-  #for_each = module.app_components
+
   source = "./modules/global_scale_down"
 
   enable_environment_hibernation_sleep_schedule = var.enable_environment_hibernation_sleep_schedule
@@ -464,11 +482,19 @@ module "global_scale_down" {
 
   #Referncing all the resources
 
-  db_identifier = module.database[0].db_identifier
+  cluster_name          = module.cluster.ecs_cluster_name
+  ecs_service_names     = local.ecs_service_names
+  ecs_desire_task_count = local.ecs_desire_task_counts
 
-  cluster_name             = module.cluster.ecs_cluster_name
-  ecs_service_names        = "my_app_componentService" #var.app_components.keys
-  ecs_task_definition_name = module.app_components.ecs_task_definition_name
-  ecs_desire_task_count    = module.app_components.ecs_desire_task_count
+  db_instance_name = local.db_instance_name
 
+  bastion_host_asg_name             = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
+  bastion_host_asg_max_capacity     = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
+  bastion_host_asg_min_capacity     = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
+  bastion_host_asg_desired_capacity = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
+
+  nat_instances_asg_names            = local.nat_instances_autoscaling_group_names
+  nat_instances_asg_max_capacity     = local.nat_instances_asg_max_capacity
+  nat_instances_asg_min_capacity     = local.nat_instances_asg_min_capacity
+  nat_instances_asg_desired_capacity = local.nat_instances_asg_desired_capacity
 }

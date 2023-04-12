@@ -1,14 +1,47 @@
-output "cloudfront_default_domain_name" {
-  value       = module.terra3_examples.cloudfront_domain_name
-  description = "URL of Cloudfront distribution. Please wait some minutes until the distribution becomes available."
+output "ecs_cluster_name" {
+  value = module.terra3_examples.ecs_cluster_name
 }
 
-output "static_website_url" {
-  value       = "https://${module.terra3_examples.cloudfront_domain_name}/"
-  description = "URL of Cloudfront distribution. Please wait some minutes until the distribution becomes available."
+output "my_app_component_service_names" {
+  value = module.terra3_examples.my_app_component_service_names
 }
 
-output "container_url" {
-  value       = "https://${module.terra3_examples.cloudfront_domain_name}/api/"
-  description = "URL of Cloudfront distribution. Please wait some minutes until the distribution becomes available."
+output "my_app_component_ecs_desire_task_counts" {
+  value = module.terra3_examples.my_app_component_ecs_desire_task_counts
+}
+
+output "db_instance_name" {
+  value = module.terra3_examples.db_instance_name
+}
+
+output "bastion_host_autoscaling_group_name" {
+  value = module.terra3_examples.bastion_host_autoscaling_group_name
+}
+
+output "bastion_host_autoscaling_group_max_capacity" {
+  value = module.terra3_examples.bastion_host_autoscaling_group_max_capacity
+}
+
+output "bastion_host_autoscaling_group_min_capacity" {
+  value = module.terra3_examples.bastion_host_autoscaling_group_min_capacity
+}
+
+output "bastion_host_autoscaling_group_desired_capacity" {
+  value = module.terra3_examples.bastion_host_autoscaling_group_desired_capacity
+}
+
+output "nat_instances_autoscaling_group_names" {
+  value = (module.terra3_examples.nat_instances_autoscaling_group_names)
+}
+
+output "nat_instances_autoscaling_group_max_capacity" {
+  value = module.terra3_examples.nat_instances_autoscaling_group_max_capacity
+}
+
+output "nat_instances_autoscaling_group_min_capacity" {
+  value = module.terra3_examples.nat_instances_autoscaling_group_min_capacity
+}
+
+output "nat_instances_autoscaling_group_desired_capacity" {
+  value = module.terra3_examples.nat_instances_autoscaling_group_desired_capacity
 }

@@ -27,20 +27,55 @@ variable "cluster_name" {
 
 variable "ecs_service_names" {
   description = ""
-  type        = string #list(string)
-}
-
-variable "ecs_task_definition_name" {
-  description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "ecs_desire_task_count" {
   description = ""
-  type        = number
+  type        = list(number)
 }
 
-variable "db_identifier" {
+variable "db_instance_name" {
   description = ""
   type        = string
+}
+
+variable "bastion_host_asg_name" {
+  description = "scale-down_autoscaling_group"
+  type        = list(string)
+}
+
+variable "bastion_host_asg_max_capacity" {
+  description = ""
+  type        = list(number)
+}
+
+variable "bastion_host_asg_min_capacity" {
+  description = ""
+  type        = list(number)
+}
+
+variable "bastion_host_asg_desired_capacity" {
+  description = ""
+  type        = list(number)
+}
+
+variable "nat_instances_asg_names" {
+  description = "nat_instances_autoscaling_group"
+  type        = list(string)
+}
+
+variable "nat_instances_asg_max_capacity" {
+  description = ""
+  type        = list(number)
+}
+
+variable "nat_instances_asg_min_capacity" {
+  description = ""
+  type        = list(number)
+}
+
+variable "nat_instances_asg_desired_capacity" {
+  description = ""
+  type        = list(number)
 }

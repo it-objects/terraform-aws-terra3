@@ -72,3 +72,55 @@ output "elasticache_subnet_ids" {
   value       = local.elasticache_subnet_ids
   description = "Return elasticache_subnet_ids of VPC in use."
 }
+
+output "ecs_cluster_name" {
+  value = module.cluster.ecs_cluster_name
+}
+
+output "my_app_component" {
+  value = keys(module.app_components.app_components)
+}
+
+output "my_app_component_service_names" {
+  value = local.ecs_service_names
+}
+
+output "my_app_component_ecs_desire_task_counts" {
+  value = local.ecs_desire_task_counts
+}
+
+output "db_instance_name" {
+  value = local.db_instance_name
+}
+
+output "bastion_host_autoscaling_group_name" {
+  value = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
+}
+
+output "bastion_host_autoscaling_group_max_capacity" {
+  value = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
+}
+
+output "bastion_host_autoscaling_group_min_capacity" {
+  value = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
+}
+
+output "bastion_host_autoscaling_group_desired_capacity" {
+  value = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
+}
+
+output "nat_instances_autoscaling_group_names" {
+  value = local.nat_instances_autoscaling_group_names
+}
+
+output "nat_instances_autoscaling_group_max_capacity" {
+  value = local.nat_instances_asg_max_capacity
+}
+
+output "nat_instances_autoscaling_group_min_capacity" {
+  value = local.nat_instances_asg_min_capacity
+}
+
+output "nat_instances_autoscaling_group_desired_capacity" {
+  value = local.nat_instances_asg_desired_capacity
+}

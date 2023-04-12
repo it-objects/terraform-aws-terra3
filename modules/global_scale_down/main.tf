@@ -4,7 +4,8 @@
 # ECS = DesiredCount = 1
 # DB  = StartDBInstanceCommand (It will start the DB)
 # ---------------------------------------------------------------------------------------------------------------------
-
+#tfsec:ignore:aws-lambda-enable-tracing
+#tfsec:ignore:aws-iam-no-policy-wildcards
 module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -27,31 +28,31 @@ module "lambda_scale_up" {
 
   attach_policy_json = true
   policy_json        = <<-EOT
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Sid": "VisualEditor0",
-                "Effect": "Allow",
-                "Action": [
-                  "autoscaling:UpdateAutoScalingGroup",
-                  "rds:DescribeDBInstances",
-                  "rds:StopDBInstance",
-                  "rds:StartDBInstance",
-                  "iam:GetRole",
-                  "ecs:UpdateService",
-                  "iam:PassRole"
-                ],
-                "Resource": [
-                    "arn:aws:autoscaling:*:531874807515:autoScalingGroup:*:autoScalingGroupName/*",
-                    "arn:aws:rds:*:531874807515:db:*",
-                    "arn:aws:iam::531874807515:role/*",
-                    "arn:aws:ecs:*:531874807515:service/*/*"
-                ]
-            }
-        ]
-    }
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "ecs:UpdateService",
+                "iam:PassRole",
+                "rds:DescribeDBInstances",
+                "autoscaling:UpdateAutoScalingGroup",
+                "rds:StopDBInstance",
+                "rds:StartDBInstance"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
   EOT
+}
+
+locals {
+  cluster_name     = split(",", var.cluster_name)
+  db_instance_name = split(",", var.db_instance_name)
 }
 
 module "eventbridge_scale_up" {
@@ -67,16 +68,28 @@ module "eventbridge_scale_up" {
     scale_up = {
       name                = "${var.solution_name}-global-scale-up"
       description         = "Trigger for a Lambda to enable global scale up."
-      schedule_expression = "rate(1 minute)" #var.environment_hibernation_wakeup_schedule
+      schedule_expression = var.environment_hibernation_wakeup_schedule
     }
   }
 
   targets = {
     scale_up = [
       {
-        name  = "${var.solution_name}-global-scale-up"
-        arn   = module.lambda_scale_up[0].lambda_function_arn
-        input = jsonencode({ "min" : 0, "max" : 2, "desired" : 1 })
+        name = "${var.solution_name}-global-scale-up"
+        arn  = module.lambda_scale_up[0].lambda_function_arn
+        input = jsonencode({
+          "cluster_name" : local.cluster_name,
+          "ecs_service_name" : var.ecs_service_names,
+          "ecs_desire_task_count" : var.ecs_desire_task_count,
+          "db_instance_name" : local.db_instance_name,
+          "bastion_host_asg_name" : var.bastion_host_asg_name,
+          "bastion_host_asg_max_capacity" : var.bastion_host_asg_max_capacity,
+          "bastion_host_asg_min_capacity" : var.bastion_host_asg_min_capacity,
+          "bastion_host_asg_desired_capacity" : var.bastion_host_asg_desired_capacity,
+          "nat_instances_asg_names" : var.nat_instances_asg_names,
+          "nat_instances_asg_max_capacity" : var.nat_instances_asg_max_capacity,
+          "nat_instances_asg_min_capacity" : var.nat_instances_asg_min_capacity,
+        "nat_instances_asg_desired_capacity" : var.nat_instances_asg_desired_capacity })
       }
     ]
   }
@@ -88,7 +101,8 @@ module "eventbridge_scale_up" {
 # ECS = DesiredCount = 0
 # DB  = StopDBInstanceCommand (It will stop the DB temporarily)
 # ---------------------------------------------------------------------------------------------------------------------
-
+#tfsec:ignore:aws-lambda-enable-tracing
+#tfsec:ignore:aws-iam-no-policy-wildcards
 module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -111,30 +125,25 @@ module "lambda_scale_down" {
 
   attach_policy_json = true
   policy_json        = <<-EOT
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Sid": "VisualEditor0",
-                "Effect": "Allow",
-                "Action": [
-                  "autoscaling:UpdateAutoScalingGroup",
-                  "rds:DescribeDBInstances",
-                  "rds:StopDBInstance",
-                  "rds:StartDBInstance",
-                  "iam:GetRole",
-                  "ecs:UpdateService",
-                  "iam:PassRole"
-                ],
-                "Resource": [
-                    "arn:aws:autoscaling:*:531874807515:autoScalingGroup:*:autoScalingGroupName/*",
-                    "arn:aws:rds:*:531874807515:db:*",
-                    "arn:aws:iam::531874807515:role/*",
-                    "arn:aws:ecs:*:531874807515:service/*/*"
-                ]
-            }
-        ]
-    }
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "ecs:UpdateService",
+                "iam:PassRole",
+                "rds:DescribeDBInstances",
+                "autoscaling:UpdateAutoScalingGroup",
+                "rds:StopDBInstance",
+                "rds:StartDBInstance"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
   EOT
 }
 
@@ -151,7 +160,7 @@ module "eventbridge_scale_down" {
     scale_down = {
       name                = "${var.solution_name}-global-scale--down"
       description         = "Trigger for a Lambda to enable global scale down."
-      schedule_expression = "rate(1 minute)" #var.environment_hibernation_sleep_schedule
+      schedule_expression = var.environment_hibernation_sleep_schedule
     }
   }
 
@@ -160,11 +169,19 @@ module "eventbridge_scale_down" {
       {
         name = "${var.solution_name}-global-scale--down"
         arn  = module.lambda_scale_down[0].lambda_function_arn
-        input = jsonencode({ "min" : 0, "max" : 2, "desired" : 1,
-          "clustername" : var.cluster_name,
-          "ecs_service_names" : var.ecs_service_names,
-          "ecs_desire_task_count" : var.ecs_desire_task_count
-        "dbname" : var.db_identifier })
+        input = jsonencode({
+          "cluster_name" : local.cluster_name,
+          "ecs_service_name" : var.ecs_service_names,
+          "ecs_desire_task_count" : [0],
+          "db_instance_name" : local.db_instance_name,
+          "bastion_host_asg_name" : var.bastion_host_asg_name,
+          "bastion_host_asg_max_capacity" : [0],
+          "bastion_host_asg_min_capacity" : [0],
+          "bastion_host_asg_desired_capacity" : [0],
+          "nat_instances_asg_names" : var.nat_instances_asg_names,
+          "nat_instances_asg_max_capacity" : [0],
+          "nat_instances_asg_min_capacity" : [0],
+        "nat_instances_asg_desired_capacity" : [0] })
       }
     ]
   }
