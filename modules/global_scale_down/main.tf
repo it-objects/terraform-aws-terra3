@@ -5,7 +5,6 @@
 # DB  = StartDBInstanceCommand (It will start the DB)
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-lambda-enable-tracing
-#tfsec:ignore:aws-iam-no-policy-wildcards
 module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -35,15 +34,19 @@ module "lambda_scale_up" {
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
-                "iam:GetRole",
                 "ecs:UpdateService",
+                "iam:GetRole",
                 "iam:PassRole",
                 "rds:DescribeDBInstances",
                 "autoscaling:UpdateAutoScalingGroup",
-                "rds:StopDBInstance",
                 "rds:StartDBInstance"
             ],
-            "Resource": "*"
+            "Resource": [
+                "arn:aws:ecs:*:${data.aws_caller_identity.current.account_id}:service/*/*",
+                "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
+                "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/*",
+                "arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:db:*"
+            ]
         }
     ]
 }
@@ -102,7 +105,6 @@ module "eventbridge_scale_up" {
 # DB  = StopDBInstanceCommand (It will stop the DB temporarily)
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-lambda-enable-tracing
-#tfsec:ignore:aws-iam-no-policy-wildcards
 module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -132,15 +134,19 @@ module "lambda_scale_down" {
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
-                "iam:GetRole",
                 "ecs:UpdateService",
+                "iam:GetRole",
                 "iam:PassRole",
                 "rds:DescribeDBInstances",
                 "autoscaling:UpdateAutoScalingGroup",
-                "rds:StopDBInstance",
-                "rds:StartDBInstance"
+                "rds:StopDBInstance"
             ],
-            "Resource": "*"
+            "Resource": [
+                "arn:aws:ecs:*:${data.aws_caller_identity.current.account_id}:service/*/*",
+                "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
+                "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/*",
+                "arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:db:*"
+            ]
         }
     ]
 }
