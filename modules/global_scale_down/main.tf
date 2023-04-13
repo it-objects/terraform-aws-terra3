@@ -4,7 +4,6 @@
 # ECS = DesiredCount = 1
 # DB  = StartDBInstanceCommand (It will start the DB)
 # ---------------------------------------------------------------------------------------------------------------------
-#tfsec:ignore:aws-lambda-enable-tracing
 module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -24,6 +23,9 @@ module "lambda_scale_up" {
       source_arn = module.eventbridge_scale_up[0].eventbridge_rule_arns["scale_up"]
     }
   }
+
+  tracing_mode          = "PassThrough"
+  attach_tracing_policy = true
 
   attach_policy_json = true
   policy_json        = <<-EOT
@@ -104,7 +106,6 @@ module "eventbridge_scale_up" {
 # ECS = DesiredCount = 0
 # DB  = StopDBInstanceCommand (It will stop the DB temporarily)
 # ---------------------------------------------------------------------------------------------------------------------
-#tfsec:ignore:aws-lambda-enable-tracing
 module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -124,6 +125,9 @@ module "lambda_scale_down" {
       source_arn = module.eventbridge_scale_down[0].eventbridge_rule_arns["scale_down"]
     }
   }
+
+  tracing_mode          = "PassThrough"
+  attach_tracing_policy = true
 
   attach_policy_json = true
   policy_json        = <<-EOT
