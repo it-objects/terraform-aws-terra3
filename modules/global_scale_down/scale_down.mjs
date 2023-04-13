@@ -49,4 +49,14 @@ export const handler = async(event) => {
     const bastion_host_asg_client = new AutoScalingClient();
     await bastion_host_asg_client.send(bastion_host_asg_command);
 
+    const ecs_ec2_asg_input = {
+      "AutoScalingGroupName": event.ecs_ec2_instances_asg_name[0],
+      "MaxSize": event.ecs_ec2_instances_asg_max_capacity[0],
+      "MinSize": event.ecs_ec2_instances_asg_min_capacity[0],
+      "DesiredCapacity":event.ecs_ec2_instances_asg_desired_capacity[0],
+    };
+    const ecs_ec2_asg_command = new UpdateAutoScalingGroupCommand(ecs_ec2_asg_input);
+    const ecs_ec2_asg_client = new AutoScalingClient();
+    await ecs_ec2_asg_client.send(ecs_ec2_asg_command);
+
 };

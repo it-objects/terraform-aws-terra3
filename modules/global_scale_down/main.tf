@@ -24,7 +24,7 @@ module "lambda_scale_up" {
     }
   }
 
-  tracing_mode          = "PassThrough"
+  tracing_mode          = "Active"
   attach_tracing_policy = true
 
   attach_policy_json = true
@@ -94,7 +94,11 @@ module "eventbridge_scale_up" {
           "nat_instances_asg_names" : var.nat_instances_asg_names,
           "nat_instances_asg_max_capacity" : var.nat_instances_asg_max_capacity,
           "nat_instances_asg_min_capacity" : var.nat_instances_asg_min_capacity,
-        "nat_instances_asg_desired_capacity" : var.nat_instances_asg_desired_capacity })
+          "nat_instances_asg_desired_capacity" : var.nat_instances_asg_desired_capacity,
+          "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
+          "ecs_ec2_instances_asg_max_capacity" : var.ecs_ec2_instances_asg_max_capacity,
+          "ecs_ec2_instances_asg_min_capacity" : var.ecs_ec2_instances_asg_min_capacity,
+        "ecs_ec2_instances_asg_desired_capacity" : var.ecs_ec2_instances_asg_desired_capacity })
       }
     ]
   }
@@ -126,7 +130,7 @@ module "lambda_scale_down" {
     }
   }
 
-  tracing_mode          = "PassThrough"
+  tracing_mode          = "Active"
   attach_tracing_policy = true
 
   attach_policy_json = true
@@ -191,7 +195,11 @@ module "eventbridge_scale_down" {
           "nat_instances_asg_names" : var.nat_instances_asg_names,
           "nat_instances_asg_max_capacity" : [0],
           "nat_instances_asg_min_capacity" : [0],
-        "nat_instances_asg_desired_capacity" : [0] })
+          "nat_instances_asg_desired_capacity" : [0],
+          "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
+          "ecs_ec2_instances_asg_max_capacity" : [0],
+          "ecs_ec2_instances_asg_min_capacity" : [0],
+        "ecs_ec2_instances_asg_desired_capacity" : [0] })
       }
     ]
   }

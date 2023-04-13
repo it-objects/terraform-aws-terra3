@@ -15,25 +15,20 @@ module "terra3_examples" {
   enable_account_best_practices = true
 
   # configure your environment here
-  create_load_balancer = true
-  create_bastion_host  = true
-  create_database      = true
+  create_load_balancer     = true
+  create_bastion_host      = true
+  create_database          = true
+  database                 = "postgres"
+  create_elasticache_redis = true
+  cluster_type             = "EC2"
 
-  database_allocated_storage       = 20
-  database_max_allocated_storage   = 25
-  database_backup_retention_period = 7              # at least 7 days or more for prod
-  database_deletion_protection     = false          # true for prod env
-  database_multi_az                = false          # true for ha prod envs
-  database_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
-
+  # dependency: required for downloading container images
+  #nat = "NAT_INSTANCES"
 
   enable_environment_hibernation_sleep_schedule = true
   environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)"
   environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)"
 
-
-  # dependency: required for downloading container images
-  nat = "NAT_INSTANCES"
 
   app_components = {
 

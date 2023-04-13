@@ -466,6 +466,12 @@ locals {
   nat_instances_asg_max_capacity        = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)
   nat_instances_asg_min_capacity        = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
   nat_instances_asg_desired_capacity    = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
+
+  ecs_ec2_instances_autoscaling_group_name = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_name)
+  ecs_ec2_instances_asg_max_capacity       = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_max_capacity)
+  ecs_ec2_instances_asg_min_capacity       = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_min_capacity)
+  ecs_ec2_instances_asg_desired_capacity   = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_desired_capacity)
+
 }
 
 
@@ -497,4 +503,9 @@ module "global_scale_down" {
   nat_instances_asg_max_capacity     = local.nat_instances_asg_max_capacity
   nat_instances_asg_min_capacity     = local.nat_instances_asg_min_capacity
   nat_instances_asg_desired_capacity = local.nat_instances_asg_desired_capacity
+
+  ecs_ec2_instances_asg_name             = local.ecs_ec2_instances_autoscaling_group_name
+  ecs_ec2_instances_asg_max_capacity     = local.ecs_ec2_instances_asg_max_capacity
+  ecs_ec2_instances_asg_min_capacity     = local.ecs_ec2_instances_asg_min_capacity
+  ecs_ec2_instances_asg_desired_capacity = local.ecs_ec2_instances_asg_desired_capacity
 }

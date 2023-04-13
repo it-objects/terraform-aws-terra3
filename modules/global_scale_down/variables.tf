@@ -79,3 +79,23 @@ variable "nat_instances_asg_desired_capacity" {
   description = ""
   type        = list(number)
 }
+
+variable "ecs_ec2_instances_asg_name" {
+  description = "ecs_ecs_instances_autoscaling_group"
+  type        = list(string)
+}
+
+variable "ecs_ec2_instances_asg_max_capacity" {
+  description = ""
+  type        = list(number)
+}
+
+variable "ecs_ec2_instances_asg_min_capacity" {
+  description = ""
+  type        = list(number)
+}
+
+variable "ecs_ec2_instances_asg_desired_capacity" {
+  description = ""
+  type        = list(number)
+}

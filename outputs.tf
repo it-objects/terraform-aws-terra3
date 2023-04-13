@@ -124,3 +124,19 @@ output "nat_instances_autoscaling_group_min_capacity" {
 output "nat_instances_autoscaling_group_desired_capacity" {
   value = local.nat_instances_asg_desired_capacity
 }
+
+output "ecs_ec2_instances_autoscaling_group_name" {
+  value = local.ecs_ec2_instances_autoscaling_group_name
+}
+
+output "ecs_ec2_instances_autoscaling_group_max_capacity" {
+  value = local.ecs_ec2_instances_asg_max_capacity
+}
+
+output "ecs_ec2_instances_autoscaling_group_min_capacity" {
+  value = local.ecs_ec2_instances_asg_min_capacity
+}
+
+output "ecs_ec2_instances_autoscaling_group_desired_capacity" {
+  value = local.ecs_ec2_instances_asg_desired_capacity
+}

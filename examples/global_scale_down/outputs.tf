@@ -31,7 +31,7 @@ output "bastion_host_autoscaling_group_desired_capacity" {
 }
 
 output "nat_instances_autoscaling_group_names" {
-  value = (module.terra3_examples.nat_instances_autoscaling_group_names)
+  value = module.terra3_examples.nat_instances_autoscaling_group_names
 }
 
 output "nat_instances_autoscaling_group_max_capacity" {
@@ -44,4 +44,20 @@ output "nat_instances_autoscaling_group_min_capacity" {
 
 output "nat_instances_autoscaling_group_desired_capacity" {
   value = module.terra3_examples.nat_instances_autoscaling_group_desired_capacity
+}
+
+output "ecs_ec2_instances_autoscaling_group_name" {
+  value = module.terra3_examples.ecs_ec2_instances_autoscaling_group_name
+}
+
+output "ecs_ec2_instances_autoscaling_group_max_capacity" {
+  value = module.terra3_examples.ecs_ec2_instances_autoscaling_group_max_capacity
+}
+
+output "ecs_ec2_instances_autoscaling_group_min_capacity" {
+  value = module.terra3_examples.ecs_ec2_instances_autoscaling_group_min_capacity
+}
+
+output "ecs_ec2_instances_autoscaling_group_desired_capacity" {
+  value = module.terra3_examples.ecs_ec2_instances_autoscaling_group_desired_capacity
 }
