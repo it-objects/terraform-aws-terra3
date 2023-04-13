@@ -28,8 +28,8 @@ module "terra3_examples" {
 
 
   enable_environment_hibernation_sleep_schedule = true
-  environment_hibernation_sleep_schedule        = "cron(00 16 * * ? *)"
-  environment_hibernation_wakeup_schedule       = "cron(00 06 * * ? *)"
+  environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)"
+  environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)"
 
 
   # dependency: required for downloading container images
