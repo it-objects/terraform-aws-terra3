@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.5.0...v1.6.0) (2023-04-13)
+
+
+### Features
+
+* updated to current version of rds for mysql database. ([4d7a3b3](https://github.com/it-objects/terraform-aws-terra3/commit/4d7a3b3161c570f3011ca1997aeecce5856ef61c))
+
 ## [1.5.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.4.0...v1.5.0) (2023-02-24)
 
 
