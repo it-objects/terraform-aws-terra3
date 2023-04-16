@@ -41,13 +41,18 @@ module "lambda_scale_up" {
                 "iam:PassRole",
                 "rds:DescribeDBInstances",
                 "autoscaling:UpdateAutoScalingGroup",
+                "elasticache:CreateCacheCluster",
                 "rds:StartDBInstance"
             ],
             "Resource": [
+                "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/*",
                 "arn:aws:ecs:*:${data.aws_caller_identity.current.account_id}:service/*/*",
                 "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
-                "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/*",
-                "arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:db:*"
+                "arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:db:*",
+                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:cluster:*",
+                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:parametergroup:*",
+                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:subnetgroup:*",
+                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:securitygroup:*"
             ]
         }
     ]
@@ -56,8 +61,14 @@ module "lambda_scale_up" {
 }
 
 locals {
-  cluster_name     = split(",", var.cluster_name)
-  db_instance_name = split(",", var.db_instance_name)
+  cluster_name            = split(",", var.cluster_name)
+  db_instance_name        = split(",", var.db_instance_name)
+  redis_cluster_id        = split(",", var.redis_cluster_id)
+  redis_engine            = split(",", var.redis_engine)
+  redis_node_type         = split(",", var.redis_node_type)
+  redis_num_cache_nodes   = split(",", var.redis_num_cache_nodes)
+  redis_engine_version    = split(",", var.redis_engine_version)
+  redis_subnet_group_name = split(",", var.redis_subnet_group_name)
 }
 
 module "eventbridge_scale_up" {
@@ -98,7 +109,14 @@ module "eventbridge_scale_up" {
           "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
           "ecs_ec2_instances_asg_max_capacity" : var.ecs_ec2_instances_asg_max_capacity,
           "ecs_ec2_instances_asg_min_capacity" : var.ecs_ec2_instances_asg_min_capacity,
-        "ecs_ec2_instances_asg_desired_capacity" : var.ecs_ec2_instances_asg_desired_capacity })
+          "ecs_ec2_instances_asg_desired_capacity" : var.ecs_ec2_instances_asg_desired_capacity,
+          "redis_cluster_id" : local.redis_cluster_id,
+          "redis_engine" : local.redis_engine,
+          "redis_node_type" : local.redis_node_type,
+          "redis_num_cache_nodes" : local.redis_num_cache_nodes,
+          "redis_engine_version" : local.redis_engine_version,
+          "redis_subnet_group_name" : local.redis_subnet_group_name,
+        "redis_security_group_ids" : var.redis_security_group_ids })
       }
     ]
   }
@@ -147,12 +165,14 @@ module "lambda_scale_down" {
                 "iam:PassRole",
                 "rds:DescribeDBInstances",
                 "autoscaling:UpdateAutoScalingGroup",
+                "elasticache:DeleteCacheCluster",
                 "rds:StopDBInstance"
             ],
             "Resource": [
                 "arn:aws:ecs:*:${data.aws_caller_identity.current.account_id}:service/*/*",
                 "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
                 "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/*",
+                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:cluster:*",
                 "arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:db:*"
             ]
         }
@@ -199,7 +219,8 @@ module "eventbridge_scale_down" {
           "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
           "ecs_ec2_instances_asg_max_capacity" : [0],
           "ecs_ec2_instances_asg_min_capacity" : [0],
-        "ecs_ec2_instances_asg_desired_capacity" : [0] })
+          "ecs_ec2_instances_asg_desired_capacity" : [0],
+        "redis_cluster_id" : local.redis_cluster_id })
       }
     ]
   }

@@ -1,6 +1,7 @@
 import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
 import { RDSClient, StartDBInstanceCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
+import { ElastiCacheClient, CreateCacheClusterCommand } from "@aws-sdk/client-elasticache";
 
 export const handler = async(event) => {
 
@@ -59,4 +60,16 @@ export const handler = async(event) => {
     const ecs_ec2_asg_client = new AutoScalingClient();
     await ecs_ec2_asg_client.send(ecs_ec2_asg_command);
 
+    const redis_memory_db = {
+      CacheClusterId: event.redis_cluster_id[0],
+      NumCacheNodes: event.redis_num_cache_nodes[0],
+      CacheNodeType: event.redis_node_type[0],
+      Engine: event.redis_engine[0],
+      EngineVersion: event.redis_engine_version[0],
+      CacheSubnetGroupName: event.redis_subnet_group_name[0],
+      SecurityGroupIds: event.redis_security_group_ids,
+    };
+    const redis_memory_db_command = new CreateCacheClusterCommand(redis_memory_db);
+    const redis_memory_db_client = new ElastiCacheClient();
+    await redis_memory_db_client.send(redis_memory_db_command);
 };

@@ -61,3 +61,31 @@ output "ecs_ec2_instances_autoscaling_group_min_capacity" {
 output "ecs_ec2_instances_autoscaling_group_desired_capacity" {
   value = module.terra3_examples.ecs_ec2_instances_autoscaling_group_desired_capacity
 }
+
+output "redis_cluster_id" {
+  value = module.terra3_examples.redis_cluster_id
+}
+
+output "redis_engine" {
+  value = module.terra3_examples.redis_engine
+}
+
+output "redis_node_type" {
+  value = module.terra3_examples.redis_node_type
+}
+
+output "redis_num_cache_nodes" {
+  value = module.terra3_examples.redis_num_cache_nodes
+}
+
+output "redis_engine_version" {
+  value = module.terra3_examples.redis_engine_version
+}
+
+output "redis_subnet_group_name" {
+  value = module.terra3_examples.redis_subnet_group_name
+}
+
+output "redis_security_group_ids" {
+  value = module.terra3_examples.redis_security_group_ids
+}

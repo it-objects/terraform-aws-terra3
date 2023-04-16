@@ -328,14 +328,24 @@ module "database" {
 # Redis Cluster
 # ---------------------------------------------------------------------------------------------------------------------
 # tfsec:ignore:aws-elasticache-enable-backup-retention
+
+locals {
+  redis_cluster_id      = "${var.solution_name}-redis"
+  redis_engine          = "redis"
+  redis_node_type       = "cache.t4g.micro"
+  redis_num_cache_nodes = 1
+  redis_engine_version  = "5.0.6"
+}
+
+# tfsec:ignore:aws-elasticache-enable-backup-retention
 resource "aws_elasticache_cluster" "redis" {
   count = var.create_elasticache_redis ? 1 : 0
 
-  cluster_id         = "${var.solution_name}-redis"
-  engine             = "redis"
-  node_type          = "cache.t4g.micro"
-  num_cache_nodes    = 1
-  engine_version     = "5.0.6"
+  cluster_id         = local.redis_cluster_id
+  engine             = local.redis_engine
+  node_type          = local.redis_node_type
+  num_cache_nodes    = local.redis_num_cache_nodes
+  engine_version     = local.redis_engine_version
   subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[0].name
   security_group_ids = [module.security_groups.redis_sg]
 }
@@ -467,7 +477,7 @@ locals {
   nat_instances_asg_min_capacity        = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
   nat_instances_asg_desired_capacity    = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
 
-  ecs_ec2_instances_autoscaling_group_name = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_name)
+  ecs_ec2_instances_autoscaling_group_name = (module.cluster.ecs_ec2_instances_autoscaling_group_name)
   ecs_ec2_instances_asg_max_capacity       = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_max_capacity)
   ecs_ec2_instances_asg_min_capacity       = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_min_capacity)
   ecs_ec2_instances_asg_desired_capacity   = flatten(module.cluster[*].ecs_ec2_instances_autoscaling_group_desired_capacity)
@@ -508,4 +518,12 @@ module "global_scale_down" {
   ecs_ec2_instances_asg_max_capacity     = local.ecs_ec2_instances_asg_max_capacity
   ecs_ec2_instances_asg_min_capacity     = local.ecs_ec2_instances_asg_min_capacity
   ecs_ec2_instances_asg_desired_capacity = local.ecs_ec2_instances_asg_desired_capacity
+
+  redis_cluster_id         = (local.redis_cluster_id)
+  redis_engine             = (local.redis_engine)
+  redis_node_type          = (local.redis_node_type)
+  redis_num_cache_nodes    = local.redis_num_cache_nodes
+  redis_engine_version     = (local.redis_engine_version)
+  redis_subnet_group_name  = (aws_elasticache_subnet_group.db_elastic_subnetgroup[0].name)
+  redis_security_group_ids = [module.security_groups.redis_sg]
 }

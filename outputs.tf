@@ -140,3 +140,31 @@ output "ecs_ec2_instances_autoscaling_group_min_capacity" {
 output "ecs_ec2_instances_autoscaling_group_desired_capacity" {
   value = local.ecs_ec2_instances_asg_desired_capacity
 }
+
+output "redis_cluster_id" {
+  value = local.redis_cluster_id
+}
+
+output "redis_engine" {
+  value = local.redis_engine
+}
+
+output "redis_node_type" {
+  value = local.redis_node_type
+}
+
+output "redis_num_cache_nodes" {
+  value = local.redis_num_cache_nodes
+}
+
+output "redis_engine_version" {
+  value = local.redis_engine_version
+}
+
+output "redis_subnet_group_name" {
+  value = aws_elasticache_subnet_group.db_elastic_subnetgroup[0].name
+}
+
+output "redis_security_group_ids" {
+  value = [module.security_groups.redis_sg]
+}

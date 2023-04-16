@@ -82,7 +82,7 @@ variable "nat_instances_asg_desired_capacity" {
 
 variable "ecs_ec2_instances_asg_name" {
   description = "ecs_ecs_instances_autoscaling_group"
-  type        = list(string)
+  type        = string
 }
 
 variable "ecs_ec2_instances_asg_max_capacity" {
@@ -98,4 +98,39 @@ variable "ecs_ec2_instances_asg_min_capacity" {
 variable "ecs_ec2_instances_asg_desired_capacity" {
   description = ""
   type        = list(number)
+}
+
+variable "redis_cluster_id" {
+  description = "redis cluster id"
+  type        = string
+}
+
+variable "redis_engine" {
+  description = ""
+  type        = string
+}
+
+variable "redis_node_type" {
+  description = ""
+  type        = string
+}
+
+variable "redis_num_cache_nodes" {
+  description = ""
+  type        = number
+}
+
+variable "redis_engine_version" {
+  description = ""
+  type        = string
+}
+
+variable "redis_subnet_group_name" {
+  description = ""
+  type        = string
+}
+
+variable "redis_security_group_ids" {
+  description = ""
+  type        = list(string)
 }
