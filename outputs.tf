@@ -90,7 +90,7 @@ output "my_app_component_ecs_desire_task_counts" {
 }
 
 output "db_instance_name" {
-  value = local.db_instance_name
+  value = local.db_instance_name #module.database[0].db_instance_name
 }
 
 output "bastion_host_autoscaling_group_name" {
@@ -162,9 +162,58 @@ output "redis_engine_version" {
 }
 
 output "redis_subnet_group_name" {
-  value = aws_elasticache_subnet_group.db_elastic_subnetgroup[0].name
+  value = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
 }
 
 output "redis_security_group_ids" {
   value = [module.security_groups.redis_sg]
+}
+
+
+
+
+
+# please delete it once the testing of redis and ecs ec2 asg is done.
+output "extra_ecs_ec2_instances_autoscaling_group_name" {
+  value = module.global_scale_down.ecs_ec2_instances_asg_name
+}
+
+output "extra_ecs_ec2_instances_autoscaling_group_max_capacity" {
+  value = module.global_scale_down.ecs_ec2_instances_asg_max_capacity
+}
+
+output "extra_ecs_ec2_instances_autoscaling_group_min_capacity" {
+  value = module.global_scale_down.ecs_ec2_instances_asg_min_capacity
+}
+
+output "extra_ecs_ec2_instances_autoscaling_group_desired_capacity" {
+  value = module.global_scale_down.ecs_ec2_instances_asg_desired_capacity
+}
+
+output "extra_redis_cluster_id" {
+  value = module.global_scale_down.redis_cluster_id
+}
+
+output "extra_redis_engine" {
+  value = module.global_scale_down.redis_engine
+}
+
+output "extra_redis_node_type" {
+  value = module.global_scale_down.redis_node_type
+}
+
+output "extra_redis_num_cache_nodes" {
+  value = module.global_scale_down.redis_num_cache_nodes
+}
+
+output "extra_redis_engine_version" {
+  value = module.global_scale_down.redis_engine_version
+}
+
+output "extra_redis_subnet_group_name" {
+  value = module.global_scale_down.redis_subnet_group_name
+}
+
+output "extra_redis_security_group_ids" {
+  value = module.global_scale_down.redis_security_group_ids
 }

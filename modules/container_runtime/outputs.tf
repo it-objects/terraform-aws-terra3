@@ -11,7 +11,7 @@ output "solution_kms_key_id" {
 }
 
 output "ecs_ec2_instances_autoscaling_group_name" {
-  value = aws_autoscaling_group.ecs_ec2_asg[0].name
+  value = aws_autoscaling_group.ecs_ec2_asg[*].name
 }
 
 output "ecs_ec2_instances_autoscaling_group_max_capacity" {
