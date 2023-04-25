@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.6.0...v1.7.0) (2023-04-25)
+
+
+### Features
+
+* Added bucket ownership control to enable ACLs. ([#29](https://github.com/it-objects/terraform-aws-terra3/issues/29)) ([b19aae0](https://github.com/it-objects/terraform-aws-terra3/commit/b19aae05ebd5cb625244f196668b1b9d64036bec))
+
 ## [1.6.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.5.0...v1.6.0) (2023-04-13)
 
 
