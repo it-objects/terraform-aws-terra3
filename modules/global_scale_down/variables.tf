@@ -43,6 +43,11 @@ variable "ecs_ec2_instances_asg_desired_capacity" {
   description = ""
   type        = list(number)
 }
+
+variable "ecs_ec2_instances_autoscaling_group_arn" {
+  description = ""
+  type        = list(string)
+}
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to NAT instances with name, max_size, min_size, desired_size
 # ---------------------------------------------------------------------------------------------------------------------

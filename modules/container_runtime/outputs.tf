@@ -25,3 +25,7 @@ output "ecs_ec2_instances_autoscaling_group_min_capacity" {
 output "ecs_ec2_instances_autoscaling_group_desired_capacity" {
   value = aws_autoscaling_group.ecs_ec2_asg[*].desired_capacity
 }
+
+output "ecs_ec2_instances_autoscaling_group_arn" {
+  value = aws_autoscaling_group.ecs_ec2_asg[*].arn
+}

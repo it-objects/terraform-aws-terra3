@@ -481,10 +481,11 @@ module "global_scale_down" {
 
   solution_name = var.solution_name
 
-  ecs_ec2_instances_asg_name             = module.cluster.ecs_ec2_instances_autoscaling_group_name
-  ecs_ec2_instances_asg_max_capacity     = module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity
-  ecs_ec2_instances_asg_min_capacity     = module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity
-  ecs_ec2_instances_asg_desired_capacity = module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity
+  ecs_ec2_instances_asg_name              = module.cluster.ecs_ec2_instances_autoscaling_group_name
+  ecs_ec2_instances_asg_max_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity
+  ecs_ec2_instances_asg_min_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity
+  ecs_ec2_instances_asg_desired_capacity  = module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity
+  ecs_ec2_instances_autoscaling_group_arn = module.cluster.ecs_ec2_instances_autoscaling_group_arn
 
   nat_instances_asg_names            = flatten(module.nat_instances[*].nat_instances_autoscaling_group_names)
   nat_instances_asg_max_capacity     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)

@@ -10,7 +10,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for ecs_ec2_instances_asg_name in var.ecs_ec2_instances_asg_name : "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${ecs_ec2_instances_asg_name}"
+            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : "${ecs_ec2_instances_autoscaling_group_arn}"
           ]
         },
 
@@ -129,7 +129,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for ecs_ec2_instances_asg_name in var.ecs_ec2_instances_asg_name : "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${ecs_ec2_instances_asg_name}"
+            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : "${ecs_ec2_instances_autoscaling_group_arn}"
           ]
         },
 
@@ -151,7 +151,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for bastion_host_asg_name in var.bastion_host_asg_name : "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${bastion_host_asg_name}"
+            for bastion_host_autoscaling_group_arn in var.bastion_host_autoscaling_group_arn : "${bastion_host_autoscaling_group_arn}"
           ]
         },
 
