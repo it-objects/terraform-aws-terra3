@@ -15,6 +15,7 @@ module "lambda_scale_up" {
   handler       = "scale_up.handler"
   runtime       = "nodejs18.x"
   source_path   = "${path.module}/scale_up.mjs"
+  timeout       = 100
 
   create_current_version_allowed_triggers = false
   allowed_triggers = {
@@ -45,14 +46,17 @@ module "lambda_scale_up" {
                 "rds:StartDBInstance"
             ],
             "Resource": [
-                "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/*",
-                "arn:aws:ecs:*:${data.aws_caller_identity.current.account_id}:service/*/*",
+                "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.ecs_ec2_instances_asg_name[0]}",
+                "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.nat_instances_asg_names[0]}",
+                "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.nat_instances_asg_names[1]}",
+                "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.bastion_host_asg_name[0]}",
+                "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${local.cluster_name[0]}/${var.ecs_service_names[0]}",
                 "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
-                "arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:db:*",
-                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:cluster:*",
-                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:parametergroup:*",
-                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:subnetgroup:*",
-                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:securitygroup:*"
+                "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${local.db_instance_name[0]}",
+                "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:${local.redis_cluster_id[0]}",
+                "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parametergroup:*",
+                "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnetgroup:${var.redis_subnet_group_name[0]}",
+                "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:securitygroup:${var.redis_security_group_ids[0]}"
             ]
         }
     ]
@@ -68,7 +72,6 @@ locals {
   redis_engine         = split(",", var.redis_engine)
   redis_node_type      = split(",", var.redis_node_type)
   redis_engine_version = split(",", var.redis_engine_version)
-  #redis_subnet_group_name = split(",", var.redis_subnet_group_name)
 }
 
 module "eventbridge_scale_up" {
@@ -106,10 +109,10 @@ module "eventbridge_scale_up" {
           "nat_instances_asg_max_capacity" : var.nat_instances_asg_max_capacity,
           "nat_instances_asg_min_capacity" : var.nat_instances_asg_min_capacity,
           "nat_instances_asg_desired_capacity" : var.nat_instances_asg_desired_capacity,
-          "ecs_ec2_instances_autoscaling_group_name" : var.ecs_ec2_instances_asg_name,
-          "ecs_ec2_instances_autoscaling_group_max_capacity" : var.ecs_ec2_instances_asg_max_capacity,
-          "ecs_ec2_instances_autoscaling_group_min_capacity" : var.ecs_ec2_instances_asg_min_capacity,
-          "ecs_ec2_instances_autoscaling_group_desired_capacity" : var.ecs_ec2_instances_asg_desired_capacity,
+          "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
+          "ecs_ec2_instances_asg_max_capacity" : var.ecs_ec2_instances_asg_max_capacity,
+          "ecs_ec2_instances_asg_min_capacity" : var.ecs_ec2_instances_asg_min_capacity,
+          "ecs_ec2_instances_asg_desired_capacity" : var.ecs_ec2_instances_asg_desired_capacity,
           "redis_cluster_id" : local.redis_cluster_id,
           "redis_engine" : local.redis_engine,
           "redis_node_type" : local.redis_node_type,
@@ -139,6 +142,7 @@ module "lambda_scale_down" {
   handler       = "scale_down.handler"
   runtime       = "nodejs18.x"
   source_path   = "${path.module}/scale_down.mjs"
+  timeout       = 100
 
   create_current_version_allowed_triggers = false
   allowed_triggers = {
@@ -152,33 +156,36 @@ module "lambda_scale_down" {
   attach_tracing_policy = true
 
   attach_policy_json = true
-  policy_json        = <<-EOT
-{
-    "Version": "2012-10-17",
-    "Statement": [
+  policy_json = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
         {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "ecs:UpdateService",
-                "iam:GetRole",
-                "iam:PassRole",
-                "rds:DescribeDBInstances",
-                "autoscaling:UpdateAutoScalingGroup",
-                "elasticache:DeleteCacheCluster",
-                "rds:StopDBInstance"
-            ],
-            "Resource": [
-                "arn:aws:ecs:*:${data.aws_caller_identity.current.account_id}:service/*/*",
-                "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
-                "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/*",
-                "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:cluster:*",
-                "arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:db:*"
-            ]
+          "Sid" : "VisualEditor0",
+          "Effect" : "Allow",
+          "Action" : [
+            "ecs:UpdateService",
+            "iam:GetRole",
+            "iam:PassRole",
+            "rds:DescribeDBInstances",
+            "autoscaling:UpdateAutoScalingGroup",
+            "elasticache:DeleteCacheCluster",
+            "rds:StopDBInstance"
+          ],
+          "Resource" : [
+            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${local.cluster_name[0]}/${var.ecs_service_names[0]}",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
+            "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.ecs_ec2_instances_asg_name[0]}",
+            "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.nat_instances_asg_names[0]}",
+            "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.nat_instances_asg_names[1]}",
+            "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.bastion_host_asg_name[0]}",
+            "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:${local.redis_cluster_id[0]}",
+            "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${local.db_instance_name[0]}",
+            [for nat_group_name in var.nat_instances_asg_names : "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${nat_group_name}"]
+          ]
         }
-    ]
-}
-  EOT
+      ]
+  })
 }
 
 module "eventbridge_scale_down" {

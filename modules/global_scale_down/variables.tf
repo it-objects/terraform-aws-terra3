@@ -134,3 +134,8 @@ variable "redis_security_group_ids" {
   description = ""
   type        = list(string)
 }
+
+variable "redis_cluster_arn" {
+  description = ""
+  type        = list(string)
+}
