@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is example 2 showcasing Terra3's capabilities.
+# This is example to showcase Terra3's capabilities of enabling global scale down/up option.
 #
-# Outcome: Like example 1 + a container runtime and no custom domain
+# Outcome: Environment can be put to hibernation state (sleep/wake up).
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
@@ -26,7 +26,7 @@ module "terra3_examples" {
   nat = "NAT_INSTANCES"
 
   enable_environment_hibernation_sleep_schedule = true
-  environment_hibernation_sleep_schedule        = "cron(00 14 ? * MON-FRI *)"
+  environment_hibernation_sleep_schedule        = "cron(00 16 ? * MON-FRI *)"
   environment_hibernation_wakeup_schedule       = "cron(00 05 ? * MON-FRI *)"
 
 
