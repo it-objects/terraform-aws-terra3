@@ -10,7 +10,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : "${ecs_ec2_instances_autoscaling_group_arn}"
+            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : ecs_ec2_instances_autoscaling_group_arn
           ]
         },
 
@@ -21,7 +21,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : "${nat_instances_autoscaling_group_arn}"
+            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : nat_instances_autoscaling_group_arn
           ]
         },
 
@@ -32,7 +32,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for bastion_host_autoscaling_group_arn in var.bastion_host_autoscaling_group_arn : "${bastion_host_autoscaling_group_arn}"
+            for bastion_host_autoscaling_group_arn in var.bastion_host_autoscaling_group_arn : bastion_host_autoscaling_group_arn
           ]
         },
 
@@ -54,9 +54,7 @@ locals {
           "Action" : [
             "ecs:UpdateService"
           ],
-          "Resource" : [
-            for ecs_service_names in var.ecs_service_names : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${local.cluster_name[0]}/${ecs_service_names}"
-          ]
+          "Resource" : var.ecs_service_arn
         },
 
         {
@@ -67,7 +65,7 @@ locals {
             "rds:StartDBInstance"
           ],
           "Resource" : [
-            "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${local.db_instance_name[0]}"
+            var.db_instance_arn
           ]
         },
 
@@ -77,9 +75,7 @@ locals {
           "Action" : [
             "elasticache:CreateCacheCluster"
           ],
-          "Resource" : [
-            "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:${local.redis_cluster_id[0]}"
-          ]
+          "Resource" : var.redis_cluster_arn
         },
 
         {
@@ -88,9 +84,7 @@ locals {
           "Action" : [
             "elasticache:CreateCacheCluster"
           ],
-          "Resource" : [
-            for redis_subnet_group_name in var.redis_subnet_group_name : "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnetgroup:${redis_subnet_group_name}"
-          ]
+          "Resource" : var.redis_subnet_group_arn
         },
 
         {
@@ -100,7 +94,7 @@ locals {
             "elasticache:CreateCacheCluster"
           ],
           "Resource" : [
-            for redis_security_group_ids in var.redis_security_group_ids : "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:securitygroup:${redis_security_group_ids}"
+            var.redis_security_group_arn
           ]
         },
 
@@ -129,7 +123,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : "${ecs_ec2_instances_autoscaling_group_arn}"
+            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : ecs_ec2_instances_autoscaling_group_arn
           ]
         },
 
@@ -140,7 +134,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : "${nat_instances_autoscaling_group_arn}"
+            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : nat_instances_autoscaling_group_arn
           ]
         },
 
@@ -151,7 +145,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for bastion_host_autoscaling_group_arn in var.bastion_host_autoscaling_group_arn : "${bastion_host_autoscaling_group_arn}"
+            for bastion_host_autoscaling_group_arn in var.bastion_host_autoscaling_group_arn : bastion_host_autoscaling_group_arn
           ]
         },
 
@@ -173,9 +167,7 @@ locals {
           "Action" : [
             "ecs:UpdateService"
           ],
-          "Resource" : [
-            for ecs_service_names in var.ecs_service_names : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${local.cluster_name[0]}/${ecs_service_names}"
-          ]
+          "Resource" : var.ecs_service_arn
         },
 
         {
@@ -186,7 +178,7 @@ locals {
             "rds:StopDBInstance"
           ],
           "Resource" : [
-            "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${local.db_instance_name[0]}"
+            var.db_instance_arn
           ]
         },
 
@@ -196,10 +188,7 @@ locals {
           "Action" : [
             "elasticache:DeleteCacheCluster"
           ],
-          "Resource" : [
-            "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:${local.redis_cluster_id[0]}"
-          ]
-
+          "Resource" : var.redis_cluster_arn
         }
       ]
   })

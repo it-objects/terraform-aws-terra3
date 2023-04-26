@@ -469,6 +469,11 @@ locals {
   ecs_desire_task_counts = [
     for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count
   ]
+
+  ecs_service_arn = [
+    for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn
+  ]
+
 }
 
 module "global_scale_down" {
@@ -502,8 +507,10 @@ module "global_scale_down" {
   cluster_name          = module.cluster.ecs_cluster_name
   ecs_service_names     = local.ecs_service_names
   ecs_desire_task_count = local.ecs_desire_task_counts
+  ecs_service_arn       = local.ecs_service_arn
 
   db_instance_name = module.database[0].db_instance_name
+  db_instance_arn  = module.database[0].db_instance_arn
 
   redis_cluster_id         = local.redis_cluster_id
   redis_engine             = local.redis_engine
@@ -512,4 +519,7 @@ module "global_scale_down" {
   redis_engine_version     = local.redis_engine_version
   redis_subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
   redis_security_group_ids = [module.security_groups.redis_sg]
+  redis_cluster_arn        = aws_elasticache_cluster.redis[*].arn
+  redis_subnet_group_arn   = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].arn
+  redis_security_group_arn = module.security_groups.redis_sg_arn
 }

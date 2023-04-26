@@ -17,3 +17,7 @@ output "db_credentials" {
 output "db_instance_name" {
   value = aws_db_instance.db.identifier
 }
+
+output "db_instance_arn" {
+  value = aws_db_instance.db.arn
+}

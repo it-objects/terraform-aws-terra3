@@ -120,6 +120,12 @@ variable "ecs_desire_task_count" {
   description = ""
   type        = list(number)
 }
+
+variable "ecs_service_arn" {
+  description = ""
+  type        = list(string)
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variable of Database (can be used same for PostgreSQL and mySQL)
 # ---------------------------------------------------------------------------------------------------------------------
@@ -127,6 +133,12 @@ variable "db_instance_name" {
   description = ""
   type        = string
 }
+
+variable "db_instance_arn" {
+  description = ""
+  type        = string
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to redis database (id, engine name, number of cache node, engine version,subnet group name, and security groups)
 # ---------------------------------------------------------------------------------------------------------------------
@@ -163,4 +175,19 @@ variable "redis_subnet_group_name" {
 variable "redis_security_group_ids" {
   description = ""
   type        = list(string)
+}
+
+variable "redis_cluster_arn" {
+  description = ""
+  type        = list(string)
+}
+
+variable "redis_subnet_group_arn" {
+  description = ""
+  type        = list(string)
+}
+
+variable "redis_security_group_arn" {
+  description = ""
+  type        = string
 }
