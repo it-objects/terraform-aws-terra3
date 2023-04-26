@@ -13,3 +13,7 @@ output "bastion_host_autoscaling_group_min_capacity" {
 output "bastion_host_autoscaling_group_desired_capacity" {
   value = aws_autoscaling_group.my_autoscaling_group.desired_capacity
 }
+
+output "bastion_host_autoscaling_group_arn" {
+  value = aws_autoscaling_group.my_autoscaling_group.arn
+}

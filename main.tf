@@ -491,10 +491,11 @@ module "global_scale_down" {
   nat_instances_asg_min_capacity     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
   nat_instances_asg_desired_capacity = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
 
-  bastion_host_asg_name             = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
-  bastion_host_asg_max_capacity     = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
-  bastion_host_asg_min_capacity     = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
-  bastion_host_asg_desired_capacity = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
+  bastion_host_asg_name              = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
+  bastion_host_asg_max_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
+  bastion_host_asg_min_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
+  bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
+  bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
 
   cluster_name          = module.cluster.ecs_cluster_name
   ecs_service_names     = local.ecs_service_names

@@ -87,6 +87,11 @@ variable "bastion_host_asg_desired_capacity" {
   description = ""
   type        = list(number)
 }
+
+variable "bastion_host_autoscaling_group_arn" {
+  description = ""
+  type        = list(string)
+}
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to ecs service to work with ecs task count
 # ---------------------------------------------------------------------------------------------------------------------
