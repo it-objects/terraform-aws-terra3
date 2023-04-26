@@ -3,6 +3,7 @@
 # ASG = MinSize, MaxSize, DesiredCapacity = 1.
 # ECS = DesiredCount = 1
 # DB  = StartDBInstanceCommand (It will start the DB)
+# redis = CreateCacheCluster (It will create the redis cluster)
 # ---------------------------------------------------------------------------------------------------------------------
 module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
@@ -98,6 +99,7 @@ module "eventbridge_scale_up" {
 # ASG = MinSize, MaxSize, DesiredCapacity = 0.
 # ECS = DesiredCount = 0
 # DB  = StopDBInstanceCommand (It will stop the DB temporarily)
+# redis = DeleteCacheCluster (It will delete the redis cluster)
 # ---------------------------------------------------------------------------------------------------------------------
 module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
