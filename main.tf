@@ -469,47 +469,38 @@ locals {
   ecs_desire_task_counts = [
     for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count
   ]
-
-  nat_instances_autoscaling_group_names = flatten(module.nat_instances[*].nat_instances_autoscaling_group_names)
-  nat_instances_asg_max_capacity        = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)
-  nat_instances_asg_min_capacity        = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
-  nat_instances_asg_desired_capacity    = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
 }
-
 
 module "global_scale_down" {
 
   source = "./modules/global_scale_down"
 
   enable_environment_hibernation_sleep_schedule = var.enable_environment_hibernation_sleep_schedule
+  environment_hibernation_sleep_schedule        = var.environment_hibernation_sleep_schedule
+  environment_hibernation_wakeup_schedule       = var.environment_hibernation_wakeup_schedule
 
   solution_name = var.solution_name
 
-  environment_hibernation_sleep_schedule  = var.environment_hibernation_sleep_schedule
-  environment_hibernation_wakeup_schedule = var.environment_hibernation_wakeup_schedule
+  ecs_ec2_instances_asg_name             = module.cluster.ecs_ec2_instances_autoscaling_group_name
+  ecs_ec2_instances_asg_max_capacity     = module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity
+  ecs_ec2_instances_asg_min_capacity     = module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity
+  ecs_ec2_instances_asg_desired_capacity = module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity
 
-  #Referncing all the resources
-
-  cluster_name          = module.cluster.ecs_cluster_name
-  ecs_service_names     = local.ecs_service_names
-  ecs_desire_task_count = local.ecs_desire_task_counts
-
-  db_instance_name = module.database[0].db_instance_name
+  nat_instances_asg_names            = flatten(module.nat_instances[*].nat_instances_autoscaling_group_names)
+  nat_instances_asg_max_capacity     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)
+  nat_instances_asg_min_capacity     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
+  nat_instances_asg_desired_capacity = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
 
   bastion_host_asg_name             = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
   bastion_host_asg_max_capacity     = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
   bastion_host_asg_min_capacity     = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
   bastion_host_asg_desired_capacity = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
 
-  nat_instances_asg_names            = local.nat_instances_autoscaling_group_names
-  nat_instances_asg_max_capacity     = local.nat_instances_asg_max_capacity
-  nat_instances_asg_min_capacity     = local.nat_instances_asg_min_capacity
-  nat_instances_asg_desired_capacity = local.nat_instances_asg_desired_capacity
+  cluster_name          = module.cluster.ecs_cluster_name
+  ecs_service_names     = local.ecs_service_names
+  ecs_desire_task_count = local.ecs_desire_task_counts
 
-  ecs_ec2_instances_asg_name             = module.cluster.ecs_ec2_instances_autoscaling_group_name
-  ecs_ec2_instances_asg_max_capacity     = module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity
-  ecs_ec2_instances_asg_min_capacity     = module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity
-  ecs_ec2_instances_asg_desired_capacity = module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity
+  db_instance_name = module.database[0].db_instance_name
 
   redis_cluster_id         = local.redis_cluster_id
   redis_engine             = local.redis_engine
