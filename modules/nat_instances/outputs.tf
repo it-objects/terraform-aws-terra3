@@ -17,3 +17,7 @@ output "nat_instances_autoscaling_group_min_capacity" {
 output "nat_instances_autoscaling_group_desired_capacity" {
   value = aws_autoscaling_group.this[*].desired_capacity
 }
+
+output "nat_instances_autoscaling_group_arn" {
+  value = aws_autoscaling_group.this[*].arn
+}

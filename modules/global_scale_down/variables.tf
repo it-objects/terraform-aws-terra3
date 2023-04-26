@@ -70,6 +70,12 @@ variable "nat_instances_asg_desired_capacity" {
   description = ""
   type        = list(number)
 }
+
+variable "nat_instances_autoscaling_group_arn" {
+  description = ""
+  type        = list(string)
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to Bastion host instance with name, max_size, min_size, desired_size
 # ---------------------------------------------------------------------------------------------------------------------

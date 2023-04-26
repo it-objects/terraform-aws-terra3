@@ -21,7 +21,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for nat_instances_asg_names in var.nat_instances_asg_names : "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${nat_instances_asg_names}"
+            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : "${nat_instances_autoscaling_group_arn}"
           ]
         },
 
@@ -140,7 +140,7 @@ locals {
             "autoscaling:UpdateAutoScalingGroup",
           ],
           "Resource" : [
-            for nat_instances_asg_names in var.nat_instances_asg_names : "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${nat_instances_asg_names}"
+            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : "${nat_instances_autoscaling_group_arn}"
           ]
         },
 
