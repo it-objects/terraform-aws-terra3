@@ -518,7 +518,4 @@ module "global_scale_down" {
   redis_engine_version     = local.redis_engine_version
   redis_subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
   redis_security_group_ids = [module.security_groups.redis_sg]
-
-  # Delete it after testing. variable aas well.
-  redis_cluster_arn = [aws_elasticache_cluster.redis[0].arn]
 }
