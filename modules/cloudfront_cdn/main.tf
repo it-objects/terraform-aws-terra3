@@ -433,6 +433,16 @@ resource "aws_s3_bucket" "s3_static_website" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_ownership_controls" "s3_static_website" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
 #tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_static_website_enc_config" {
   count = var.enable_s3_for_static_website ? 1 : 0
