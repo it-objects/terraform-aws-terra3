@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.8.0...v1.9.0) (2023-04-27)
+
+
+### Features
+
+* add alias domain ([#32](https://github.com/it-objects/terraform-aws-terra3/issues/32)) ([3a71814](https://github.com/it-objects/terraform-aws-terra3/commit/3a71814f56d67a87b08aedf4884db63388b9deba))
+
 ## [1.8.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.7.0...v1.8.0) (2023-04-27)
 
 
