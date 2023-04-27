@@ -36,13 +36,7 @@ variable "lb_dns_name" {
 }
 
 variable "alias_domain_name" {
-  description = "Alias domain"
-  type        = string
-  default     = ""
-}
-
-variable "alias_domain_name_2" {
-  description = "Alias domain 2"
+  description = "While domain_name usually defines internal domain names, the alias domain repesents a second domain which is used as primary."
   type        = string
   default     = ""
 }

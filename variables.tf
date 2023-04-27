@@ -278,7 +278,7 @@ variable "enable_s3_for_static_website" {
 
 variable "s3_static_website_bucket_cf_function_arn" {
   type        = string
-  description = "String that defines cloudfront function for static website bucket."
+  description = "String that defines Cloudfront function for static website bucket."
   default     = ""
 }
 
@@ -363,6 +363,12 @@ variable "cluster_ec2_volume_size" {
 variable "domain_name" {
   type        = string
   description = "Example: aws-sandbox.terra3.io"
+  default     = ""
+}
+
+variable "alias_domain_name" {
+  type        = string
+  description = "While domain_name usually defines internal domain names, the alias domain repesents a second domain which is used as primary."
   default     = ""
 }
 

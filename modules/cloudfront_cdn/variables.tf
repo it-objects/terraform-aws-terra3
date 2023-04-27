@@ -12,6 +12,12 @@ variable "domain" {
   description = "DNS configuration: Domain name. E.g. aws-sandbox.terra3.io"
 }
 
+variable "alias_domain_name" {
+  description = "While domain_name usually defines internal domain names, the alias domain repesents a second domain which is used as primary."
+  type        = string
+  default     = ""
+}
+
 variable "certificate_arn" {
   type        = string
   description = "Certificate for cloudfront residing in Virginia."

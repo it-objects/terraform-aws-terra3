@@ -141,7 +141,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   enabled         = true
   is_ipv6_enabled = true
 
-  aliases = var.domain == null ? null : length(var.domain) == 0 ? null : [var.domain] # compact([var.domain, var.alias_domain_name, var.alias_domain_name_2])
+  aliases = var.domain == null ? null : length(var.domain) == 0 ? null : length(var.alias_domain_name) == 0 ? [var.domain] : compact([var.domain, var.alias_domain_name])
 
   comment             = "General Cloudfront distribution."
   http_version        = "http2and3"      # enable QUIC

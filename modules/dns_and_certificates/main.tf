@@ -23,11 +23,13 @@ data "aws_route53_zone" "imported_hostedzone" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # cert for root domain in Virgina required by CloudFront
+# If alias domain is set, make alias domain first and domain_name second, as domain_name is usually the internal
+# auto-generated domain name and alias domain the final one.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_acm_certificate" "domain_certificate" {
-  domain_name               = var.create_subdomain ? "${var.solution_name}.${local.domain_name}" : local.domain_name
+  domain_name               = length(var.alias_domain_name) == 0 ? var.create_subdomain ? "${var.solution_name}.${local.domain_name}" : local.domain_name : var.alias_domain_name
   validation_method         = "DNS"
-  subject_alternative_names = compact([var.alias_domain_name, var.alias_domain_name_2])
+  subject_alternative_names = length(var.alias_domain_name) == 0 ? [] : var.create_subdomain ? ["${var.solution_name}.${local.domain_name}"] : [local.domain_name]
 
   # It's recommended to specify create_before_destroy = true in a lifecycle block to
   # replace a certificate which is currently in use (eg, by aws_lb_listener).
