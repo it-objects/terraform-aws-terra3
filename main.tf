@@ -474,6 +474,9 @@ locals {
     for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn
   ]
 
+  db_instance_name = var.create_database ? module.database[0].db_instance_name : ""
+  db_instance_arn  = var.create_database ? module.database[0].db_instance_arn : ""
+
 }
 
 module "global_scale_down" {
@@ -509,8 +512,8 @@ module "global_scale_down" {
   ecs_desire_task_count = local.ecs_desire_task_counts
   ecs_service_arn       = local.ecs_service_arn
 
-  db_instance_name = module.database[0].db_instance_name
-  db_instance_arn  = module.database[0].db_instance_arn
+  db_instance_name = local.db_instance_name
+  db_instance_arn  = local.db_instance_arn
 
   redis_cluster_id         = local.redis_cluster_id
   redis_engine             = local.redis_engine

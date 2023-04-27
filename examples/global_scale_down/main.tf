@@ -26,8 +26,8 @@ module "terra3_examples" {
   nat = "NAT_INSTANCES"
 
   enable_environment_hibernation_sleep_schedule = true
-  environment_hibernation_sleep_schedule        = "cron(00 16 ? * MON-FRI *)"
-  environment_hibernation_wakeup_schedule       = "cron(00 05 ? * MON-FRI *)"
+  environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)"
+  environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)"
 
 
   app_components = {
