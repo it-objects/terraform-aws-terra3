@@ -387,6 +387,7 @@ resource "aws_s3_bucket_acl" "s3_bucket_acl" {
       id = data.aws_canonical_user_id.current.id
     }
   }
+  depends_on = [aws_s3_bucket_ownership_controls.cloudfront_logs_bucket]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
