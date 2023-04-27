@@ -365,29 +365,29 @@ resource "aws_s3_bucket_public_access_block" "block" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Give access to account and log front cloud delivery.
 # ---------------------------------------------------------------------------------------------------------------------
-resource "aws_s3_bucket_acl" "s3_bucket_acl" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  access_control_policy {
-    grant {
-      grantee {
-        id   = data.aws_canonical_user_id.current.id
-        type = "CanonicalUser"
-      }
-      permission = "FULL_CONTROL"
-    }
-    grant {
-      grantee {
-        id   = data.aws_cloudfront_log_delivery_canonical_user_id.current.id
-        type = "CanonicalUser"
-      }
-      permission = "FULL_CONTROL"
-    }
-    owner {
-      id = data.aws_canonical_user_id.current.id
-    }
-  }
-}
+#resource "aws_s3_bucket_acl" "s3_bucket_acl" {
+#  bucket = aws_s3_bucket.cloudfront_logs.id
+#
+#  access_control_policy {
+#    grant {
+#      grantee {
+#        id   = data.aws_canonical_user_id.current.id
+#        type = "CanonicalUser"
+#      }
+#      permission = "FULL_CONTROL"
+#    }
+#    grant {
+#      grantee {
+#        id   = data.aws_cloudfront_log_delivery_canonical_user_id.current.id
+#        type = "CanonicalUser"
+#      }
+#      permission = "FULL_CONTROL"
+#    }
+#    owner {
+#      id = data.aws_canonical_user_id.current.id
+#    }
+#  }
+#}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # ACLs are disabled per defaults. With the help of Bucket owner preferred, ACLs are enabled.
@@ -399,6 +399,7 @@ resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
     object_ownership = "BucketOwnerPreferred"
   }
 }
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Alias record for cloudfront distribution
 # ---------------------------------------------------------------------------------------------------------------------
