@@ -13,3 +13,11 @@ output "db_secrets_version_arn" {
 output "db_credentials" {
   value = local.secret_string
 }
+
+output "db_instance_name" {
+  value = aws_db_instance.db.identifier
+}
+
+output "db_instance_arn" {
+  value = aws_db_instance.db.arn
+}

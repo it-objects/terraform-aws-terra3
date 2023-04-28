@@ -330,14 +330,24 @@ module "database" {
 # Redis Cluster
 # ---------------------------------------------------------------------------------------------------------------------
 # tfsec:ignore:aws-elasticache-enable-backup-retention
+
+locals {
+  redis_cluster_id      = "${var.solution_name}-redis"
+  redis_engine          = "redis"
+  redis_node_type       = "cache.t4g.micro"
+  redis_num_cache_nodes = 1
+  redis_engine_version  = "5.0.6"
+}
+
+# tfsec:ignore:aws-elasticache-enable-backup-retention
 resource "aws_elasticache_cluster" "redis" {
   count = var.create_elasticache_redis ? 1 : 0
 
-  cluster_id         = "${var.solution_name}-redis"
-  engine             = "redis"
-  node_type          = "cache.t4g.micro"
-  num_cache_nodes    = 1
-  engine_version     = "5.0.6"
+  cluster_id         = local.redis_cluster_id
+  engine             = local.redis_engine
+  node_type          = local.redis_node_type
+  num_cache_nodes    = local.redis_num_cache_nodes
+  engine_version     = local.redis_engine_version
   subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[0].name
   security_group_ids = [module.security_groups.redis_sg]
 }
@@ -451,4 +461,70 @@ module "app_components" {
 
   # needed because for the ability to run separately, this module relies on querying information via data fields
   depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
+}
+
+locals {
+  ecs_service_names = [
+    for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name
+  ]
+
+  ecs_desire_task_counts = [
+    for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count
+  ]
+
+  ecs_service_arn = [
+    for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn
+  ]
+
+  db_instance_name = var.create_database ? module.database[0].db_instance_name : ""
+  db_instance_arn  = var.create_database ? module.database[0].db_instance_arn : ""
+
+}
+
+module "global_scale_down" {
+
+  source = "./modules/global_scale_down"
+
+  enable_environment_hibernation_sleep_schedule = var.enable_environment_hibernation_sleep_schedule
+  environment_hibernation_sleep_schedule        = var.environment_hibernation_sleep_schedule
+  environment_hibernation_wakeup_schedule       = var.environment_hibernation_wakeup_schedule
+
+  solution_name = var.solution_name
+
+  ecs_ec2_instances_asg_name              = module.cluster.ecs_ec2_instances_autoscaling_group_name
+  ecs_ec2_instances_asg_max_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity
+  ecs_ec2_instances_asg_min_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity
+  ecs_ec2_instances_asg_desired_capacity  = module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity
+  ecs_ec2_instances_autoscaling_group_arn = module.cluster.ecs_ec2_instances_autoscaling_group_arn
+
+  nat_instances_asg_names             = flatten(module.nat_instances[*].nat_instances_autoscaling_group_names)
+  nat_instances_asg_max_capacity      = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)
+  nat_instances_asg_min_capacity      = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
+  nat_instances_asg_desired_capacity  = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
+  nat_instances_autoscaling_group_arn = flatten(module.nat_instances[*].nat_instances_autoscaling_group_arn)
+
+  bastion_host_asg_name              = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
+  bastion_host_asg_max_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
+  bastion_host_asg_min_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
+  bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
+  bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
+
+  cluster_name          = module.cluster.ecs_cluster_name
+  ecs_service_names     = local.ecs_service_names
+  ecs_desire_task_count = local.ecs_desire_task_counts
+  ecs_service_arn       = local.ecs_service_arn
+
+  db_instance_name = local.db_instance_name
+  db_instance_arn  = local.db_instance_arn
+
+  redis_cluster_id         = local.redis_cluster_id
+  redis_engine             = local.redis_engine
+  redis_node_type          = local.redis_node_type
+  redis_num_cache_nodes    = local.redis_num_cache_nodes
+  redis_engine_version     = local.redis_engine_version
+  redis_subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
+  redis_security_group_ids = [module.security_groups.redis_sg]
+  redis_cluster_arn        = aws_elasticache_cluster.redis[*].arn
+  redis_subnet_group_arn   = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].arn
+  redis_security_group_arn = module.security_groups.redis_sg_arn
 }
