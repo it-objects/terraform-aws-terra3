@@ -4,40 +4,16 @@ locals {
       "Version" : "2012-10-17",
       "Statement" : [
         {
-          "Sid" : "VisualEditor00",
+          "Sid" : "ScaleUpAutoscaling",
           "Effect" : "Allow",
           "Action" : [
             "autoscaling:UpdateAutoScalingGroup",
           ],
-          "Resource" : [
-            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : ecs_ec2_instances_autoscaling_group_arn
-          ]
+          "Resource" : concat(var.ecs_ec2_instances_autoscaling_group_arn, var.nat_instances_autoscaling_group_arn, var.bastion_host_autoscaling_group_arn)
         },
 
         {
-          "Sid" : "VisualEditor01",
-          "Effect" : "Allow",
-          "Action" : [
-            "autoscaling:UpdateAutoScalingGroup",
-          ],
-          "Resource" : [
-            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : nat_instances_autoscaling_group_arn
-          ]
-        },
-
-        {
-          "Sid" : "VisualEditor02",
-          "Effect" : "Allow",
-          "Action" : [
-            "autoscaling:UpdateAutoScalingGroup",
-          ],
-          "Resource" : [
-            for bastion_host_autoscaling_group_arn in var.bastion_host_autoscaling_group_arn : bastion_host_autoscaling_group_arn
-          ]
-        },
-
-        {
-          "Sid" : "VisualEditor03",
+          "Sid" : "ScaleUpIAM",
           "Effect" : "Allow",
           "Action" : [
             "iam:GetRole",
@@ -49,7 +25,7 @@ locals {
         },
 
         {
-          "Sid" : "VisualEditor04",
+          "Sid" : "ScaleUpUpdateECS",
           "Effect" : "Allow",
           "Action" : [
             "ecs:UpdateService"
@@ -58,7 +34,7 @@ locals {
         },
 
         {
-          "Sid" : "VisualEditor05",
+          "Sid" : "ScaleUpDB",
           "Effect" : "Allow",
           "Action" : [
             "rds:DescribeDBInstances",
@@ -70,45 +46,13 @@ locals {
         },
 
         {
-          "Sid" : "VisualEditor06",
+          "Sid" : "ScaleUpRedis",
           "Effect" : "Allow",
           "Action" : [
             "elasticache:CreateCacheCluster"
           ],
-          "Resource" : var.redis_cluster_arn
+          "Resource" : concat(var.redis_cluster_arn, var.redis_subnet_group_arn, [var.redis_security_group_arn], ["arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parametergroup:*"])
         },
-
-        {
-          "Sid" : "VisualEditor07",
-          "Effect" : "Allow",
-          "Action" : [
-            "elasticache:CreateCacheCluster"
-          ],
-          "Resource" : var.redis_subnet_group_arn
-        },
-
-        {
-          "Sid" : "VisualEditor08",
-          "Effect" : "Allow",
-          "Action" : [
-            "elasticache:CreateCacheCluster"
-          ],
-          "Resource" : [
-            var.redis_security_group_arn
-          ]
-        },
-
-        {
-          "Sid" : "VisualEditor09",
-          "Effect" : "Allow",
-          "Action" : [
-            "elasticache:CreateCacheCluster"
-          ],
-          "Resource" : [
-            "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parametergroup:*"
-          ]
-        }
-
       ]
   })
 
@@ -117,40 +61,16 @@ locals {
       "Version" : "2012-10-17",
       "Statement" : [
         {
-          "Sid" : "VisualEditor00",
+          "Sid" : "ScaleDownAutoscaling",
           "Effect" : "Allow",
           "Action" : [
             "autoscaling:UpdateAutoScalingGroup",
           ],
-          "Resource" : [
-            for ecs_ec2_instances_autoscaling_group_arn in var.ecs_ec2_instances_autoscaling_group_arn : ecs_ec2_instances_autoscaling_group_arn
-          ]
+          "Resource" : concat(var.ecs_ec2_instances_autoscaling_group_arn, var.nat_instances_autoscaling_group_arn, var.bastion_host_autoscaling_group_arn)
         },
 
         {
-          "Sid" : "VisualEditor01",
-          "Effect" : "Allow",
-          "Action" : [
-            "autoscaling:UpdateAutoScalingGroup",
-          ],
-          "Resource" : [
-            for nat_instances_autoscaling_group_arn in var.nat_instances_autoscaling_group_arn : nat_instances_autoscaling_group_arn
-          ]
-        },
-
-        {
-          "Sid" : "VisualEditor02",
-          "Effect" : "Allow",
-          "Action" : [
-            "autoscaling:UpdateAutoScalingGroup",
-          ],
-          "Resource" : [
-            for bastion_host_autoscaling_group_arn in var.bastion_host_autoscaling_group_arn : bastion_host_autoscaling_group_arn
-          ]
-        },
-
-        {
-          "Sid" : "VisualEditor03",
+          "Sid" : "ScaleDownIAM",
           "Effect" : "Allow",
           "Action" : [
             "iam:GetRole",
@@ -162,7 +82,7 @@ locals {
         },
 
         {
-          "Sid" : "VisualEditor04",
+          "Sid" : "ScaleDownUpdateECS",
           "Effect" : "Allow",
           "Action" : [
             "ecs:UpdateService"
@@ -171,7 +91,7 @@ locals {
         },
 
         {
-          "Sid" : "VisualEditor05",
+          "Sid" : "ScaleDownDB",
           "Effect" : "Allow",
           "Action" : [
             "rds:DescribeDBInstances",
@@ -183,7 +103,7 @@ locals {
         },
 
         {
-          "Sid" : "VisualEditor06",
+          "Sid" : "sScaleDownRedis",
           "Effect" : "Allow",
           "Action" : [
             "elasticache:DeleteCacheCluster"

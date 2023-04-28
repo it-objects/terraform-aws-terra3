@@ -22,7 +22,7 @@ module "lambda_scale_up" {
   allowed_triggers = {
     ScanAmiRule = {
       principal  = "events.amazonaws.com"
-      source_arn = module.eventbridge_scale_up[0].eventbridge_rule_arns["scale_up"]
+      source_arn = module.eventbridge_scale_up[0].eventbridge_rule_arns["${var.solution_name}-scale_up"]
     }
   }
 
@@ -53,7 +53,7 @@ module "eventbridge_scale_up" {
   create_bus = false
 
   rules = {
-    scale_up = {
+    "${var.solution_name}-scale_up" = {
       name                = "${var.solution_name}-global-scale-up"
       description         = "Trigger for a Lambda to enable global scale up."
       schedule_expression = var.environment_hibernation_wakeup_schedule
@@ -61,7 +61,7 @@ module "eventbridge_scale_up" {
   }
 
   targets = {
-    scale_up = [
+    "${var.solution_name}-scale_up" = [
       {
         name = "${var.solution_name}-global-scale-up"
         arn  = module.lambda_scale_up[0].lambda_function_arn
@@ -88,7 +88,8 @@ module "eventbridge_scale_up" {
           "redis_num_cache_nodes" : var.redis_num_cache_nodes,
           "redis_engine_version" : local.redis_engine_version,
           "redis_subnet_group_name" : var.redis_subnet_group_name,
-        "redis_security_group_ids" : var.redis_security_group_ids })
+          "redis_security_group_ids" : var.redis_security_group_ids
+        })
       }
     ]
   }
@@ -118,7 +119,7 @@ module "lambda_scale_down" {
   allowed_triggers = {
     ScanAmiRule = {
       principal  = "events.amazonaws.com"
-      source_arn = module.eventbridge_scale_down[0].eventbridge_rule_arns["scale_down"]
+      source_arn = module.eventbridge_scale_down[0].eventbridge_rule_arns["${var.solution_name}-scale_down"]
     }
   }
 
@@ -134,22 +135,22 @@ module "eventbridge_scale_down" {
 
   source    = "terraform-aws-modules/eventbridge/aws"
   version   = "1.17.2"
-  role_name = "${var.solution_name}-eventbridge-global-scale--down"
+  role_name = "${var.solution_name}-eventbridge-global-scale-down"
 
   create_bus = false
 
   rules = {
-    scale_down = {
-      name                = "${var.solution_name}-global-scale--down"
+    "${var.solution_name}-scale_down" = {
+      name                = "${var.solution_name}-global-scale-down"
       description         = "Trigger for a Lambda to enable global scale down."
       schedule_expression = var.environment_hibernation_sleep_schedule
     }
   }
 
   targets = {
-    scale_down = [
+    "${var.solution_name}-scale_down" = [
       {
-        name = "${var.solution_name}-global-scale--down"
+        name = "${var.solution_name}-global-scale-down"
         arn  = module.lambda_scale_down[0].lambda_function_arn
         input = jsonencode({
           "cluster_name" : local.cluster_name,
@@ -158,7 +159,8 @@ module "eventbridge_scale_down" {
           "bastion_host_asg_name" : var.bastion_host_asg_name,
           "nat_instances_asg_names" : var.nat_instances_asg_names,
           "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
-        "redis_cluster_id" : local.redis_cluster_id })
+          "redis_cluster_id" : local.redis_cluster_id
+        })
       }
     ]
   }
