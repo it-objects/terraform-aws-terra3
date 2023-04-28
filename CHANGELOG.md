@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.9.0...v1.10.0) (2023-04-28)
+
+
+### Features
+
+* add environment sleep feature which allows to scale down the environment after a provided schedule to save costs in e.g. lower stages ([0fe9358](https://github.com/it-objects/terraform-aws-terra3/commit/0fe935818b94f1339c5020d0ce8fff5722d8020b))
+
 ## [1.9.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.8.0...v1.9.0) (2023-04-27)
 
 
