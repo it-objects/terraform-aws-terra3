@@ -20,9 +20,12 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
   }
 }
 
-resource "aws_s3_bucket_acl" "s3_bucket_acl" {
+resource "aws_s3_bucket_ownership_controls" "s3_data_bucket" {
   bucket = aws_s3_bucket.s3_data_bucket.id
-  acl    = "private"
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

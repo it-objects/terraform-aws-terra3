@@ -11,7 +11,7 @@ locals {
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
-  domain_name = var.enable_custom_domain ? module.dns_and_certificates[0].domain_name : ""
+  domain_name = var.enable_custom_domain ? module.dns_and_certificates[0].internal_domain_name : ""
 }
 
 resource "aws_ssm_parameter" "domain_name" {
@@ -139,7 +139,7 @@ module "l7_loadbalancer" {
   enable_custom_domain = var.enable_custom_domain
   default_redirect_url = var.default_redirect_url
   hosted_zone_id       = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
-  domain_name          = var.enable_custom_domain ? module.dns_and_certificates[0].domain_name : ""
+  domain_name          = var.enable_custom_domain ? module.dns_and_certificates[0].internal_domain_name : ""
 }
 
 resource "aws_ssm_parameter" "environment_alb_arn" {
@@ -174,6 +174,7 @@ module "dns_and_certificates" {
   route53_subdomain = var.solution_name
   route53_zone_id   = var.route53_zone_id
   domain            = var.domain_name
+  alias_domain_name = var.alias_domain_name
 
   create_subdomain = var.create_subdomain
 
@@ -192,9 +193,10 @@ module "cloudfront_cdn" {
   source        = "./modules/cloudfront_cdn"
   solution_name = var.solution_name
 
-  origin_alb_url  = length(module.l7_loadbalancer) == 0 ? null : module.l7_loadbalancer[0].lb_dns_name
-  domain          = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].domain_name
-  certificate_arn = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].cloudfront_certificate_arn
+  origin_alb_url    = length(module.l7_loadbalancer) == 0 ? null : module.l7_loadbalancer[0].lb_dns_name
+  domain            = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].internal_domain_name
+  alias_domain_name = length(module.dns_and_certificates) == 0 ? null : var.alias_domain_name
+  certificate_arn   = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].cloudfront_certificate_arn
 
   calculated_zone_id = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
 

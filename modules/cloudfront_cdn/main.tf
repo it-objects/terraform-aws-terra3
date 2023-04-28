@@ -141,7 +141,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   enabled         = true
   is_ipv6_enabled = true
 
-  aliases = var.domain == null ? null : length(var.domain) == 0 ? null : [var.domain] # compact([var.domain, var.alias_domain_name, var.alias_domain_name_2])
+  aliases = var.domain == null ? null : length(var.domain) == 0 ? null : length(var.alias_domain_name) == 0 ? [var.domain] : compact([var.domain, var.alias_domain_name])
 
   comment             = "General Cloudfront distribution."
   http_version        = "http2and3"      # enable QUIC
@@ -363,6 +363,34 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Give access to account and log front cloud delivery.
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_s3_bucket_acl" "s3_bucket_acl" {
+  bucket = aws_s3_bucket.cloudfront_logs.id
+
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_canonical_user_id.current.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
+    grant {
+      grantee {
+        id   = data.aws_cloudfront_log_delivery_canonical_user_id.current.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
+  }
+  depends_on = [aws_s3_bucket_ownership_controls.cloudfront_logs_bucket]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # ACLs are disabled per defaults. With the help of Bucket owner preferred, ACLs are enabled.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
@@ -372,6 +400,7 @@ resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
     object_ownership = "BucketOwnerPreferred"
   }
 }
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Alias record for cloudfront distribution
 # ---------------------------------------------------------------------------------------------------------------------
@@ -403,6 +432,16 @@ resource "aws_s3_bucket" "s3_static_website" {
   bucket = "${var.solution_name}-static-website-s3-bucket-${random_string.random_s3_postfix.result}"
 
   force_destroy = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_static_website" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
 }
 
 #tfsec:ignore:aws-s3-encryption-customer-key
