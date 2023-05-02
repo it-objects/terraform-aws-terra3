@@ -1,7 +1,3 @@
-variable "solution_name" {
-  type = string
-}
-
 variable "ecr_name" {
   type = string
 }

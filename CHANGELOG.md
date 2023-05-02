@@ -2,6 +2,219 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.9.0...v1.10.0) (2023-04-28)
+
+
+### Features
+
+* add environment sleep feature which allows to scale down the environment after a provided schedule to save costs in e.g. lower stages ([0fe9358](https://github.com/it-objects/terraform-aws-terra3/commit/0fe935818b94f1339c5020d0ce8fff5722d8020b))
+
+## [1.9.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.8.0...v1.9.0) (2023-04-27)
+
+
+### Features
+
+* add alias domain ([#32](https://github.com/it-objects/terraform-aws-terra3/issues/32)) ([3a71814](https://github.com/it-objects/terraform-aws-terra3/commit/3a71814f56d67a87b08aedf4884db63388b9deba))
+
+## [1.8.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.7.0...v1.8.0) (2023-04-27)
+
+
+### Features
+
+* enabled S3 access control lists (ACLs) for S3 buckets ([#31](https://github.com/it-objects/terraform-aws-terra3/issues/31)) ([9201a3f](https://github.com/it-objects/terraform-aws-terra3/commit/9201a3fba70a2e5824a877249d0cd60a19e4464f))
+
+## [1.7.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.6.0...v1.7.0) (2023-04-25)
+
+
+### Features
+
+* Added bucket ownership control to enable ACLs. ([#29](https://github.com/it-objects/terraform-aws-terra3/issues/29)) ([b19aae0](https://github.com/it-objects/terraform-aws-terra3/commit/b19aae05ebd5cb625244f196668b1b9d64036bec))
+
+## [1.6.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.5.0...v1.6.0) (2023-04-13)
+
+
+### Features
+
+* updated to current version of rds for mysql database. ([4d7a3b3](https://github.com/it-objects/terraform-aws-terra3/commit/4d7a3b3161c570f3011ca1997aeecce5856ef61c))
+
+## [1.5.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.4.0...v1.5.0) (2023-02-24)
+
+
+### Features
+
+* added option to enable alert based on ecs running task count ([#28](https://github.com/it-objects/terraform-aws-terra3/issues/28)) ([69f4690](https://github.com/it-objects/terraform-aws-terra3/commit/69f4690cbd2c181e895ebc93cacf67f583c57f09))
+
+## [1.4.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.3.0...v1.4.0) (2023-02-24)
+
+
+### Features
+
+* added more options to configure the database ([#27](https://github.com/it-objects/terraform-aws-terra3/issues/27)) ([586de72](https://github.com/it-objects/terraform-aws-terra3/commit/586de7298b577c237bea90fe03c5fbd68bb8c07d))
+
+## [1.3.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.2.0...v1.3.0) (2023-02-23)
+
+
+### Features
+
+* activate option for single AZ ([cb705d3](https://github.com/it-objects/terraform-aws-terra3/commit/cb705d398578fd02245c4d8423ac519a079bbcfa))
+* add option to disable custom error messages in Cloudfront in cases where API responses are masked by a custom error response on 404. ([7b838bd](https://github.com/it-objects/terraform-aws-terra3/commit/7b838bd4381f861ca2221e83d26e6cc09e0ddf6d))
+
+## [1.2.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.1.0...v1.2.0) (2023-02-23)
+
+
+### Features
+
+* add option to set subnet tags as required by eks and elb ([ac6cd0f](https://github.com/it-objects/terraform-aws-terra3/commit/ac6cd0fa7f0b4d934bc4f551e79b858cd9f80d44))
+
+## [1.1.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.0.0...v1.1.0) (2023-02-13)
+
+
+### Features
+
+* **vpc:** output VPC related ids ([8532b41](https://github.com/it-objects/terraform-aws-terra3/commit/8532b4190768b1a59f1cd244ecf7f5647a0e7355))
+
+## [1.0.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.26.0...v1.0.0) (2023-02-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* Terra3 v1.0 GA
+
+### Miscellaneous Chores
+
+* reverting change of example ([28a0c44](https://github.com/it-objects/terraform-aws-terra3/commit/28a0c44023d3d9caaa3ebca907e5de97698c3908))
+
+## [0.26.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.25.1...v0.26.0) (2023-02-08)
+
+
+### Features
+
+* **modules:** update modules to latest versions ([39486fd](https://github.com/it-objects/terraform-aws-terra3/commit/39486fd80a221e84292ab2d8659f6feda53516d9))
+
+### [0.25.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.25.0...v0.25.1) (2023-02-08)
+
+
+### Bug Fixes
+
+* **alb:** fix issue when application load balancer is disabled and remove workaround for example 1 ([efa593c](https://github.com/it-objects/terraform-aws-terra3/commit/efa593c3f976bca3c07511f38316ba6f8cf4f509))
+
+## [0.25.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.2...v0.25.0) (2023-02-08)
+
+
+### Features
+
+* **ecr:** add parameter that allows to add a custom ECR name. per default, the solution name is taken. ([bb2f829](https://github.com/it-objects/terraform-aws-terra3/commit/bb2f829ae7dbd167690281b5dab1e81b77807e73))
+
+### [0.24.2](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.1...v0.24.2) (2023-02-06)
+
+
+### Bug Fixes
+
+* expose more output variables required for using gitlab_aws_oidc ([0a30d6d](https://github.com/it-objects/terraform-aws-terra3/commit/0a30d6dc44e1cc2a04980142ba9ed35b653e1ba6))
+
+### [0.24.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.24.0...v0.24.1) (2023-02-06)
+
+
+### Bug Fixes
+
+* **cloudfront:** increase SPA compatibility by adding listbucket to S3 policy to avoid 403 and return 404 instead also to s3_static_website_bucket ([9275a42](https://github.com/it-objects/terraform-aws-terra3/commit/9275a427a86ebe2cd96ce50c754e9709b09ce457))
+
+## [0.24.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.23.0...v0.24.0) (2023-02-06)
+
+
+### Features
+
+* **cloudfront:** increase SPA compatibility by adding listbucket to S3 policy to avoid 403 and return 404 instead also to s3_static_website_bucket ([f0922ad](https://github.com/it-objects/terraform-aws-terra3/commit/f0922adc3ef12937dfa9aae157f746c43ecec881))
+
+## [0.23.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.22.0...v0.23.0) (2023-02-06)
+
+
+### Features
+
+* **cloudfront:** increase SPA compatibility by adding listbucket to S3 policy to avoid 403 and return 404 instead ([82b3d43](https://github.com/it-objects/terraform-aws-terra3/commit/82b3d43c2a03ae9c9543f598505e9d997681d32c))
+
+## [0.22.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.21.0...v0.22.0) (2023-02-03)
+
+
+### Features
+
+* **cdn:** adding option to add cloudfront function to s3 static website bucket ([7d242b6](https://github.com/it-objects/terraform-aws-terra3/commit/7d242b615054669db8757aa3bb056df694094252))
+
+
+### Bug Fixes
+
+* **examples:** examples with create_load_balancer = false currently don't work with latest version. This fixes this issue temporarily by pinning version to older version of Terra3 ([6051696](https://github.com/it-objects/terraform-aws-terra3/commit/60516963b934dd3c0b4a28d3702376737c1a8f82))
+
+## [0.21.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.2...v0.21.0) (2023-01-30)
+
+
+### Features
+
+* adding switch for creating subdomain or use hosted zone's domain name ([fe739f8](https://github.com/it-objects/terraform-aws-terra3/commit/fe739f83f706a3ac94e1fb7b69779c96988147f2))
+
+### [0.20.2](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.1...v0.20.2) (2023-01-30)
+
+
+### Bug Fixes
+
+* container definitions with certain log_configuration declarations were not accepted ([efba249](https://github.com/it-objects/terraform-aws-terra3/commit/efba249345de5385df20116c72d94bc9972f160a))
+
+### [0.20.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.20.0...v0.20.1) (2023-01-27)
+
+
+### Bug Fixes
+
+* added default value of firelens container ([#26](https://github.com/it-objects/terraform-aws-terra3/issues/26)) ([74bf9d6](https://github.com/it-objects/terraform-aws-terra3/commit/74bf9d609dfd3ab9e294fd5c33a912cc84f22dce))
+
+## [0.20.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.19.0...v0.20.0) (2023-01-27)
+
+
+### Features
+
+* added logconfiguration as configurable and firelensconfiguration as an option ([#25](https://github.com/it-objects/terraform-aws-terra3/issues/25)) ([8a0380b](https://github.com/it-objects/terraform-aws-terra3/commit/8a0380b02ab0d43a63ccb7f889d0bb5465788dcd))
+
+## [0.19.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.18.0...v0.19.0) (2023-01-26)
+
+
+### Features
+
+* adding database credentials to SSM parameter. ([#24](https://github.com/it-objects/terraform-aws-terra3/issues/24)) ([af90a58](https://github.com/it-objects/terraform-aws-terra3/commit/af90a5893d37feafd92a8d6e2cc3d5b7e2f92dbc))
+
+## [0.18.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.17.0...v0.18.0) (2023-01-25)
+
+
+### Features
+
+* adding configurations for memory_reservation and default_redirect_url ([e51988b](https://github.com/it-objects/terraform-aws-terra3/commit/e51988b1c947038bffc2df8b165cd5dd75f24ad9))
+
+## [0.17.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.16.1...v0.17.0) (2023-01-24)
+
+
+### Features
+
+* adding option for injecting secrets to app_component ([#22](https://github.com/it-objects/terraform-aws-terra3/issues/22)) ([d7cc43a](https://github.com/it-objects/terraform-aws-terra3/commit/d7cc43a170df501dfd261704ab90cb272130a9ab))
+
+### [0.16.1](https://github.com/it-objects/terraform-aws-terra3/compare/v0.16.0...v0.16.1) (2023-01-24)
+
+
+### Bug Fixes
+
+* avoid error if no S3 solution bucket is created ([2b3f1a2](https://github.com/it-objects/terraform-aws-terra3/commit/2b3f1a26cdc01eb9e59d75a32021575785cf1c1f))
+
+## [0.16.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.15.0...v0.16.0) (2023-01-23)
+
+
+### Features
+
+* added output arn of s3 solution bucket. ([#21](https://github.com/it-objects/terraform-aws-terra3/issues/21)) ([94c15d7](https://github.com/it-objects/terraform-aws-terra3/commit/94c15d7f129fb85feee719cd7454147be6340021))
+
+## [0.15.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.14.0...v0.15.0) (2023-01-19)
+
+
+### Features
+
+* allow setting up two tf states, one for infra scope and one for application scope to reduce blast radius ([cb223a0](https://github.com/it-objects/terraform-aws-terra3/commit/cb223a00a3faa6a4cfa35f96ba42fe71cf896f2f))
+
 ## [0.14.0](https://github.com/it-objects/terraform-aws-terra3/compare/v0.13.0...v0.14.0) (2023-01-17)
 
 

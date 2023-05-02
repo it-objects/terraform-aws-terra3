@@ -21,11 +21,11 @@ export default {
 
         footer: {
             message: 'Released under the Apache2 License.',
-            copyright: 'Copyright © 2022 it-objects GmbH'
+            copyright: 'Copyright © 2023 it-objects GmbH'
         },
 
         nav: [
-            { text: '->IT-Objects', link: 'https://www.it-objects.de/cloud/' },
+            { text: '->it-objects', link: 'https://www.it-objects.de/cloud/' },
           /*{
             text: 'Dropdown Menu',
             collapsible: true,

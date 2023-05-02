@@ -34,6 +34,12 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   secret_string = local.secret_string
 }
 
+resource "aws_ssm_parameter" "db_credentials_arn" {
+  name  = "/${var.solution_name}/db_credentials_arn"
+  type  = "String"
+  value = aws_secretsmanager_secret_version.db_credentials_version.arn
+}
+
 # as this is meant for testing purposes, costs are higher weighted than medium or low security related aspects
 #tfsec:ignore:aws-rds-enable-performance-insights
 resource "aws_db_instance" "db" {

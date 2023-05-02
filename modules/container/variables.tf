@@ -16,6 +16,11 @@ variable "container_memory" {
   type = number
 }
 
+variable "container_memory_reservation" {
+  type    = number
+  default = null
+}
+
 variable "port_mappings" {
   type = list(object({
     containerPort = number
@@ -42,6 +47,21 @@ variable "environment" {
   default     = []
 }
 
+variable "map_secrets" {
+  type        = map(string)
+  description = "The secret references to pass to the container. This is a map of string: {key: value}. map_secrets overrides environment"
+  default     = null
+}
+
+variable "secrets" {
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  description = "The secret references to pass to the container. This is a list of maps. map_secrets overrides environment"
+  default     = []
+}
+
 variable "essential" {
   type        = bool
   description = "Determines whether all other containers in a task are stopped, if this container fails or stops for any reason. Due to how Terraform type casts booleans in json it is required to double quote this value"
@@ -57,5 +77,18 @@ variable "command" {
 variable "readonlyRootFilesystem" {
   type        = bool
   description = "Best practice is to enable it, but causes issues in some cases."
+  default     = false
+}
+
+# https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_LogConfiguration.html
+variable "log_configuration" {
+  type        = any
+  description = "Log configuration options to send to a custom log driver for the container."
+  default     = null
+}
+
+variable "enable_firelens_container" {
+  description = "Select true to enable firelens container."
+  type        = bool
   default     = false
 }

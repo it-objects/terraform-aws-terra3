@@ -1,7 +1,7 @@
 Overview
 ========
 
-Welcome to Terra3 (beta) - An opinionated Terraform module for quickly ramping-up 3-tier architectures in AWS!
+Welcome to Terra3 - An opinionated Terraform module for ramping-up 3-tier architectures in AWS in no time!
 
 This repository contains a collection of Terraform modules that aim to make it easier and faster for customers to get started with a 3-tier-architecture in [AWS](https://aws.amazon.com/). It can be used to configure and provision a complete stack with
 
@@ -9,7 +9,9 @@ This repository contains a collection of Terraform modules that aim to make it e
 
 *   a containerized backend/API running on AWS ECS
 
-*   an AWS RDS MySQL database
+*   an AWS RDS MySQL/Postgres database
+
+*   an AWS ElastiCache Redis
 
 It is the result of many projects we did for customers with similar requirements. And rather than starting from scratch
 with every project, we've created reusable Terraform modules. What started as an internal library, now evolved into
@@ -19,7 +21,7 @@ a single module we'd like to share and to give back to the community as open sou
 
 These are module features that allow cloud engineers to customize the AWS infrastructure setup, mostly by just setting the appropriate flag.
 
-* NAT instance as optional low-cost alternative to NAT Gateway
+* Pre-configured NAT instance as optional low-cost alternative to NAT Gateway
 
 * Reasonable defaults such as "Enabled VPC Gateway endpoint for S3", "account-wide S3/EBS encryption"
 
@@ -34,12 +36,6 @@ These are module features that allow cloud engineers to customize the AWS infras
 * Transport encryption between Cloudfront and the Application Loadbalancer (if custom_domain is enabled)
 
 * and many more...
-
-**Beta phase**
-While the internal sub-modules are used by us in production, the single Terraform module, that bundles all sub-modules
-behind neat module parameters such as app_modules and containers, is a completely new development. It should be considered
-as beta for now, until we release the first major version, expected to be generally available in 2022. Subscribe
-to the GitHub project to hear about the release! Any feedback from you is welcome!
 
 
 What is Terra3
@@ -60,6 +56,6 @@ You can use it
 
 *   as ramp-up to quickly see your website or container run on AWS
 
-*   as base for your next project to skip the nitty gritty grunt work
+*   as base for your next project to skip the nitty-gritty grunt work
 
 *   for educational purposes

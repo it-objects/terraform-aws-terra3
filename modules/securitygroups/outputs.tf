@@ -29,3 +29,7 @@ output "redis_access_marker_sg" {
 output "redis_sg" {
   value = aws_security_group.redis_sg.id
 }
+
+output "redis_sg_arn" {
+  value = aws_security_group.redis_sg.arn
+}

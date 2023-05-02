@@ -17,6 +17,6 @@ module "terra3_examples" {
   enable_account_best_practices = true
 
   # configure your environment here
-  create_load_balancer = false
+  create_load_balancer = true
   nat                  = "NO_NAT" # default value
 }

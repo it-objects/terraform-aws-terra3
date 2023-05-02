@@ -11,7 +11,13 @@ locals {
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
-  domain_name = length(module.dns_and_certificates) == 0 ? "" : module.dns_and_certificates[0].domain_name
+  domain_name = var.enable_custom_domain ? module.dns_and_certificates[0].internal_domain_name : ""
+}
+
+resource "aws_ssm_parameter" "domain_name" {
+  name  = "/${var.solution_name}/domain_name"
+  type  = "String"
+  value = var.enable_custom_domain ? local.domain_name : "-"
 }
 
 
@@ -34,7 +40,7 @@ module "vpc" {
   count = !var.use_an_existing_vpc ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
-  version = "3.16.0"
+  version = "3.19.0"
 
   name = "${var.solution_name}-vpc"
   cidr = var.cidr
@@ -43,19 +49,27 @@ module "vpc" {
   public_subnets  = var.public_subnets_cidr_blocks
   private_subnets = var.private_subnets_cidr_blocks
 
-  public_subnet_tags = {
-    "Tier" : "public"
+  public_subnet_tags = var.set_cluster_name_for_k8s_subnet_tagging == "" ? {
+    Tier = "public"
+    } : {
+    "kubernetes.io/role/elb"                                               = "1"      # required annotations for ALB controller
+    "kubernetes.io/cluster/${var.set_cluster_name_for_k8s_subnet_tagging}" = "shared" # required annotations for ALB controller
+    Tier                                                                   = "public"
   }
 
-  private_subnet_tags = {
-    "Tier" : "private"
+  private_subnet_tags = var.set_cluster_name_for_k8s_subnet_tagging == "" ? {
+    Tier = "private"
+    } : {
+    "kubernetes.io/role/internal-elb"                                      = "1"      # required annotations for ALB controller
+    "kubernetes.io/cluster/${var.set_cluster_name_for_k8s_subnet_tagging}" = "shared" # required annotations for ALB controller
+    Tier                                                                   = "private"
   }
 
-  create_database_subnet_group = true
-  database_subnets             = var.database_cidr_blocks
+  create_database_subnet_group = var.create_database
+  database_subnets             = var.create_database ? var.database_cidr_blocks : []
 
-  create_elasticache_subnet_group = true
-  elasticache_subnets             = var.elasticache_cidr_blocks
+  create_elasticache_subnet_group = var.create_elasticache_redis
+  elasticache_subnets             = var.create_elasticache_redis ? var.elasticache_cidr_blocks : []
 
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -121,6 +135,19 @@ module "l7_loadbalancer" {
   security_groups = [module.security_groups.loadbalancer_sg]
 
   enable_alb_logs = var.enable_alb_logs
+
+  enable_custom_domain = var.enable_custom_domain
+  default_redirect_url = var.default_redirect_url
+  hosted_zone_id       = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
+  domain_name          = var.enable_custom_domain ? module.dns_and_certificates[0].internal_domain_name : ""
+}
+
+resource "aws_ssm_parameter" "environment_alb_arn" {
+  count = !var.create_load_balancer ? 1 : 0
+
+  name  = "/${var.solution_name}/alb_arn"
+  type  = "String"
+  value = "-"
 }
 
 module "security_groups" {
@@ -129,7 +156,7 @@ module "security_groups" {
   name   = var.solution_name
   vpc_id = local.vpc_id
 
-  create_dns_and_certificates = var.create_dns_and_certificates
+  create_dns_and_certificates = var.enable_custom_domain
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -138,37 +165,46 @@ module "security_groups" {
 # - hosted zone to be created within account
 # ---------------------------------------------------------------------------------------------------------------------
 module "dns_and_certificates" {
-  count = var.create_dns_and_certificates ? 1 : 0
+  count = var.enable_custom_domain ? 1 : 0
 
   source = "./modules/dns_and_certificates"
 
-  environment = var.solution_name
+  solution_name = var.solution_name
 
   route53_subdomain = var.solution_name
   route53_zone_id   = var.route53_zone_id
   domain            = var.domain_name
+  alias_domain_name = var.alias_domain_name
 
-  create_load_balancer = var.create_load_balancer
-  lb_dns_name          = length(module.l7_loadbalancer) == 0 ? "" : module.l7_loadbalancer[0].lb_dns_name
+  create_subdomain = var.create_subdomain
 
   providers = {
     aws.useast1 = aws.useast1
   }
 }
 
+resource "aws_ssm_parameter" "enable_custom_domain" {
+  name  = "/${var.solution_name}/enable_custom_domain"
+  type  = "String"
+  value = var.enable_custom_domain
+}
+
 module "cloudfront_cdn" {
   source        = "./modules/cloudfront_cdn"
   solution_name = var.solution_name
 
-  origin_alb_url  = length(module.l7_loadbalancer) == 0 ? null : module.l7_loadbalancer[0].lb_dns_name
-  domain          = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].domain_name
-  certificate_arn = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].cloudfront_certificate_arn
+  origin_alb_url    = length(module.l7_loadbalancer) == 0 ? null : module.l7_loadbalancer[0].lb_dns_name
+  domain            = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].internal_domain_name
+  alias_domain_name = length(module.dns_and_certificates) == 0 ? null : var.alias_domain_name
+  certificate_arn   = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].cloudfront_certificate_arn
 
-  calculated_zone_id = var.create_dns_and_certificates ? module.dns_and_certificates[0].hosted_zone_id : ""
+  calculated_zone_id = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
 
-  enable_s3_for_static_website = var.enable_s3_for_static_website
+  enable_s3_for_static_website             = var.enable_s3_for_static_website
+  s3_static_website_bucket_cf_function_arn = var.s3_static_website_bucket_cf_function_arn
 
   s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
+  disable_custom_error_response    = var.disable_custom_error_response
 
   s3_solution_bucket_name        = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
   s3_solution_bucket_arn         = try(module.s3_solution_bucket[0].s3_bucket_arn, "")
@@ -213,6 +249,12 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
+resource "aws_ssm_parameter" "cluster_type" {
+  name  = "/${var.solution_name}/cluster_type"
+  type  = "String"
+  value = var.cluster_type
+}
+
 locals {
   create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
 }
@@ -224,77 +266,17 @@ resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
   name  = "ecs_service_cpu_and_memory_utilization_topic"
 }
 
+resource "aws_ssm_parameter" "sns_alerts_topic_arn" {
+  name  = "/${var.solution_name}/sns_alerts_topic_arn"
+  type  = "String"
+  value = local.create_sns_topic ? aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn : "-"
+}
+
 resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sns_subscription" {
   count     = local.create_sns_topic ? length(var.alert_receivers_email) : 0
   topic_arn = aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn
   protocol  = "email"
   endpoint  = var.alert_receivers_email[count.index]
-}
-
-module "app_components" {
-  for_each = var.app_components
-
-  source = "./modules/app_component"
-
-  name              = each.key
-  solution_name     = var.solution_name
-  container_runtime = module.cluster.ecs_cluster_name
-  cluster_type      = var.cluster_type
-
-  enable_ecs_autoscaling       = var.enable_ecs_autoscaling
-  ecs_autoscaling_metric_type  = var.ecs_autoscaling_metric_type
-  ecs_autoscaling_max_capacity = var.ecs_autoscaling_max_capacity
-  ecs_autoscaling_min_capacity = var.ecs_autoscaling_min_capacity
-  ecs_autoscaling_target_value = var.ecs_autoscaling_target_value
-
-  instances = each.value["instances"]
-
-  total_cpu    = each.value["total_cpu"]
-  total_memory = each.value["total_memory"]
-
-  # CloudWatch alert based on cpu and memory utilization
-  cpu_utilization_alert    = var.cpu_utilization_alert
-  memory_utilization_alert = var.memory_utilization_alert
-  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
-
-  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
-  cpu_utilization_high_period             = var.cpu_utilization_high_period
-  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
-  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
-  cpu_utilization_low_period              = var.cpu_utilization_low_period
-  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
-
-  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
-  memory_utilization_high_period             = var.memory_utilization_high_period
-  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
-  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
-  memory_utilization_low_period              = var.memory_utilization_low_period
-  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
-
-
-  container = each.value["container"]
-
-  # if true the next block's variables are ignored internally
-  internal_service = lookup(each.value, "internal_service", false)
-
-  listener_rule_prio = lookup(each.value, "listener_rule_prio", null)
-  path_mapping       = lookup(each.value, "path_mapping", null)
-  service_port       = lookup(each.value, "service_port", null)
-
-  lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
-  health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
-  lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
-
-  enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
-
-  # for cost savings undeploy outside work hours
-  enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
-
-  s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
-
-  lb_domain_name = var.create_dns_and_certificates ? "lb.${local.domain_name}" : ""
-
-  depends_on = [module.l7_loadbalancer, module.security_groups]
 }
 
 module "bastion_host_ssm" {
@@ -310,7 +292,7 @@ module "bastion_host_ssm" {
 }
 
 locals {
-  rds_cluster_engine_version                = var.database == "mysql" ? "8.0.30" : "14.5"
+  rds_cluster_engine_version                = var.database == "mysql" ? "8.0.32" : "14.5"
   rds_cluster_security_group_ids            = var.database == "mysql" ? [module.security_groups.mysql_db_sg] : [module.security_groups.postgres_db_sg]
   rds_cluster_enable_cloudwatch_logs_export = var.database == "mysql" ? ["audit"] : ["postgresql"]
 }
@@ -333,13 +315,13 @@ module "database" {
   rds_cluster_security_group_ids = local.rds_cluster_security_group_ids
 
   # adapt these for prod! Now optimized for for testing and low costs
-  rds_cluster_allocated_storage       = 20
-  rds_cluster_max_allocated_storage   = 25
-  rds_cluster_backup_retention_period = "7"            # at least 7 days or more for prod
-  rds_cluster_deletion_protection     = false          # true for prod env
-  rds_cluster_multi_az                = false          # true for ha prod envs
-  rds_cluster_instance_instance_class = "db.t4g.micro" # db.t3.* for prod env
-  rds_cluster_storage_encrypted       = true           # true for prod env or non-db.t2x.micro free tier instance
+  rds_cluster_allocated_storage       = var.database_allocated_storage
+  rds_cluster_max_allocated_storage   = var.database_max_allocated_storage
+  rds_cluster_backup_retention_period = var.database_backup_retention_period # at least 7 days or more for prod
+  rds_cluster_deletion_protection     = var.database_deletion_protection     # true for prod env
+  rds_cluster_multi_az                = var.database_multi_az                # true for ha prod envs
+  rds_cluster_instance_instance_class = var.database_instance_instance_class # db.t3.* for prod env
+  rds_cluster_storage_encrypted       = true                                 # true for prod env or non-db.t2x.micro free tier instance
 
   rds_cluster_enable_cloudwatch_logs_export = local.rds_cluster_enable_cloudwatch_logs_export
 }
@@ -348,14 +330,24 @@ module "database" {
 # Redis Cluster
 # ---------------------------------------------------------------------------------------------------------------------
 # tfsec:ignore:aws-elasticache-enable-backup-retention
+
+locals {
+  redis_cluster_id      = "${var.solution_name}-redis"
+  redis_engine          = "redis"
+  redis_node_type       = "cache.t4g.micro"
+  redis_num_cache_nodes = 1
+  redis_engine_version  = "5.0.6"
+}
+
+# tfsec:ignore:aws-elasticache-enable-backup-retention
 resource "aws_elasticache_cluster" "redis" {
   count = var.create_elasticache_redis ? 1 : 0
 
-  cluster_id         = "${var.solution_name}-redis"
-  engine             = "redis"
-  node_type          = "cache.t4g.micro"
-  num_cache_nodes    = 1
-  engine_version     = "5.0.6"
+  cluster_id         = local.redis_cluster_id
+  engine             = local.redis_engine
+  node_type          = local.redis_node_type
+  num_cache_nodes    = local.redis_num_cache_nodes
+  engine_version     = local.redis_engine_version
   subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[0].name
   security_group_ids = [module.security_groups.redis_sg]
 }
@@ -373,10 +365,9 @@ resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
 module "ecr" {
   count = var.create_ecr ? 1 : 0
 
-  source        = "./modules/ecr"
-  solution_name = var.solution_name
+  source = "./modules/ecr"
 
-  ecr_name              = "${var.solution_name}-api"
+  ecr_name              = length(var.ecr_custom_name) > 3 ? var.ecr_custom_name : var.solution_name
   access_for_account_id = var.ecr_access_for_account_id # allow production account
 }
 
@@ -427,4 +418,113 @@ module "scheduled_api_call" {
   enable_scheduled_https_api_call  = var.enable_scheduled_https_api_call
   scheduled_https_api_call_crontab = var.scheduled_https_api_call_crontab
   scheduled_https_api_call_url     = var.scheduled_https_api_call_url
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# app components called from within the same module (can also be used externally, see separate_state_example)
+# ---------------------------------------------------------------------------------------------------------------------
+module "app_components" {
+  source = "./modules/app_components"
+
+  app_components = var.app_components
+
+  solution_name = var.solution_name
+
+  two_states_approach = false # overwriting default to indicate one state approach
+
+  enable_custom_domain = var.enable_custom_domain
+
+  # CloudWatch alert based on cpu and memory utilization
+  cpu_utilization_alert    = var.cpu_utilization_alert
+  memory_utilization_alert = var.memory_utilization_alert
+  sns_topic_arn            = local.create_sns_topic ? [aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn] : null
+
+  cpu_utilization_high_evaluation_periods = var.cpu_utilization_high_evaluation_periods
+  cpu_utilization_high_period             = var.cpu_utilization_high_period
+  cpu_utilization_high_threshold          = var.cpu_utilization_high_threshold
+  cpu_utilization_low_evaluation_periods  = var.cpu_utilization_low_evaluation_periods
+  cpu_utilization_low_period              = var.cpu_utilization_low_period
+  cpu_utilization_low_threshold           = var.cpu_utilization_low_threshold
+
+  memory_utilization_high_evaluation_periods = var.memory_utilization_high_evaluation_periods
+  memory_utilization_high_period             = var.memory_utilization_high_period
+  memory_utilization_high_threshold          = var.memory_utilization_high_threshold
+  memory_utilization_low_evaluation_periods  = var.memory_utilization_low_evaluation_periods
+  memory_utilization_low_period              = var.memory_utilization_low_period
+  memory_utilization_low_threshold           = var.memory_utilization_low_threshold
+
+  task_count_alert              = var.task_count_alert
+  task_count_threshold          = var.task_count_threshold
+  task_count_evaluation_periods = var.task_count_evaluation_periods
+  task_count_period             = var.task_count_period
+  enable_container_insights     = var.enable_container_insights
+
+  # needed because for the ability to run separately, this module relies on querying information via data fields
+  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
+}
+
+locals {
+  ecs_service_names = [
+    for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name
+  ]
+
+  ecs_desire_task_counts = [
+    for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count
+  ]
+
+  ecs_service_arn = [
+    for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn
+  ]
+
+  db_instance_name = var.create_database ? module.database[0].db_instance_name : ""
+  db_instance_arn  = var.create_database ? module.database[0].db_instance_arn : ""
+
+}
+
+module "global_scale_down" {
+
+  source = "./modules/global_scale_down"
+
+  enable_environment_hibernation_sleep_schedule = var.enable_environment_hibernation_sleep_schedule
+  environment_hibernation_sleep_schedule        = var.environment_hibernation_sleep_schedule
+  environment_hibernation_wakeup_schedule       = var.environment_hibernation_wakeup_schedule
+
+  solution_name = var.solution_name
+
+  ecs_ec2_instances_asg_name              = module.cluster.ecs_ec2_instances_autoscaling_group_name
+  ecs_ec2_instances_asg_max_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity
+  ecs_ec2_instances_asg_min_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity
+  ecs_ec2_instances_asg_desired_capacity  = module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity
+  ecs_ec2_instances_autoscaling_group_arn = module.cluster.ecs_ec2_instances_autoscaling_group_arn
+
+  nat_instances_asg_names             = flatten(module.nat_instances[*].nat_instances_autoscaling_group_names)
+  nat_instances_asg_max_capacity      = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)
+  nat_instances_asg_min_capacity      = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
+  nat_instances_asg_desired_capacity  = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
+  nat_instances_autoscaling_group_arn = flatten(module.nat_instances[*].nat_instances_autoscaling_group_arn)
+
+  bastion_host_asg_name              = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
+  bastion_host_asg_max_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
+  bastion_host_asg_min_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
+  bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
+  bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
+
+  cluster_name          = module.cluster.ecs_cluster_name
+  ecs_service_names     = local.ecs_service_names
+  ecs_desire_task_count = local.ecs_desire_task_counts
+  ecs_service_arn       = local.ecs_service_arn
+
+  db_instance_name = local.db_instance_name
+  db_instance_arn  = local.db_instance_arn
+
+  redis_cluster_id         = local.redis_cluster_id
+  redis_engine             = local.redis_engine
+  redis_node_type          = local.redis_node_type
+  redis_num_cache_nodes    = local.redis_num_cache_nodes
+  redis_engine_version     = local.redis_engine_version
+  redis_subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
+  redis_security_group_ids = [module.security_groups.redis_sg]
+  redis_cluster_arn        = aws_elasticache_cluster.redis[*].arn
+  redis_subnet_group_arn   = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].arn
+  redis_security_group_arn = module.security_groups.redis_sg_arn
 }

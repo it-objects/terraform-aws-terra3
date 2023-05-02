@@ -9,7 +9,7 @@ module "mastodon-on-aws" {
   enable_s3_for_static_website = false # there's no static website, Mastodon is served from web app container
 
   # if set to true, domain_name or domain of zone is required
-  create_dns_and_certificates = true
+  enable_custom_domain = true
 
   # domain name of hosted zone to which we have full access
   # domain_name = var.custom_domain_name

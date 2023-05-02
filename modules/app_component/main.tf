@@ -12,6 +12,7 @@
 locals {
   launch_type = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? "FARGATE" : "EC2"
 }
+
 resource "aws_ecs_service" "ecs_service" {
   name            = "${var.name}Service"
   cluster         = data.aws_ecs_cluster.selected.arn
@@ -107,34 +108,13 @@ resource "aws_lb_target_group" "target_group" {
   }
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# HTTPS (Port 443) listener + rules
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_lb_listener" "port_443" {
-  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
-
-  load_balancer_arn = data.aws_ssm_parameter.alb_arn.value
-  port              = "443"
-  protocol          = "HTTPS"
-  certificate_arn   = data.aws_acm_certificate.certificate[0].arn
-  ssl_policy        = "ELBSecurityPolicy-FS-1-2-Res-2020-10"
-
-  # if no attached rule matches, do this
-  default_action {
-    type = "redirect"
-    redirect {
-      host        = var.default_redirect_url
-      protocol    = "HTTPS"
-      port        = "443"
-      status_code = "HTTP_302"
-    }
-  }
-}
-
+## ---------------------------------------------------------------------------------------------------------------------
+## HTTPS (Port 443) listener rules
+## ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "https_listener_rule" {
-  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
+  count = var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_443[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_443_arn.value
   priority     = var.listener_rule_prio
 
   action {
@@ -155,9 +135,9 @@ resource "aws_lb_listener_rule" "https_listener_rule" {
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
-  count = var.lb_domain_name != "" && !var.internal_service ? 1 : 0
+  count = var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_443[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_443_arn.value
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
 
   action {
@@ -181,32 +161,10 @@ resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
   }
 }
 
-
-# ---------------------------------------------------------------------------------------------------------------------
-# HTTP (Port 80) listener + rules
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_lb_listener" "port_80" {
-  count = var.internal_service ? 0 : 1
-
-  load_balancer_arn = data.aws_ssm_parameter.alb_arn.value
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type = "redirect"
-    redirect {
-      host        = "terra3.io"
-      protocol    = "HTTPS"
-      port        = "443"
-      status_code = "HTTP_302"
-    }
-  }
-}
-
 resource "aws_lb_listener_rule" "http_listener_rule" {
-  count = var.internal_service ? 0 : 1
+  count = !var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_80[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_80_arn.value
   priority     = var.listener_rule_prio
 
   action {
@@ -227,9 +185,9 @@ resource "aws_lb_listener_rule" "http_listener_rule" {
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "http_trailing_slash_redirect" {
-  count = var.internal_service ? 0 : 1
+  count = !var.enable_custom_domain && !var.internal_service ? 1 : 0
 
-  listener_arn = aws_lb_listener.port_80[0].arn
+  listener_arn = data.aws_ssm_parameter.alb_listener_80_arn.value
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
 
   action {
@@ -429,6 +387,34 @@ resource "aws_iam_role_policy_attachment" "ecs-autoscale" {
   count      = var.enable_ecs_autoscaling ? 1 : 0
   role       = aws_iam_role.ecs-autoscale-role[0].id
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"
+}
+
+locals {
+  metric_name        = !var.enable_container_insights ? "CPUUtilization" : "RunningTaskCount"
+  namespace          = !var.enable_container_insights ? "AWS/ECS" : "ECS/ContainerInsights"
+  statistics         = !var.enable_container_insights ? "SampleCount" : "Average"
+  treat_missing_data = !var.enable_container_insights ? "breaching" : "missing"
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_running_task_count" {
+  count               = var.task_count_alert ? 1 : 0
+  alarm_name          = "ecs_running_task_count_${var.name}"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = var.task_count_evaluation_periods
+  metric_name         = local.metric_name
+  namespace           = local.namespace
+  period              = var.task_count_period
+  statistic           = local.statistics
+  threshold           = var.task_count_threshold
+  alarm_description   = "This metric send alert when running ecs task count is less than ${var.task_count_threshold} for ${var.task_count_period} seconds."
+  alarm_actions       = var.sns_topic_arn
+  ok_actions          = var.sns_topic_arn
+  treat_missing_data  = local.treat_missing_data
+
+  dimensions = {
+    ServiceName = aws_ecs_service.ecs_service.name
+    ClusterName = var.container_runtime
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

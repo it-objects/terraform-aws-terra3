@@ -127,6 +127,30 @@ variable "alert_receivers_email" {
   description = "Email address for the endpoint of SNS subscription."
 }
 
+variable "task_count_alert" {
+  description = "Select true to get alert based on ecs running task"
+  type        = bool
+  default     = false
+}
+
+variable "task_count_threshold" {
+  type        = number
+  description = "The minimum running ecs tasks."
+  default     = 1
+}
+
+variable "task_count_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "task_count_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
 variable "create_load_balancer" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool
@@ -139,10 +163,16 @@ variable "enable_alb_logs" {
   default     = false
 }
 
-variable "create_dns_and_certificates" {
+variable "enable_custom_domain" {
   description = "Creates DNS entries and ACM certificates to be consumed by other resources."
   type        = bool
   default     = false
+}
+
+variable "default_redirect_url" {
+  description = "In case a URL cannot be matched by the LB, the request should be redirected to this URL."
+  type        = string
+  default     = "terra3.io"
 }
 
 variable "add_default_index_html" {
@@ -155,6 +185,12 @@ variable "route53_zone_id" {
   description = "Put in here the zone id of the Route53 Hosted Zone to which the subdomain should be added."
   type        = string
   default     = ""
+}
+
+variable "create_subdomain" {
+  type        = bool
+  description = "Creates either a subdomain using the solution_name or uses the hosted zone's domain."
+  default     = true
 }
 
 variable "single_az_setup" {
@@ -173,6 +209,42 @@ variable "create_database" {
   description = "Creates an AWS RDS MySQL database and gives access to it from ECS containers and the bastion host."
   type        = bool
   default     = false
+}
+
+variable "database_allocated_storage" {
+  description = "allocated_storage"
+  type        = number
+  default     = 20
+}
+
+variable "database_max_allocated_storage" {
+  description = "max_allocated_storage"
+  type        = number
+  default     = 20
+}
+
+variable "database_backup_retention_period" {
+  description = "Number of days to retain backups"
+  type        = number
+  default     = 7
+}
+
+variable "database_deletion_protection" {
+  description = "If the cluster should have deletion protection enabled"
+  type        = bool
+  default     = false
+}
+
+variable "database_multi_az" {
+  description = "Multi Availability Zones"
+  type        = bool
+  default     = false
+}
+
+variable "database_instance_instance_class" {
+  description = "Database instance type"
+  type        = string
+  default     = "db.t3.small"
 }
 
 variable "create_s3_solution_bucket" {
@@ -202,6 +274,18 @@ variable "enable_s3_for_static_website" {
   description = "Creates an AWS S3 bucket and serve static webpages from it."
   type        = bool
   default     = true
+}
+
+variable "s3_static_website_bucket_cf_function_arn" {
+  type        = string
+  description = "String that defines Cloudfront function for static website bucket."
+  default     = ""
+}
+
+variable "disable_custom_error_response" {
+  type        = bool
+  default     = false
+  description = "Needs to be enabled in cases where API responses are masked by a custom error response on 404."
 }
 
 variable "enable_ecs_exec" {
@@ -316,6 +400,12 @@ variable "domain_name" {
   default     = ""
 }
 
+variable "alias_domain_name" {
+  type        = string
+  description = "While domain_name usually defines internal domain names, the alias domain repesents a second domain which is used as primary."
+  default     = ""
+}
+
 variable "private_subnets_cidr_blocks" {
   type        = list(string)
   description = ""
@@ -369,6 +459,12 @@ variable "create_ecr" {
   default = false
 }
 
+variable "ecr_custom_name" {
+  description = "Custom name for ECR repo. Otherwise, solution name is taken."
+  type        = string
+  default     = ""
+}
+
 variable "ecr_access_for_account_id" {
   type    = string
   default = ""
@@ -404,6 +500,12 @@ variable "ses_domain_name" {
 
 variable "ses_mail_from_domain" {
   description = "Define mail from domain name. Usually the same as the ses_domain_name."
+  type        = string
+  default     = ""
+}
+
+variable "set_cluster_name_for_k8s_subnet_tagging" {
+  description = "Enables/disables proper tagging for subnet discovery in case of using K8s and AWS ELB."
   type        = string
   default     = ""
 }
@@ -465,5 +567,23 @@ variable "scheduled_https_api_call_crontab" {
 variable "scheduled_https_api_call_url" {
   type        = string
   description = "Enter url of scheduled api call."
+  default     = ""
+}
+
+variable "enable_environment_hibernation_sleep_schedule" {
+  type        = bool
+  description = "Select true to enable sleep environment hibernation."
+  default     = false
+}
+
+variable "environment_hibernation_sleep_schedule" {
+  type        = string
+  description = "Enter schedule details of sleep schedule."
+  default     = ""
+}
+
+variable "environment_hibernation_wakeup_schedule" {
+  type        = string
+  description = "Enter schedule details of wakeup schedule."
   default     = ""
 }

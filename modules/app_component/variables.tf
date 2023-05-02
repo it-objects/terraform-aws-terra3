@@ -74,29 +74,15 @@ variable "total_memory" {
   type = number
 }
 
+# validation is ensured in container module
 variable "container" {
-  type = list(object({
-    name             = string
-    container_image  = string
-    container_cpu    = number
-    container_memory = number
-    port_mappings = list(object({
-      containerPort = number
-      protocol      = string
-    }))
-    environment = list(object({
-      name  = string
-      value = string
-    }))
-    command                = list(string)
-    essential              = bool
-    readonlyRootFilesystem = bool
-  }))
+  type = any
 }
 
-variable "lb_domain_name" {
-  description = "Domain name of loadbalancer if set."
-  default     = ""
+variable "enable_firelens_container" {
+  description = "Select true to enable firelens container."
+  type        = bool
+  default     = false
 }
 
 #  CloudWatch alert based on cpu and memory utilization
@@ -187,6 +173,36 @@ variable "memory_utilization_low_threshold" {
 variable "sns_topic_arn" {
   type        = set(string)
   description = "ARN of SNS topic"
+}
+
+variable "task_count_alert" {
+  description = "Select true to get alert based on ecs running task"
+  type        = bool
+  default     = false
+}
+
+variable "task_count_threshold" {
+  type        = number
+  description = "The minimum running ecs tasks."
+  default     = 1
+}
+
+variable "task_count_evaluation_periods" {
+  type        = number
+  description = "Number of periods to evaluate for the alarm"
+  default     = 3
+}
+
+variable "task_count_period" {
+  type        = number
+  description = "Duration in seconds to evaluate for the alarm"
+  default     = 300
+}
+
+variable "enable_container_insights" {
+  description = "Enables/disables more detailed logging via Container Insights for ECS."
+  type        = bool
+  default     = false
 }
 
 # # IAM
@@ -291,4 +307,9 @@ variable "s3_solution_bucket_access" {
   type        = bool
   default     = false
   description = "Gives component access to solution bucket."
+}
+
+variable "enable_custom_domain" {
+  type    = bool
+  default = false
 }

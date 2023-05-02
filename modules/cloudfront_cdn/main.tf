@@ -111,6 +111,10 @@ locals {
       use_forwarded_values     = false
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
       cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+
+      function_association = var.s3_static_website_bucket_cf_function_arn == "" ? {} : {
+        viewer-request : { function_arn : var.s3_static_website_bucket_cf_function_arn }
+      }
     }]
   ])
 
@@ -137,7 +141,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   enabled         = true
   is_ipv6_enabled = true
 
-  aliases = var.domain == null ? null : length(var.domain) == 0 ? null : [var.domain] # compact([var.domain, var.alias_domain_name, var.alias_domain_name_2])
+  aliases = var.domain == null ? null : length(var.domain) == 0 ? null : length(var.alias_domain_name) == 0 ? [var.domain] : compact([var.domain, var.alias_domain_name])
 
   comment             = "General Cloudfront distribution."
   http_version        = "http2and3"      # enable QUIC
@@ -304,10 +308,14 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   # needs to be added for SPA's
   # source: https://stackoverflow.com/questions/44318922/receive-accessdenied-when-trying-to-access-a-page-via-the-full-url-on-my-website
   # -------------------------------------------------------------------------------------------------------------------
-  custom_error_response {
-    error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
+  dynamic "custom_error_response" {
+    for_each = var.disable_custom_error_response ? [] : [true]
+
+    content {
+      error_code         = 404
+      response_code      = 200
+      response_page_path = "/index.html"
+    }
   }
 }
 
@@ -316,18 +324,6 @@ resource "random_string" "random_s3_postfix" {
   special   = false
   min_lower = 4
 }
-
-# ---------------------------------------------------------------------------------------------------------------------
-# CloudFront Function to add index.html to subdirectories
-# Source: https://aws.amazon.com/de/blogs/networking-and-content-delivery/implementing-default-directory-indexes-in-amazon-s3-backed-amazon-cloudfront-origins-using-cloudfront-functions/
-# ---------------------------------------------------------------------------------------------------------------------
-#resource "aws_cloudfront_function" "cf_function_rewrite_default_index_request" {
-#  name    = "${var.solution_name}-RewriteDefaultIndexRequest"
-#  runtime = "cloudfront-js-1.0"
-#  comment = "CloudFront Function to add index.html to subdirectories."
-#  publish = true
-#  code    = file("${path.module}/cf_functions/rewritedefaultindexrequest.js")
-#}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AWS S3 bucket
@@ -367,10 +363,11 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Give access to account and log front cloud delivery
+# Give access to account and log front cloud delivery.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_acl" "s3_bucket_acl" {
   bucket = aws_s3_bucket.cloudfront_logs.id
+
   access_control_policy {
     grant {
       grantee {
@@ -389,6 +386,18 @@ resource "aws_s3_bucket_acl" "s3_bucket_acl" {
     owner {
       id = data.aws_canonical_user_id.current.id
     }
+  }
+  depends_on = [aws_s3_bucket_ownership_controls.cloudfront_logs_bucket]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# ACLs are disabled per defaults. With the help of Bucket owner preferred, ACLs are enabled.
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
+  bucket = aws_s3_bucket.cloudfront_logs.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
   }
 }
 
@@ -425,6 +434,16 @@ resource "aws_s3_bucket" "s3_static_website" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_ownership_controls" "s3_static_website" {
+  count = var.enable_s3_for_static_website ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
 #tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_static_website_enc_config" {
   count = var.enable_s3_for_static_website ? 1 : 0
@@ -436,13 +455,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_static_website
       sse_algorithm = "AES256"
     }
   }
-}
-
-resource "aws_s3_bucket_acl" "s3_static_website_bucket_acl" {
-  count = var.enable_s3_for_static_website ? 1 : 0
-
-  bucket = aws_s3_bucket.s3_static_website[0].id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_cors_configuration" "example" {
@@ -521,6 +533,16 @@ data "aws_iam_policy_document" "s3_static_website_policy_document" {
       identifiers = [aws_cloudfront_origin_access_identity.origin_access_identity[0].iam_arn]
     }
   }
+
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.s3_static_website[0].arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.origin_access_identity[0].iam_arn]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "s3_static_website_policy" {
@@ -545,6 +567,16 @@ data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
   statement {
     actions   = ["s3:GetObject"]
     resources = ["${var.s3_solution_bucket_arn}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].iam_arn]
+    }
+  }
+
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [var.s3_solution_bucket_arn]
 
     principals {
       type        = "AWS"

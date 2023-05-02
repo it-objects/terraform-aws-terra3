@@ -20,6 +20,63 @@ resource "aws_lb" "this" {
   }
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# HTTPS (Port 443) listener
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_lb_listener" "port_443" {
+  count = var.enable_custom_domain ? 1 : 0
+
+  load_balancer_arn = aws_lb.this.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  certificate_arn   = aws_acm_certificate.subdomain_certificate[0].arn
+  ssl_policy        = "ELBSecurityPolicy-FS-1-2-Res-2020-10"
+
+  # if no attached rule matches, do this
+  default_action {
+    type = "redirect"
+    redirect {
+      host        = var.default_redirect_url
+      protocol    = "HTTPS"
+      port        = "443"
+      status_code = "HTTP_302"
+    }
+  }
+}
+
+resource "aws_ssm_parameter" "alb_listener_443_arn" {
+  name  = "/${var.solution_name}/alb_listener_443_arn"
+  type  = "String"
+  value = var.enable_custom_domain ? aws_lb_listener.port_443[0].arn : "-"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# HTTP (Port 80) listener
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_lb_listener" "port_80" {
+  count = !var.enable_custom_domain ? 1 : 0
+
+  load_balancer_arn = aws_lb.this.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      host        = var.default_redirect_url
+      protocol    = "HTTPS"
+      port        = "443"
+      status_code = "HTTP_302"
+    }
+  }
+}
+
+resource "aws_ssm_parameter" "alb_listener_arn" {
+  name  = "/${var.solution_name}/alb_listener_80_arn"
+  type  = "String"
+  value = !var.enable_custom_domain ? aws_lb_listener.port_80[0].arn : "-"
+}
+
 # tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "lb-logs" {
   count  = var.enable_alb_logs ? 1 : 0
@@ -70,7 +127,7 @@ resource "random_string" "random_s3_alb_logs_postfix" {
 }
 
 data "aws_iam_policy_document" "allow-lb" {
-  count = var.enable_alb_logs == true ? 1 : 0
+  count = var.enable_alb_logs ? 1 : 0
   statement {
     principals {
       type        = "Service"
@@ -111,4 +168,57 @@ resource "aws_ssm_parameter" "environment_alb_url" {
   name  = "/${var.solution_name}/alb_url"
   type  = "String"
   value = aws_lb.this.dns_name
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Loadbalancer subdomain
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_route53_record" "subdomain" {
+  count = var.enable_custom_domain ? 1 : 0
+
+  zone_id = var.hosted_zone_id
+  name    = "lb.${var.domain_name}"
+  type    = "CNAME"
+  ttl     = 60
+  records = [aws_lb.this.dns_name]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Certificate
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_acm_certificate" "subdomain_certificate" {
+  count = var.enable_custom_domain ? 1 : 0
+
+  domain_name       = "lb.${var.domain_name}"
+  validation_method = "DNS"
+
+  # It's recommended to specify create_before_destroy = true in a lifecycle block to
+  # replace a certificate which is currently in use (eg, by aws_lb_listener).
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+locals {
+  domain_validation_options = length(aws_acm_certificate.subdomain_certificate) > 0 ? aws_acm_certificate.subdomain_certificate[0].domain_validation_options : []
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Required for DNS validation: adds a record to the DNS zone to show that we own the DNS zone
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_route53_record" "route53_validation_record" {
+  for_each = {
+    for dvo in local.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.hosted_zone_id
 }
