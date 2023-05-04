@@ -308,6 +308,86 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
     ClusterName = var.container_runtime
   }
 }
+# ---------------------------------------------------------------------------------------------------------------------
+# Autoscaling based on CPU and MEMORY Utilisation for scaling up and down to save costs.
+# ---------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------
+# Create autoscaling target linked to ECS
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_appautoscaling_target" "ecs_target" {
+  count              = var.enable_ecs_autoscaling ? 1 : 0
+  max_capacity       = var.ecs_autoscaling_max_capacity
+  min_capacity       = var.ecs_autoscaling_min_capacity
+  resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+  role_arn           = aws_iam_role.ecs-autoscale-role[0].arn
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Scale up based on CPU and MEMORY Utilisation
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_appautoscaling_policy" "ecs_target_cpu" {
+  count              = var.enable_ecs_autoscaling && var.ecs_autoscaling_metric_type == "CPU_UTILISATION" ? 1 : 0
+  name               = "${var.name}-auto-scaling-policy-cpu"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target[0].service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value = var.ecs_autoscaling_target_value
+  }
+  depends_on = [aws_appautoscaling_target.ecs_target]
+}
+
+resource "aws_appautoscaling_policy" "ecs_target_memory" {
+  count              = var.enable_ecs_autoscaling && var.ecs_autoscaling_metric_type == "MEMORY_UTILISATION" ? 1 : 0
+  name               = "${var.name}-auto-scaling-policy-memory"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target[0].service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value = var.ecs_autoscaling_target_value
+  }
+  depends_on = [aws_appautoscaling_target.ecs_target]
+}
+# ---------------------------------------------------------------------------------------------------------------------
+# IAM Role Definitions
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role" "ecs-autoscale-role" {
+  count = var.enable_ecs_autoscaling ? 1 : 0
+  name  = "${var.name}-ecs-auto-scaling-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "application-autoscaling.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecs-autoscale" {
+  count      = var.enable_ecs_autoscaling ? 1 : 0
+  role       = aws_iam_role.ecs-autoscale-role[0].id
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"
+}
 
 locals {
   metric_name        = !var.enable_container_insights ? "CPUUtilization" : "RunningTaskCount"

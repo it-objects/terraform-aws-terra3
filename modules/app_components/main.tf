@@ -42,6 +42,12 @@ module "app_components" {
   task_count_period             = var.task_count_period
   enable_container_insights     = var.enable_container_insights
 
+  enable_ecs_autoscaling       = var.enable_ecs_autoscaling
+  ecs_autoscaling_metric_type  = var.ecs_autoscaling_metric_type
+  ecs_autoscaling_max_capacity = var.ecs_autoscaling_max_capacity
+  ecs_autoscaling_min_capacity = var.ecs_autoscaling_min_capacity
+  ecs_autoscaling_target_value = var.ecs_autoscaling_target_value
+
   container = each.value["container"]
 
   enable_firelens_container = lookup(each.value, "enable_firelens_container", false)

@@ -30,6 +30,42 @@ variable "cluster_type" {
   }
 }
 
+variable "enable_ecs_autoscaling" {
+  description = "Enables/disables auto-scaling cpu utilisation and memory utilisation of ECS."
+  type        = bool
+  default     = false
+}
+
+
+variable "ecs_autoscaling_metric_type" {
+  description = "Select CPU_UTILISATION to perform auto scaling based on CPU Utilisation, or select MEMORY_UTILISATION for MEMORY Utilisation."
+  type        = string
+  default     = "CPU_UTILISATION"
+
+  validation {
+    condition     = contains(["CPU_UTILISATION", "MEMORY_UTILISATION"], var.ecs_autoscaling_metric_type)
+    error_message = "Only 'CPU_UTILISATION', and 'MEMORY_UTILISATION' are allowed."
+  }
+}
+
+variable "ecs_autoscaling_max_capacity" {
+  description = "Select the maximum nodes for ecs."
+  type        = number
+  default     = 2
+}
+
+variable "ecs_autoscaling_min_capacity" {
+  description = "Select the minimum nodes for ecs."
+  type        = number
+  default     = 1
+}
+
+variable "ecs_autoscaling_target_value" {
+  description = "Select the target value for ecs."
+  type        = number
+  default     = 80
+}
+
 variable "total_cpu" {
   type = number
 }

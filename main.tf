@@ -459,6 +459,12 @@ module "app_components" {
   task_count_period             = var.task_count_period
   enable_container_insights     = var.enable_container_insights
 
+  enable_ecs_autoscaling       = var.enable_ecs_autoscaling
+  ecs_autoscaling_metric_type  = var.ecs_autoscaling_metric_type
+  ecs_autoscaling_max_capacity = var.ecs_autoscaling_max_capacity
+  ecs_autoscaling_min_capacity = var.ecs_autoscaling_min_capacity
+  ecs_autoscaling_target_value = var.ecs_autoscaling_target_value
+
   # needed because for the ability to run separately, this module relies on querying information via data fields
   depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
 }
