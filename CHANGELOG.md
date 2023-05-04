@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.10.0...v1.11.0) (2023-05-04)
+
+
+### Features
+
+* autoscaling of fargate container based on cpu and memory utilisation ([#14](https://github.com/it-objects/terraform-aws-terra3/issues/14)) ([fb3a8fc](https://github.com/it-objects/terraform-aws-terra3/commit/fb3a8fc5ac6e9f8907f648377c84468f0b97733a))
+
 ## [1.10.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.9.0...v1.10.0) (2023-04-28)
 
 
