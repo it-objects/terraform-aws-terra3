@@ -81,7 +81,20 @@ resource "aws_ssm_parameter" "alb_listener_arn" {
 resource "aws_s3_bucket" "lb-logs" {
   count  = var.enable_alb_logs ? 1 : 0
   bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
+
+  force_destroy = true
 }
+
+resource "aws_s3_bucket_ownership_controls" "lb-logs" {
+  count = var.enable_alb_logs ? 1 : 0
+
+  bucket = aws_s3_bucket.lb-logs[0].id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Block public access per-se
 # TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
@@ -106,12 +119,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption_con
       sse_algorithm = "AES256"
     }
   }
-}
-
-resource "aws_s3_bucket_acl" "lb-logs-acl" {
-  count  = var.enable_alb_logs ? 1 : 0
-  bucket = aws_s3_bucket.lb-logs[0].id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "allow-lb" {
