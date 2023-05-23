@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.13.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.12.0...v1.13.0) (2023-05-23)
+
+
+### Features
+
+* **hibernate:** re-enable deprecated scaledown option ([c83f637](https://github.com/it-objects/terraform-aws-terra3/commit/c83f63796998152c3a48c954a506bee57a1c8430))
+
 ## [1.12.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.11.0...v1.12.0) (2023-05-23)
 
 
