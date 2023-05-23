@@ -68,7 +68,10 @@ module "app_components" {
   enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
 
   # for cost savings undeploy outside work hours
-  enable_autoscaling = lookup(each.value, "enable_autoscaling", false)
+  enable_autoscaling                = lookup(each.value, "enable_autoscaling", false)
+  autoscale_task_weekday_scale_down = lookup(each.value, "autoscale_task_weekday_scale_down", null)
+  autoscale_up_event                = lookup(each.value, "autoscale_up_event", null)
+  autoscale_down_event              = lookup(each.value, "autoscale_down_event", null)
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
