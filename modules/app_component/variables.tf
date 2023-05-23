@@ -241,14 +241,14 @@ variable "autoscale_task_weekday_scale_down" {
 
 variable "autoscale_up_event" {
   type        = string
-  default     = "cron(0 8 ? * MON-FRI *)" # Every weekday at 7:00 CET
-  description = ""
+  default     = "cron(0 8 ? * MON-FRI *)"
+  description = "Default: Every weekday send a scaleup event at 8:00 TZ Europe/Berlin"
 }
 
 variable "autoscale_down_event" {
   type        = string
-  default     = "cron(0 17 ? * * *)" # Every day send a scaledown at 19:00 CET
-  description = ""
+  default     = "cron(0 18 ? * * *)" #
+  description = "Default: Every day send a scaledown event at 18:00 TZ Europe/Berlin"
 }
 
 variable "desired_count" {

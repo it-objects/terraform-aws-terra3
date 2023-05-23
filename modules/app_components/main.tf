@@ -69,9 +69,9 @@ module "app_components" {
 
   # for cost savings undeploy outside work hours
   enable_autoscaling                = lookup(each.value, "enable_autoscaling", false)
-  autoscale_task_weekday_scale_down = lookup(each.value, "autoscale_task_weekday_scale_down", null)
-  autoscale_up_event                = lookup(each.value, "autoscale_up_event", null)
-  autoscale_down_event              = lookup(each.value, "autoscale_down_event", null)
+  autoscale_task_weekday_scale_down = lookup(each.value, "autoscale_task_weekday_scale_down", 0)
+  autoscale_up_event                = lookup(each.value, "autoscale_up_event", "cron(0 8 ? * MON-FRI *)")
+  autoscale_down_event              = lookup(each.value, "autoscale_down_event", "cron(0 18 ? * * *)")
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
