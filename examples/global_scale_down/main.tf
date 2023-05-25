@@ -29,7 +29,6 @@ module "terra3_examples" {
   environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)"
   environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)"
 
-
   app_components = {
 
     my_app_component = {

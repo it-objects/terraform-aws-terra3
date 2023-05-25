@@ -483,8 +483,6 @@ locals {
   ]
 
   db_instance_name = var.create_database ? module.database[0].db_instance_name : ""
-  db_instance_arn  = var.create_database ? module.database[0].db_instance_arn : ""
-
 }
 
 module "global_scale_down" {
@@ -515,21 +513,21 @@ module "global_scale_down" {
   bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
   bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
 
-  cluster_name          = module.cluster.ecs_cluster_name
+  cluster_name          = length(local.ecs_service_names) > 1 ? split(",", module.cluster.ecs_cluster_name) : []
   ecs_service_names     = local.ecs_service_names
   ecs_desire_task_count = local.ecs_desire_task_counts
   ecs_service_arn       = local.ecs_service_arn
 
   db_instance_name = local.db_instance_name
-  db_instance_arn  = local.db_instance_arn
+  db_instance_arn  = module.database[*].db_instance_arn
 
-  redis_cluster_id         = local.redis_cluster_id
-  redis_engine             = local.redis_engine
-  redis_node_type          = local.redis_node_type
-  redis_num_cache_nodes    = local.redis_num_cache_nodes
-  redis_engine_version     = local.redis_engine_version
+  redis_cluster_id         = var.create_elasticache_redis ? split(",", local.redis_cluster_id) : []
+  redis_engine             = var.create_elasticache_redis ? split(",", local.redis_engine) : []
+  redis_node_type          = var.create_elasticache_redis ? split(",", local.redis_node_type) : []
+  redis_num_cache_nodes    = var.create_elasticache_redis ? local.redis_num_cache_nodes : null
+  redis_engine_version     = var.create_elasticache_redis ? split(",", local.redis_engine_version) : []
   redis_subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
-  redis_security_group_ids = [module.security_groups.redis_sg]
+  redis_security_group_ids = var.create_elasticache_redis ? [module.security_groups.redis_sg] : []
   redis_cluster_arn        = aws_elasticache_cluster.redis[*].arn
   redis_subnet_group_arn   = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].arn
   redis_security_group_arn = module.security_groups.redis_sg_arn

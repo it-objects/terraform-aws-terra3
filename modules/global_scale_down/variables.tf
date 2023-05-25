@@ -108,7 +108,7 @@ variable "bastion_host_autoscaling_group_arn" {
 # ---------------------------------------------------------------------------------------------------------------------
 variable "cluster_name" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "ecs_service_names" {
@@ -136,7 +136,7 @@ variable "db_instance_name" {
 
 variable "db_instance_arn" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -144,17 +144,17 @@ variable "db_instance_arn" {
 # ---------------------------------------------------------------------------------------------------------------------
 variable "redis_cluster_id" {
   description = "redis cluster id"
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_engine" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_node_type" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_num_cache_nodes" {
@@ -164,7 +164,7 @@ variable "redis_num_cache_nodes" {
 
 variable "redis_engine_version" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_subnet_group_name" {
