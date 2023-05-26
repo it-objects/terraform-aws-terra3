@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.14.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.13.0...v1.14.0) (2023-05-26)
+
+
+### Features
+
+* **s3-endpoint:** giving public subnet also access to s3 gateway endpoint ([14caf9e](https://github.com/it-objects/terraform-aws-terra3/commit/14caf9e42ed08e2c4da7382913baab2314e3b3b0))
+
 ## [1.13.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.12.0...v1.13.0) (2023-05-23)
 
 
