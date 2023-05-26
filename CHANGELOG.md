@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.14.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.0...v1.14.1) (2023-05-26)
+
+
+### Bug Fixes
+
+* **vpc-module:** adding version pinning to aws vpc module ([f321290](https://github.com/it-objects/terraform-aws-terra3/commit/f3212902411c8c1bfa6851f490f954defc7adee1))
+
 ## [1.14.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.13.0...v1.14.0) (2023-05-26)
 
 
