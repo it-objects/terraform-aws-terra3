@@ -27,6 +27,7 @@ locals {
   public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : module.vpc[0].public_subnets
   private_subnets         = var.use_an_existing_vpc ? var.external_private_subnets : module.vpc[0].private_subnets
   private_route_table_ids = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].private_route_table_ids
+  public_route_table_ids  = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].public_route_table_ids
   db_subnet_group_name    = var.use_an_existing_vpc ? var.external_db_subnet_group_name : module.vpc[0].database_subnet_group
   elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
 }
@@ -97,7 +98,7 @@ module "vpc_endpoints" {
     s3 = {
       service         = "s3"
       tags            = { Name = "s3-vpc-endpoint" }
-      route_table_ids = local.private_route_table_ids
+      route_table_ids = concat(local.private_route_table_ids, local.public_route_table_ids)
       service_type    = "Gateway"
     }
   }
