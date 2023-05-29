@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.14.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.1...v1.14.2) (2023-05-26)
+
+
+### Bug Fixes
+
+* **aws-provider:** pinning aws provider to versions below 5.0.0 as these cause issues with aws vpc module ([4b1a01d](https://github.com/it-objects/terraform-aws-terra3/commit/4b1a01de20c30858a78f93589c5190f6837b25ef))
+
+### [1.14.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.0...v1.14.1) (2023-05-26)
+
+
+### Bug Fixes
+
+* **vpc-module:** adding version pinning to aws vpc module ([f321290](https://github.com/it-objects/terraform-aws-terra3/commit/f3212902411c8c1bfa6851f490f954defc7adee1))
+
+## [1.14.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.13.0...v1.14.0) (2023-05-26)
+
+
+### Features
+
+* **s3-endpoint:** giving public subnet also access to s3 gateway endpoint ([14caf9e](https://github.com/it-objects/terraform-aws-terra3/commit/14caf9e42ed08e2c4da7382913baab2314e3b3b0))
+
 ## [1.13.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.12.0...v1.13.0) (2023-05-23)
 
 
