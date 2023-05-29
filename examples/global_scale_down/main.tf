@@ -7,13 +7,6 @@
 locals {
   solution_name = "scale-down"
 }
-output "scale_up_arn" {
-  value = local.scale_up_policies_arns
-}
-
-output "scale_down_arn" {
-  value = local.scale_down_policies_arns
-}
 
 module "terra3_examples" {
   source = "../.."
