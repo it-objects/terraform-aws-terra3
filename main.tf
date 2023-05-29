@@ -236,7 +236,6 @@ module "cluster" {
   cluster_type           = var.cluster_type
 
   public_subnets         = local.public_subnets
-  private_subnets        = local.private_subnets
   vpc_security_group_ids = [module.security_groups.ecs_task_sg]
 
   cluster_ec2_min_nodes           = var.cluster_ec2_min_nodes
