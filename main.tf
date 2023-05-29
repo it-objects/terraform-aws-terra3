@@ -513,7 +513,7 @@ module "global_scale_down" {
   bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
   bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
 
-  cluster_name          = length(local.ecs_service_names) > 1 ? split(",", module.cluster.ecs_cluster_name) : []
+  cluster_name          = length(local.ecs_service_names) != 0 ? split(",", module.cluster.ecs_cluster_name) : []
   ecs_service_names     = local.ecs_service_names
   ecs_desire_task_count = local.ecs_desire_task_counts
   ecs_service_arn       = local.ecs_service_arn
@@ -524,7 +524,7 @@ module "global_scale_down" {
   redis_cluster_id         = var.create_elasticache_redis ? split(",", local.redis_cluster_id) : []
   redis_engine             = var.create_elasticache_redis ? split(",", local.redis_engine) : []
   redis_node_type          = var.create_elasticache_redis ? split(",", local.redis_node_type) : []
-  redis_num_cache_nodes    = var.create_elasticache_redis ? local.redis_num_cache_nodes : null
+  redis_num_cache_nodes    = var.create_elasticache_redis ? local.redis_num_cache_nodes : 0
   redis_engine_version     = var.create_elasticache_redis ? split(",", local.redis_engine_version) : []
   redis_subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
   redis_security_group_ids = var.create_elasticache_redis ? [module.security_groups.redis_sg] : []

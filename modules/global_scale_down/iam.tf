@@ -4,7 +4,7 @@ locals {
 }
 
 resource "aws_iam_policy" "scale_up_down_asg_policy" {
-  count       = length(local.asg_arn) != 0 ? 1 : 0
+  count       = length(local.asg_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "scale_up_down_asg_policy"
   path        = "/"
   description = "Scale up/down auto scaling policy"
@@ -25,7 +25,7 @@ resource "aws_iam_policy" "scale_up_down_asg_policy" {
 }
 
 resource "aws_iam_policy" "scale_up_down_ecs_policy" {
-  count       = length(var.ecs_service_arn) != 0 ? 1 : 0
+  count       = length(var.ecs_service_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "scale_up_down_ecs_policy"
   path        = "/"
   description = "Scale up/down ECS policy"
@@ -70,7 +70,7 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
 }
 
 resource "aws_iam_policy" "scale_up_rds_db_policy" {
-  count       = length(var.db_instance_arn) != 0 ? 1 : 0
+  count       = length(var.db_instance_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "scale_up_rds_db_policy"
   path        = "/"
   description = "Scale up rds policy"
@@ -92,7 +92,7 @@ resource "aws_iam_policy" "scale_up_rds_db_policy" {
 }
 
 resource "aws_iam_policy" "scale_down_rds_db_policy" {
-  count       = length(var.db_instance_arn) != 0 ? 1 : 0
+  count       = length(var.db_instance_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "scale_down_rds_db_policy"
   path        = "/"
   description = "Scale down rds policy"
@@ -114,7 +114,7 @@ resource "aws_iam_policy" "scale_down_rds_db_policy" {
 }
 
 resource "aws_iam_policy" "scale_up_redis_policy" {
-  count       = length(var.redis_cluster_arn) != 0 ? 1 : 0
+  count       = length(var.redis_cluster_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "scale_up_redis_policy"
   path        = "/"
   description = "Scale up redis policy"
@@ -135,7 +135,7 @@ resource "aws_iam_policy" "scale_up_redis_policy" {
 }
 
 resource "aws_iam_policy" "scale_down_redis_policy" {
-  count       = length(var.redis_cluster_arn) != 0 ? 1 : 0
+  count       = length(var.redis_cluster_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "scale_down_redis_policy"
   path        = "/"
   description = "Scale down redis policy"
@@ -150,7 +150,7 @@ resource "aws_iam_policy" "scale_down_redis_policy" {
           "Action" : [
             "elasticache:DeleteCacheCluster"
           ],
-          "Resource" : local.redis_arn
+          "Resource" : var.redis_cluster_arn
       }]
   })
 }

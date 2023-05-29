@@ -6,8 +6,21 @@
 # redis = CreateCacheCluster (It will create the redis cluster)
 # ---------------------------------------------------------------------------------------------------------------------
 locals {
-  scale_up_policies_arns   = concat(aws_iam_policy.scale_up_down_asg_policy[*].arn, aws_iam_policy.scale_up_down_ecs_policy[*].arn, aws_iam_policy.scale_up_down_iam_policy[*].arn, aws_iam_policy.scale_up_rds_db_policy[*].arn, aws_iam_policy.scale_up_redis_policy[*].arn)
-  scale_down_policies_arns = concat(aws_iam_policy.scale_up_down_asg_policy[*].arn, aws_iam_policy.scale_up_down_ecs_policy[*].arn, aws_iam_policy.scale_up_down_iam_policy[*].arn, aws_iam_policy.scale_down_rds_db_policy[*].arn, aws_iam_policy.scale_up_redis_policy[*].arn)
+  scale_up_policies_arns = concat(
+    aws_iam_policy.scale_up_down_asg_policy[*].arn,
+    aws_iam_policy.scale_up_down_ecs_policy[*].arn,
+    aws_iam_policy.scale_up_down_iam_policy[*].arn,
+    aws_iam_policy.scale_up_rds_db_policy[*].arn,
+    aws_iam_policy.scale_up_redis_policy[*].arn
+  )
+
+  scale_down_policies_arns = concat(
+    aws_iam_policy.scale_up_down_asg_policy[*].arn,
+    aws_iam_policy.scale_up_down_ecs_policy[*].arn,
+    aws_iam_policy.scale_up_down_iam_policy[*].arn,
+    aws_iam_policy.scale_down_rds_db_policy[*].arn,
+    aws_iam_policy.scale_down_redis_policy[*].arn
+  )
 
 }
 module "lambda_scale_up" {
@@ -128,8 +141,8 @@ module "lambda_scale_down" {
   attach_tracing_policy = true
 
   attach_policies    = true
-  policies           = local.scale_up_policies_arns
-  number_of_policies = length(local.scale_up_policies_arns)
+  policies           = local.scale_down_policies_arns
+  number_of_policies = length(local.scale_down_policies_arns)
 }
 
 module "eventbridge_scale_down" {
