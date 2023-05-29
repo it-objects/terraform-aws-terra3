@@ -21,8 +21,8 @@ locals {
     aws_iam_policy.scale_down_rds_db_policy[*].arn,
     aws_iam_policy.scale_down_redis_policy[*].arn
   )
-
 }
+
 module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
