@@ -111,6 +111,11 @@ variable "cluster_name" {
   type        = list(string)
 }
 
+variable "cluster_arn" {
+  description = ""
+  type        = string
+}
+
 variable "ecs_service_names" {
   description = ""
   type        = list(string)
@@ -131,7 +136,7 @@ variable "ecs_service_arn" {
 # ---------------------------------------------------------------------------------------------------------------------
 variable "db_instance_name" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "db_instance_arn" {
