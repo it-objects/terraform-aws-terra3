@@ -26,7 +26,7 @@ resource "aws_iam_policy" "scale_up_down_asg_policy" {
 
 #tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "scale_up_down_ecs_policy" {
-  count       = length(var.ecs_service_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
+  count       = length(var.cluster_name) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "${var.solution_name}-scale_up_down_ecs_policy"
   path        = "/"
   description = "Scale up/down ECS policy"
