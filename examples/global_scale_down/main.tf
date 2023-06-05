@@ -20,7 +20,6 @@ module "terra3_examples" {
   create_database          = true
   database                 = "postgres"
   create_elasticache_redis = true
-  cluster_type             = "EC2"
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
