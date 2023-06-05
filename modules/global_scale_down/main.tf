@@ -52,11 +52,6 @@ module "lambda_scale_up" {
   number_of_policies = length(local.scale_up_policies_arns)
 }
 
-# to make them a list of string
-locals {
-  db_instance_name = split(",", var.db_instance_name)
-}
-
 module "eventbridge_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -81,9 +76,7 @@ module "eventbridge_scale_up" {
         arn  = module.lambda_scale_up[0].lambda_function_arn
         input = jsonencode({
           "cluster_name" : var.cluster_name,
-          "ecs_service_name" : var.ecs_service_names,
-          "ecs_desire_task_count" : var.ecs_desire_task_count,
-          "db_instance_name" : local.db_instance_name,
+          "db_instance_name" : var.db_instance_name,
           "bastion_host_asg_name" : var.bastion_host_asg_name,
           "bastion_host_asg_max_capacity" : var.bastion_host_asg_max_capacity,
           "bastion_host_asg_min_capacity" : var.bastion_host_asg_min_capacity,
@@ -169,8 +162,7 @@ module "eventbridge_scale_down" {
         arn  = module.lambda_scale_down[0].lambda_function_arn
         input = jsonencode({
           "cluster_name" : var.cluster_name,
-          "ecs_service_name" : var.ecs_service_names,
-          "db_instance_name" : local.db_instance_name,
+          "db_instance_name" : var.db_instance_name,
           "bastion_host_asg_name" : var.bastion_host_asg_name,
           "nat_instances_asg_names" : var.nat_instances_asg_names,
           "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
