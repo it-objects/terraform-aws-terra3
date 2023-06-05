@@ -484,7 +484,7 @@ locals {
     for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn
   ]
 
-  db_instance_name = var.create_database ? split(",", module.database.db_instance_name) : []
+  db_instance_name = var.create_database ? split(",", module.database[0].db_instance_name) : []
 }
 
 resource "aws_ssm_parameter" "ecs_service_name" {
