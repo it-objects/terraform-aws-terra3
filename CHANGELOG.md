@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.15.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.3...v1.15.0) (2023-06-07)
+
+
+### Features
+
+* **global-scaledown-option:** scaledown option with separate tf state ([d8413a3](https://github.com/it-objects/terraform-aws-terra3/commit/d8413a378c72a7bf197d152ba7db1d2ce0c2d40e))
+
 ### [1.14.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.2...v1.14.3) (2023-06-07)
 
 
