@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.14.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.2...v1.14.3) (2023-06-07)
+
+
+### Bug Fixes
+
+* updated aws provider version. ([9daf64a](https://github.com/it-objects/terraform-aws-terra3/commit/9daf64a492873c4ae65235b3f0843b5fc5e146c6))
+
 ### [1.14.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.1...v1.14.2) (2023-05-26)
 
 
