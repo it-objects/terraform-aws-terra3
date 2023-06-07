@@ -523,7 +523,7 @@ module "global_scale_down" {
   bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
   bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
 
-  cluster_name = split(",", module.cluster.ecs_cluster_name) #length(local.ecs_service_names) != 0 ? split(",", module.cluster.ecs_cluster_name) : []
+  cluster_name = split(",", module.cluster.ecs_cluster_name)
   cluster_arn  = module.cluster.ecs_cluster_arn
 
   db_instance_name = local.db_instance_name
