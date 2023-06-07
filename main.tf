@@ -488,7 +488,9 @@ locals {
 }
 
 resource "aws_ssm_parameter" "ecs_service_name" {
-  name  = "/ecs_service_data"
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  name  = "/${var.solution_name}/global_scale_down/ecs_service_data"
   value = "1"
   type  = "String"
 }
@@ -521,11 +523,8 @@ module "global_scale_down" {
   bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
   bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
 
-  cluster_name          = split(",", module.cluster.ecs_cluster_name) #length(local.ecs_service_names) != 0 ? split(",", module.cluster.ecs_cluster_name) : []
-  cluster_arn           = module.cluster.ecs_cluster_arn
-  ecs_service_names     = local.ecs_service_names
-  ecs_desire_task_count = local.ecs_desire_task_counts
-  ecs_service_arn       = local.ecs_service_arn
+  cluster_name = split(",", module.cluster.ecs_cluster_name) #length(local.ecs_service_names) != 0 ? split(",", module.cluster.ecs_cluster_name) : []
+  cluster_arn  = module.cluster.ecs_cluster_arn
 
   db_instance_name = local.db_instance_name
   db_instance_arn  = module.database[*].db_instance_arn

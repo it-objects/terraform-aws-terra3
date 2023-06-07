@@ -21,6 +21,8 @@ locals {
     aws_iam_policy.scale_down_rds_db_policy[*].arn,
     aws_iam_policy.scale_down_redis_policy[*].arn
   )
+
+  ecs_service_data = "/${var.solution_name}/global_scale_down/ecs_service_data"
 }
 
 module "lambda_scale_up" {
@@ -75,6 +77,7 @@ module "eventbridge_scale_up" {
         name = "${var.solution_name}-global-scale-up"
         arn  = module.lambda_scale_up[0].lambda_function_arn
         input = jsonencode({
+          "ecs_service_data" : local.ecs_service_data,
           "cluster_name" : var.cluster_name,
           "db_instance_name" : var.db_instance_name,
           "bastion_host_asg_name" : var.bastion_host_asg_name,
@@ -161,6 +164,7 @@ module "eventbridge_scale_down" {
         name = "${var.solution_name}-global-scale-down"
         arn  = module.lambda_scale_down[0].lambda_function_arn
         input = jsonencode({
+          "ecs_service_data" : local.ecs_service_data,
           "cluster_name" : var.cluster_name,
           "db_instance_name" : var.db_instance_name,
           "bastion_host_asg_name" : var.bastion_host_asg_name,
