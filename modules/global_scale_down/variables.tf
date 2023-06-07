@@ -1,6 +1,7 @@
 variable "solution_name" {
   type = string
 }
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to environment hibernation
 # ---------------------------------------------------------------------------------------------------------------------
@@ -21,6 +22,7 @@ variable "environment_hibernation_wakeup_schedule" {
   description = "Enter schedule details of wakeup schedule."
   default     = ""
 }
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to ecs_ec2 instance with name, max_size, min_size, desired_size
 # ---------------------------------------------------------------------------------------------------------------------
@@ -48,6 +50,7 @@ variable "ecs_ec2_instances_autoscaling_group_arn" {
   description = ""
   type        = list(string)
 }
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to NAT instances with name, max_size, min_size, desired_size
 # ---------------------------------------------------------------------------------------------------------------------
@@ -103,27 +106,18 @@ variable "bastion_host_autoscaling_group_arn" {
   description = ""
   type        = list(string)
 }
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to ecs service to work with ecs task count
 # ---------------------------------------------------------------------------------------------------------------------
 variable "cluster_name" {
   description = ""
+  type        = list(string)
+}
+
+variable "cluster_arn" {
+  description = ""
   type        = string
-}
-
-variable "ecs_service_names" {
-  description = ""
-  type        = list(string)
-}
-
-variable "ecs_desire_task_count" {
-  description = ""
-  type        = list(number)
-}
-
-variable "ecs_service_arn" {
-  description = ""
-  type        = list(string)
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -131,12 +125,12 @@ variable "ecs_service_arn" {
 # ---------------------------------------------------------------------------------------------------------------------
 variable "db_instance_name" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "db_instance_arn" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -144,17 +138,17 @@ variable "db_instance_arn" {
 # ---------------------------------------------------------------------------------------------------------------------
 variable "redis_cluster_id" {
   description = "redis cluster id"
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_engine" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_node_type" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_num_cache_nodes" {
@@ -164,7 +158,7 @@ variable "redis_num_cache_nodes" {
 
 variable "redis_engine_version" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 variable "redis_subnet_group_name" {

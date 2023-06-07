@@ -20,19 +20,17 @@ module "terra3_examples" {
   create_database          = true
   database                 = "postgres"
   create_elasticache_redis = true
-  cluster_type             = "EC2"
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
   enable_environment_hibernation_sleep_schedule = true
-  environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)"
-  environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)"
-
+  environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)" #Down
+  environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)" #Up
 
   app_components = {
 
-    my_app_component = {
+    global_scale_down_app_component = {
 
       instances = 1
 

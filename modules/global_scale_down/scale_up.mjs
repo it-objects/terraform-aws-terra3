@@ -1,4 +1,5 @@
 import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 import { RDSClient, StartDBInstanceCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, CreateCacheClusterCommand } from "@aws-sdk/client-elasticache";
@@ -41,17 +42,6 @@ export const handler = async(event) => {
         await bastion_host_asg_client.send(bastion_host_asg_command);
     }
 
-    for (let i = 0; i < event.ecs_service_name.length; i++){
-        const ecs_input = {
-          "cluster": event.cluster_name[0],
-          "service": event.ecs_service_name[0],
-          "desiredCount": event.ecs_desire_task_count[0],
-        };
-        const ecs_command = new UpdateServiceCommand(ecs_input);
-        const ecs_client = new ECSClient();
-        await ecs_client.send(ecs_command);
-    }
-
     for (let i = 0; i < event.db_instance_name.length; i++){
         const db_input = {
           "DBInstanceIdentifier": event.db_instance_name,
@@ -75,4 +65,52 @@ export const handler = async(event) => {
         const redis_memory_db_client = new ElastiCacheClient();
         await redis_memory_db_client.send(redis_memory_db_command);
     }
+
+    const clusterName = event.cluster_name[0];
+      try {
+        // Retrieve the stored service data from SSM Parameter Store
+        const getParameterParams = {
+          Name: event.ecs_service_data, // Set the path of the stored parameter
+        };
+        const getParameterCommand = new GetParameterCommand(getParameterParams);
+        const ssmClient = new SSMClient();
+        const getParameterResponse = await ssmClient.send(getParameterCommand);
+
+        // Use the retrieved parameter value for further processing, if needed
+        let storedServicesData = [];
+        if (getParameterResponse.Parameter) {
+          const storedParameter = JSON.parse(getParameterResponse.Parameter.Value);
+          if (Array.isArray(storedParameter)) {
+            // Check if the stored parameter has the correct structure
+            const isValidParameter = storedParameter.every(item => item.name && item.desiredCount);
+            if (isValidParameter) {
+              storedServicesData = storedParameter;
+            }
+          }
+        }
+
+        // Update the ECS service using the stored parameter data again
+        for (const serviceData of storedServicesData) {
+          const updateServiceParams = {
+            cluster: clusterName, // Specify the ECS cluster name
+            service: serviceData.name, // Specify the ECS service name
+            desiredCount: serviceData.desiredCount, // Set the desired count for the service
+          };
+          const updateServiceCommand = new UpdateServiceCommand(updateServiceParams);
+          const ecsClient = new ECSClient();
+          await ecsClient.send(updateServiceCommand);
+        }
+
+        return {
+          statusCode: 200,
+          body: JSON.stringify(storedServicesData),
+        };
+      } catch (error) {
+        console.error('Error retrieving services:', error);
+
+        return {
+          statusCode: 500,
+          body: JSON.stringify({ error: 'Failed to retrieve services' }),
+        };
+      }
 };

@@ -1,4 +1,5 @@
-import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+import { ECSClient, UpdateServiceCommand, ListServicesCommand, DescribeServicesCommand } from "@aws-sdk/client-ecs";
+import { SSMClient, PutParameterCommand} from "@aws-sdk/client-ssm";
 import { RDSClient, StopDBInstanceCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, DeleteCacheClusterCommand } from "@aws-sdk/client-elasticache";
@@ -41,17 +42,6 @@ export const handler = async(event) => {
         await bastion_host_asg_client.send(bastion_host_asg_command);
     }
 
-    for (let i = 0; i < event.ecs_service_name.length; i++){
-        const ecs_input = {
-          "cluster": event.cluster_name[i],
-          "service": event.ecs_service_name[i],
-          "desiredCount": 0,
-        };
-        const ecs_command = new UpdateServiceCommand(ecs_input);
-        const ecs_client = new ECSClient();
-        await ecs_client.send(ecs_command);
-    }
-
     for (let i = 0; i < event.db_instance_name.length; i++){
         const db_input = {
           "DBInstanceIdentifier": event.db_instance_name[i],
@@ -69,4 +59,74 @@ export const handler = async(event) => {
         const redis_memory_db_client = new ElastiCacheClient();
         await redis_memory_db_client.send(redis_memory_db_command);
     }
+
+    const clusterName = event.cluster_name[0];
+      try {
+        // Call the listServices command to retrieve the list of ECS services
+        const listServicesParams = {
+          cluster: clusterName,
+        };
+        const listServicesCommand = new ListServicesCommand(listServicesParams);
+        const ecsClient = new ECSClient();
+        const listServicesResponse = await ecsClient.send(listServicesCommand);
+        // Extract the service ARNs from the response
+        const serviceArns = listServicesResponse.serviceArns;
+        if (serviceArns.length === 0) {
+          return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'No services found in the specified cluster' }),
+          };
+        }
+
+        // Call the describeServices command to retrieve the list of running services
+        const describeServicesParams = {
+          cluster: clusterName,
+          services: serviceArns,
+        };
+        const describeServicesCommand = new DescribeServicesCommand(describeServicesParams);
+        const describeServicesResponse = await ecsClient.send(describeServicesCommand);
+
+        // Extract the service names and desired counts from the response
+        const servicesData = describeServicesResponse.services.map(service => ({
+          name: service.serviceName,
+          desiredCount: service.desiredCount
+        }));
+        // Log the service names
+        console.log('Running services:');
+        console.log(servicesData);
+
+        // Store the service names in SSM Parameter Store
+        const putParameterParams = {
+          Name: event.ecs_service_data, // Set the desired path for the parameter
+          Value: JSON.stringify(servicesData), // Store the service names as a comma-separated string
+          Type: 'String',
+          Overwrite: true,
+        };
+        const putParameterCommand = new PutParameterCommand(putParameterParams);
+        const ssmClient = new SSMClient();
+        await ssmClient.send(putParameterCommand);
+
+       // Update the ECS service for each service in the stored data
+        for (const serviceData of servicesData) {
+          const updateServiceParams = {
+            cluster: clusterName, // Specify the ECS cluster name
+            service: serviceData.name, // Specify the ECS service name
+            desiredCount: 0, // Set the desired count for the service
+          };
+          const updateServiceCommand = new UpdateServiceCommand(updateServiceParams);
+          await ecsClient.send(updateServiceCommand);
+        }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(servicesData),
+    };
+      } catch (error) {
+        console.error('Error retrieving services:', error);
+
+        return {
+          statusCode: 500,
+          body: JSON.stringify({ error: 'Failed to retrieve services' }),
+        };
+      }
 };

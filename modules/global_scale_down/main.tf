@@ -5,11 +5,31 @@
 # DB  = StartDBInstanceCommand (It will start the DB)
 # redis = CreateCacheCluster (It will create the redis cluster)
 # ---------------------------------------------------------------------------------------------------------------------
+locals {
+  scale_up_policies_arns = concat(
+    aws_iam_policy.scale_up_down_asg_policy[*].arn,
+    aws_iam_policy.scale_up_down_ecs_policy[*].arn,
+    aws_iam_policy.scale_up_down_iam_policy[*].arn,
+    aws_iam_policy.scale_up_rds_db_policy[*].arn,
+    aws_iam_policy.scale_up_redis_policy[*].arn
+  )
+
+  scale_down_policies_arns = concat(
+    aws_iam_policy.scale_up_down_asg_policy[*].arn,
+    aws_iam_policy.scale_up_down_ecs_policy[*].arn,
+    aws_iam_policy.scale_up_down_iam_policy[*].arn,
+    aws_iam_policy.scale_down_rds_db_policy[*].arn,
+    aws_iam_policy.scale_down_redis_policy[*].arn
+  )
+
+  ecs_service_data = "/${var.solution_name}/global_scale_down/ecs_service_data"
+}
+
 module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "4.9.0"
+  version = "4.18.0"
 
   function_name = "${var.solution_name}-global-scale-up"
   description   = "Performs global scale up"
@@ -29,18 +49,9 @@ module "lambda_scale_up" {
   tracing_mode          = "Active"
   attach_tracing_policy = true
 
-  attach_policy_json = true
-  policy_json        = local.scale_up_policy
-}
-
-# to make them a list of string
-locals {
-  cluster_name         = split(",", var.cluster_name)
-  db_instance_name     = split(",", var.db_instance_name)
-  redis_cluster_id     = split(",", var.redis_cluster_id)
-  redis_engine         = split(",", var.redis_engine)
-  redis_node_type      = split(",", var.redis_node_type)
-  redis_engine_version = split(",", var.redis_engine_version)
+  attach_policies    = true
+  policies           = local.scale_up_policies_arns
+  number_of_policies = length(local.scale_up_policies_arns)
 }
 
 module "eventbridge_scale_up" {
@@ -66,10 +77,9 @@ module "eventbridge_scale_up" {
         name = "${var.solution_name}-global-scale-up"
         arn  = module.lambda_scale_up[0].lambda_function_arn
         input = jsonencode({
-          "cluster_name" : local.cluster_name,
-          "ecs_service_name" : var.ecs_service_names,
-          "ecs_desire_task_count" : var.ecs_desire_task_count,
-          "db_instance_name" : local.db_instance_name,
+          "ecs_service_data" : local.ecs_service_data,
+          "cluster_name" : var.cluster_name,
+          "db_instance_name" : var.db_instance_name,
           "bastion_host_asg_name" : var.bastion_host_asg_name,
           "bastion_host_asg_max_capacity" : var.bastion_host_asg_max_capacity,
           "bastion_host_asg_min_capacity" : var.bastion_host_asg_min_capacity,
@@ -82,11 +92,11 @@ module "eventbridge_scale_up" {
           "ecs_ec2_instances_asg_max_capacity" : var.ecs_ec2_instances_asg_max_capacity,
           "ecs_ec2_instances_asg_min_capacity" : var.ecs_ec2_instances_asg_min_capacity,
           "ecs_ec2_instances_asg_desired_capacity" : var.ecs_ec2_instances_asg_desired_capacity,
-          "redis_cluster_id" : local.redis_cluster_id,
-          "redis_engine" : local.redis_engine,
-          "redis_node_type" : local.redis_node_type,
+          "redis_cluster_id" : var.redis_cluster_id,
+          "redis_engine" : var.redis_engine,
+          "redis_node_type" : var.redis_node_type,
           "redis_num_cache_nodes" : var.redis_num_cache_nodes,
-          "redis_engine_version" : local.redis_engine_version,
+          "redis_engine_version" : var.redis_engine_version,
           "redis_subnet_group_name" : var.redis_subnet_group_name,
           "redis_security_group_ids" : var.redis_security_group_ids
         })
@@ -106,7 +116,7 @@ module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "4.9.0"
+  version = "4.18.0"
 
   function_name = "${var.solution_name}-global-scale-down"
   description   = "Performs global scale down"
@@ -126,8 +136,9 @@ module "lambda_scale_down" {
   tracing_mode          = "Active"
   attach_tracing_policy = true
 
-  attach_policy_json = true
-  policy_json        = local.scale_down_policy
+  attach_policies    = true
+  policies           = local.scale_down_policies_arns
+  number_of_policies = length(local.scale_down_policies_arns)
 }
 
 module "eventbridge_scale_down" {
@@ -153,13 +164,13 @@ module "eventbridge_scale_down" {
         name = "${var.solution_name}-global-scale-down"
         arn  = module.lambda_scale_down[0].lambda_function_arn
         input = jsonencode({
-          "cluster_name" : local.cluster_name,
-          "ecs_service_name" : var.ecs_service_names,
-          "db_instance_name" : local.db_instance_name,
+          "ecs_service_data" : local.ecs_service_data,
+          "cluster_name" : var.cluster_name,
+          "db_instance_name" : var.db_instance_name,
           "bastion_host_asg_name" : var.bastion_host_asg_name,
           "nat_instances_asg_names" : var.nat_instances_asg_names,
           "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
-          "redis_cluster_id" : local.redis_cluster_id
+          "redis_cluster_id" : var.redis_cluster_id
         })
       }
     ]
