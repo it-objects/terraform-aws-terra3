@@ -36,10 +36,12 @@ resource "aws_iam_policy" "scale_up_down_ecs_policy" {
       "Version" : "2012-10-17",
       "Statement" : [
         {
-          "Sid" : "ScaleUpDownUpdateECS",
+          "Sid" : "ScaleUpDownECS",
           "Effect" : "Allow",
           "Action" : [
-            "ecs:UpdateService"
+            "ecs:UpdateService",
+            "ecs:ListServices",
+            "ecs:DescribeServices"
           ],
           "Resource" : "*"
           Condition = {
@@ -47,22 +49,14 @@ resource "aws_iam_policy" "scale_up_down_ecs_policy" {
               "ecs:cluster" : var.cluster_arn
             }
           }
-        },
-        {
-          "Sid" : "ScaleUpDownListECS",
-          "Effect" : "Allow",
-          "Action" : [
-            "ecs:ListServices",
-            "ecs:DescribeServices"
-          ],
-          "Resource" : "*"
-      }]
+        }
+      ]
   })
 }
 
 resource "aws_iam_policy" "scale_up_down_iam_policy" {
   count       = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-  name        = "${var.solution_name}-scale_up_down_iam_policy"
+  name        = "${var.solution_name}-scale_up_down_iam_ssm_policy"
   path        = "/"
   description = "Scale up/down iam policy"
 
@@ -89,7 +83,7 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
             "ssm:GetParameter"
           ],
           "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/ecs_service_data"
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}"
           ]
         }
       ]
