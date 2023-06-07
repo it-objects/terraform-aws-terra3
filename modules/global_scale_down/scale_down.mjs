@@ -61,9 +61,7 @@ export const handler = async(event) => {
     }
 
     const clusterName = event.cluster_name[0];
-
       try {
-
         // Call the listServices command to retrieve the list of ECS services
         const listServicesParams = {
           cluster: clusterName,
@@ -73,8 +71,12 @@ export const handler = async(event) => {
         const listServicesResponse = await ecsClient.send(listServicesCommand);
         // Extract the service ARNs from the response
         const serviceArns = listServicesResponse.serviceArns;
-        console.log(serviceArns);
-
+        if (serviceArns.length === 0) {
+          return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'No services found in the specified cluster' }),
+          };
+        }
 
         // Call the describeServices command to retrieve the list of running services
         const describeServicesParams = {
@@ -83,6 +85,7 @@ export const handler = async(event) => {
         };
         const describeServicesCommand = new DescribeServicesCommand(describeServicesParams);
         const describeServicesResponse = await ecsClient.send(describeServicesCommand);
+
         // Extract the service names and desired counts from the response
         const servicesData = describeServicesResponse.services.map(service => ({
           name: service.serviceName,
@@ -92,10 +95,9 @@ export const handler = async(event) => {
         console.log('Running services:');
         console.log(servicesData);
 
-
         // Store the service names in SSM Parameter Store
         const putParameterParams = {
-          Name: '/ecs_service_data', // Set the desired path for the parameter
+          Name: event.ecs_service_data, // Set the desired path for the parameter
           Value: JSON.stringify(servicesData), // Store the service names as a comma-separated string
           Type: 'String',
           Overwrite: true,
@@ -103,7 +105,6 @@ export const handler = async(event) => {
         const putParameterCommand = new PutParameterCommand(putParameterParams);
         const ssmClient = new SSMClient();
         await ssmClient.send(putParameterCommand);
-
 
        // Update the ECS service for each service in the stored data
         for (const serviceData of servicesData) {

@@ -66,30 +66,31 @@ export const handler = async(event) => {
         await redis_memory_db_client.send(redis_memory_db_command);
     }
 
-
     const clusterName = event.cluster_name[0];
-    console.log(clusterName);
-
       try {
-
-      // Retrieve the stored service data from SSM Parameter Store
+        // Retrieve the stored service data from SSM Parameter Store
         const getParameterParams = {
-          Name: '/ecs_service_data', // Set the path of the stored parameter
+          Name: event.ecs_service_data, // Set the path of the stored parameter
         };
         const getParameterCommand = new GetParameterCommand(getParameterParams);
         const ssmClient = new SSMClient();
         const getParameterResponse = await ssmClient.send(getParameterCommand);
 
-        // Parse the stored service data
-        const servicesData = JSON.parse(getParameterResponse.Parameter.Value);
+        // Use the retrieved parameter value for further processing, if needed
+        let storedServicesData = [];
+        if (getParameterResponse.Parameter) {
+          const storedParameter = JSON.parse(getParameterResponse.Parameter.Value);
+          if (Array.isArray(storedParameter)) {
+            // Check if the stored parameter has the correct structure
+            const isValidParameter = storedParameter.every(item => item.name && item.desiredCount);
+            if (isValidParameter) {
+              storedServicesData = storedParameter;
+            }
+          }
+        }
 
-
-        console.log(servicesData);
-        console.log(clusterName);
-
-
-        // Update the ECS service for each service in the stored data
-        for (const serviceData of servicesData) {
+        // Update the ECS service using the stored parameter data again
+        for (const serviceData of storedServicesData) {
           const updateServiceParams = {
             cluster: clusterName, // Specify the ECS cluster name
             service: serviceData.name, // Specify the ECS service name
@@ -100,12 +101,9 @@ export const handler = async(event) => {
           await ecsClient.send(updateServiceCommand);
         }
 
-
-        console.log(clusterName);
-
         return {
           statusCode: 200,
-          body: JSON.stringify(servicesData),
+          body: JSON.stringify(storedServicesData),
         };
       } catch (error) {
         console.error('Error retrieving services:', error);
