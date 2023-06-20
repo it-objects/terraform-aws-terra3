@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.16.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.15.0...v1.16.0) (2023-06-20)
+
+
+### Features
+
+* moved eventbridge parameters into lambda function by using ssm parameter ([#35](https://github.com/it-objects/terraform-aws-terra3/issues/35)) ([b9e68b9](https://github.com/it-objects/terraform-aws-terra3/commit/b9e68b9afe73a71e5093f282b5100bf94f2470c6))
+
 ## [1.15.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.14.3...v1.15.0) (2023-06-07)
 
 
