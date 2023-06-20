@@ -79,11 +79,22 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
           "Sid" : "ScaleUpSSM",
           "Effect" : "Allow",
           "Action" : [
-            "ssm:PutParameter",
             "ssm:GetParameter"
           ],
           "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}"
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}",
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.scale_up_parameters}",
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+          ]
+        },
+        {
+          "Sid" : "PutParameterSSM",
+          "Effect" : "Allow",
+          "Action" : [
+            "ssm:PutParameter"
+          ],
+          "Resource" : [
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
           ]
         }
       ]
