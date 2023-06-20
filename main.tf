@@ -485,6 +485,21 @@ locals {
   ]
 
   db_instance_name = var.create_database ? split(",", module.database[0].db_instance_name) : []
+
+  cluster_name = split(",", module.cluster.ecs_cluster_name)
+
+  redis = {
+    cluster_id         = var.create_elasticache_redis ? split(",", local.redis_cluster_id) : []
+    engine             = var.create_elasticache_redis ? split(",", local.redis_engine) : []
+    node_type          = var.create_elasticache_redis ? split(",", local.redis_node_type) : []
+    num_cache_nodes    = var.create_elasticache_redis ? local.redis_num_cache_nodes : 0
+    engine_version     = var.create_elasticache_redis ? split(",", local.redis_engine_version) : []
+    subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
+    security_group_ids = var.create_elasticache_redis ? [module.security_groups.redis_sg] : []
+    cluster_arn        = aws_elasticache_cluster.redis[*].arn
+    subnet_group_arn   = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].arn
+    security_group_arn = module.security_groups.redis_sg_arn
+  }
 }
 
 resource "aws_ssm_parameter" "ecs_service_name" {
@@ -493,6 +508,32 @@ resource "aws_ssm_parameter" "ecs_service_name" {
   name  = "/${var.solution_name}/global_scale_down/ecs_service_data"
   value = "1"
   type  = "String"
+}
+
+resource "aws_ssm_parameter" "scale_up_parameters" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  name  = "/${var.solution_name}/global_scale_down/scale_up_parameters"
+  value = local.global_scale_data
+  type  = "String"
+}
+
+locals {
+  global_scale_data = jsonencode({
+    "asg_name" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_name, module.nat_instances[*].nat_instances_autoscaling_group_names, module.cluster.ecs_ec2_instances_autoscaling_group_name]),
+    "asg_max_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity, module.nat_instances[*].nat_instances_autoscaling_group_max_capacity, module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity]),
+    "asg_min_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity, module.nat_instances[*].nat_instances_autoscaling_group_min_capacity, module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity]),
+    "asg_desired_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity, module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity, module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity]),
+    "db_instance_name" : local.db_instance_name,
+    "redis_cluster_id" : local.redis.cluster_id,
+    "redis_engine" : local.redis.engine,
+    "redis_node_type" : local.redis.node_type,
+    "redis_num_cache_nodes" : local.redis.num_cache_nodes,
+    "redis_engine_version" : local.redis.engine_version,
+    "redis_subnet_group_name" : local.redis.subnet_group_name,
+    "redis_security_group_ids" : [local.redis.security_group_ids],
+    "cluster_name" : local.cluster_name,
+  })
 }
 
 module "global_scale_down" {
@@ -505,38 +546,13 @@ module "global_scale_down" {
 
   solution_name = var.solution_name
 
-  ecs_ec2_instances_asg_name              = module.cluster.ecs_ec2_instances_autoscaling_group_name
-  ecs_ec2_instances_asg_max_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_max_capacity
-  ecs_ec2_instances_asg_min_capacity      = module.cluster.ecs_ec2_instances_autoscaling_group_min_capacity
-  ecs_ec2_instances_asg_desired_capacity  = module.cluster.ecs_ec2_instances_autoscaling_group_desired_capacity
   ecs_ec2_instances_autoscaling_group_arn = module.cluster.ecs_ec2_instances_autoscaling_group_arn
-
-  nat_instances_asg_names             = flatten(module.nat_instances[*].nat_instances_autoscaling_group_names)
-  nat_instances_asg_max_capacity      = flatten(module.nat_instances[*].nat_instances_autoscaling_group_max_capacity)
-  nat_instances_asg_min_capacity      = flatten(module.nat_instances[*].nat_instances_autoscaling_group_min_capacity)
-  nat_instances_asg_desired_capacity  = flatten(module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity)
-  nat_instances_autoscaling_group_arn = flatten(module.nat_instances[*].nat_instances_autoscaling_group_arn)
-
-  bastion_host_asg_name              = module.bastion_host_ssm[*].bastion_host_autoscaling_group_name
-  bastion_host_asg_max_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity
-  bastion_host_asg_min_capacity      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity
-  bastion_host_asg_desired_capacity  = module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity
-  bastion_host_autoscaling_group_arn = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
-
-  cluster_name = split(",", module.cluster.ecs_cluster_name)
-  cluster_arn  = module.cluster.ecs_cluster_arn
-
-  db_instance_name = local.db_instance_name
-  db_instance_arn  = module.database[*].db_instance_arn
-
-  redis_cluster_id         = var.create_elasticache_redis ? split(",", local.redis_cluster_id) : []
-  redis_engine             = var.create_elasticache_redis ? split(",", local.redis_engine) : []
-  redis_node_type          = var.create_elasticache_redis ? split(",", local.redis_node_type) : []
-  redis_num_cache_nodes    = var.create_elasticache_redis ? local.redis_num_cache_nodes : 0
-  redis_engine_version     = var.create_elasticache_redis ? split(",", local.redis_engine_version) : []
-  redis_subnet_group_name  = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].name
-  redis_security_group_ids = var.create_elasticache_redis ? [module.security_groups.redis_sg] : []
-  redis_cluster_arn        = aws_elasticache_cluster.redis[*].arn
-  redis_subnet_group_arn   = aws_elasticache_subnet_group.db_elastic_subnetgroup[*].arn
-  redis_security_group_arn = module.security_groups.redis_sg_arn
+  nat_instances_autoscaling_group_arn     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_arn)
+  bastion_host_autoscaling_group_arn      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
+  cluster_name                            = local.cluster_name
+  cluster_arn                             = module.cluster.ecs_cluster_arn
+  db_instance_arn                         = module.database[*].db_instance_arn
+  redis_cluster_arn                       = local.redis.cluster_arn
+  redis_subnet_group_arn                  = local.redis.subnet_group_arn
+  redis_security_group_arn                = local.redis.security_group_arn
 }

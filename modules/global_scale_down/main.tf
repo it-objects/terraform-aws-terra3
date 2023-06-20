@@ -22,7 +22,9 @@ locals {
     aws_iam_policy.scale_down_redis_policy[*].arn
   )
 
-  ecs_service_data = "/${var.solution_name}/global_scale_down/ecs_service_data"
+  ecs_service_data    = "/${var.solution_name}/global_scale_down/ecs_service_data"
+  scale_up_parameters = "/${var.solution_name}/global_scale_down/scale_up_parameters"
+
 }
 
 module "lambda_scale_up" {
@@ -52,6 +54,11 @@ module "lambda_scale_up" {
   attach_policies    = true
   policies           = local.scale_up_policies_arns
   number_of_policies = length(local.scale_up_policies_arns)
+
+  environment_variables = {
+    ecs_service_data    = local.ecs_service_data
+    scale_up_parameters = local.scale_up_parameters
+  }
 }
 
 module "eventbridge_scale_up" {
@@ -75,30 +82,10 @@ module "eventbridge_scale_up" {
     "${var.solution_name}-scale_up" = [
       {
         name = "${var.solution_name}-global-scale-up"
-        arn  = module.lambda_scale_up[0].lambda_function_arn
+        arn  = module.lambda_scale_down[0].lambda_function_arn
         input = jsonencode({
           "ecs_service_data" : local.ecs_service_data,
-          "cluster_name" : var.cluster_name,
-          "db_instance_name" : var.db_instance_name,
-          "bastion_host_asg_name" : var.bastion_host_asg_name,
-          "bastion_host_asg_max_capacity" : var.bastion_host_asg_max_capacity,
-          "bastion_host_asg_min_capacity" : var.bastion_host_asg_min_capacity,
-          "bastion_host_asg_desired_capacity" : var.bastion_host_asg_desired_capacity,
-          "nat_instances_asg_names" : var.nat_instances_asg_names,
-          "nat_instances_asg_max_capacity" : var.nat_instances_asg_max_capacity,
-          "nat_instances_asg_min_capacity" : var.nat_instances_asg_min_capacity,
-          "nat_instances_asg_desired_capacity" : var.nat_instances_asg_desired_capacity,
-          "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
-          "ecs_ec2_instances_asg_max_capacity" : var.ecs_ec2_instances_asg_max_capacity,
-          "ecs_ec2_instances_asg_min_capacity" : var.ecs_ec2_instances_asg_min_capacity,
-          "ecs_ec2_instances_asg_desired_capacity" : var.ecs_ec2_instances_asg_desired_capacity,
-          "redis_cluster_id" : var.redis_cluster_id,
-          "redis_engine" : var.redis_engine,
-          "redis_node_type" : var.redis_node_type,
-          "redis_num_cache_nodes" : var.redis_num_cache_nodes,
-          "redis_engine_version" : var.redis_engine_version,
-          "redis_subnet_group_name" : var.redis_subnet_group_name,
-          "redis_security_group_ids" : var.redis_security_group_ids
+          "scale_up_parameters" : local.scale_up_parameters
         })
       }
     ]
@@ -139,6 +126,11 @@ module "lambda_scale_down" {
   attach_policies    = true
   policies           = local.scale_down_policies_arns
   number_of_policies = length(local.scale_down_policies_arns)
+
+  environment_variables = {
+    ecs_service_data    = local.ecs_service_data
+    scale_up_parameters = local.scale_up_parameters
+  }
 }
 
 module "eventbridge_scale_down" {
@@ -164,13 +156,6 @@ module "eventbridge_scale_down" {
         name = "${var.solution_name}-global-scale-down"
         arn  = module.lambda_scale_down[0].lambda_function_arn
         input = jsonencode({
-          "ecs_service_data" : local.ecs_service_data,
-          "cluster_name" : var.cluster_name,
-          "db_instance_name" : var.db_instance_name,
-          "bastion_host_asg_name" : var.bastion_host_asg_name,
-          "nat_instances_asg_names" : var.nat_instances_asg_names,
-          "ecs_ec2_instances_asg_names" : var.ecs_ec2_instances_asg_name,
-          "redis_cluster_id" : var.redis_cluster_id
         })
       }
     ]
