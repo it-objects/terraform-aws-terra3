@@ -24,7 +24,7 @@ locals {
 
   ecs_service_data    = "/${var.solution_name}/global_scale_down/ecs_service_data"
   scale_up_parameters = "/${var.solution_name}/global_scale_down/scale_up_parameters"
-
+  hibernation_state   = " /${var.solution_name}/global_scale_down/hibernation_state"
 }
 
 module "lambda_scale_up" {
@@ -38,7 +38,7 @@ module "lambda_scale_up" {
   handler       = "scale_up.handler"
   runtime       = "nodejs18.x"
   source_path   = "${path.module}/scale_up.mjs"
-  timeout       = 100
+  timeout       = 600
 
   create_current_version_allowed_triggers = false
   allowed_triggers = {
@@ -58,6 +58,7 @@ module "lambda_scale_up" {
   environment_variables = {
     ecs_service_data    = local.ecs_service_data
     scale_up_parameters = local.scale_up_parameters
+    hibernation_state   = local.hibernation_state
   }
 }
 
@@ -82,7 +83,7 @@ module "eventbridge_scale_up" {
     "${var.solution_name}-scale_up" = [
       {
         name = "${var.solution_name}-global-scale-up"
-        arn  = module.lambda_scale_down[0].lambda_function_arn
+        arn  = module.lambda_scale_up[0].lambda_function_arn
         input = jsonencode({
           "ecs_service_data" : local.ecs_service_data,
           "scale_up_parameters" : local.scale_up_parameters
@@ -110,7 +111,7 @@ module "lambda_scale_down" {
   handler       = "scale_down.handler"
   runtime       = "nodejs18.x"
   source_path   = "${path.module}/scale_down.mjs"
-  timeout       = 100
+  timeout       = 600
 
   create_current_version_allowed_triggers = false
   allowed_triggers = {
@@ -130,6 +131,7 @@ module "lambda_scale_down" {
   environment_variables = {
     ecs_service_data    = local.ecs_service_data
     scale_up_parameters = local.scale_up_parameters
+    hibernation_state   = local.hibernation_state
   }
 }
 

@@ -1,10 +1,30 @@
 import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
-import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
+import { SSMClient, PutParameterCommand, GetParameterCommand} from "@aws-sdk/client-ssm";
 import { RDSClient, StartDBInstanceCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, CreateCacheClusterCommand } from "@aws-sdk/client-elasticache";
 
-export const handler = async(event) => {
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const checkParameterValue = async(parameterName) => {
+  const getParameterCommand = new GetParameterCommand({ Name: parameterName });
+
+  try {
+    const ssmClient = new SSMClient();
+    const response = await ssmClient.send(getParameterCommand);
+    const parameterValue = response.Parameter.Value;
+
+    if (parameterValue === 'scaled_down') {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error retrieving SSM parameter:', error);
+      throw error;
+    }
+};
+
+export const scale_up_handler = async(event) => {
 try {
   const parameterStorePath = process.env.scale_up_parameters;
 
@@ -101,5 +121,48 @@ try {
       statusCode: 500,
       body: JSON.stringify({ error: 'Failed to update Global scale up' }),
     };
+  }
+};
+
+
+
+export const updateParameterValue = async(parameterName, parameterValue) => {
+  console.log("Waiting for 8 minutes");
+  await pause(480000); // Pause for 8 minutes
+
+  const putParameterCommand = new PutParameterCommand({
+    Name: parameterName,
+    Value: parameterValue,
+    Type: 'String',
+    Overwrite: true,
+  });
+
+  try {
+    const ssmClientPUT = new SSMClient();
+    await ssmClientPUT.send(putParameterCommand);
+    console.log('SSM parameter value updated successfully.');
+  } catch (error) {
+    console.error('Error updating SSM parameter:', error);
+    throw error;
+  }
+};
+
+export const handler = async(event) => {
+  const parameterName = '/g-scale-down/global_scale_down/hibernation_state';
+try {
+    const isValueValid = await checkParameterValue(parameterName);
+
+    if (isValueValid) {
+      console.log('The stored value is valid. Continuing with Lambda execution...');
+      await scale_up_handler();
+      await updateParameterValue(parameterName, 'scaled_up');
+      console.log('Hibernation state has been successfully changed to scaled up.');
+      // Add your Lambda function code here
+    } else {
+      console.log('The stored value is not valid. Stopping Lambda execution...');
+      return; // Stop Lambda execution
+    }
+  } catch (error) {
+    console.error('Error:', error);
   }
 };
