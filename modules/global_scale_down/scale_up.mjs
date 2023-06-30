@@ -1,12 +1,13 @@
 import { ECSClient, UpdateServiceCommand } from "@aws-sdk/client-ecs";
 import { SSMClient, PutParameterCommand, GetParameterCommand} from "@aws-sdk/client-ssm";
-import { RDSClient, StartDBInstanceCommand } from "@aws-sdk/client-rds";
+import { RDSClient, StartDBInstanceCommand, DescribeDBInstancesCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
-import { ElastiCacheClient, CreateCacheClusterCommand } from "@aws-sdk/client-elasticache";
+import { ElastiCacheClient, CreateCacheClusterCommand, DescribeCacheClustersCommand } from "@aws-sdk/client-elasticache";
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const checkParameterValue = async(parameterName) => {
+  console.log("Currently chaecking the hibernation state");
   const getParameterCommand = new GetParameterCommand({ Name: parameterName });
 
   try {
@@ -25,6 +26,7 @@ export const checkParameterValue = async(parameterName) => {
 };
 
 export const scale_up_handler = async(event) => {
+  console.log("scaling up the state.");
 try {
   const parameterStorePath = process.env.scale_up_parameters;
 
@@ -124,11 +126,106 @@ try {
   }
 };
 
+export const waitForInstanceStatus = async(desiredStatus, redisdesiredStatus) => {
+  try{
+  console.log("Waiting for the update to be done");
+  const parameterStorePath = process.env.scale_up_parameters;
 
+  // Retrieve stored parameter value from SSM Parameter Store
+  const getParameterCommand = new GetParameterCommand({
+    Name: parameterStorePath,
+  });
+  const ssmClient = new SSMClient();
+  const getParameterResponse = await ssmClient.send(getParameterCommand);
+
+    if (!getParameterResponse.Parameter) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'No stored parameter found' }),
+      };
+    }
+  const storedData = JSON.parse(getParameterResponse.Parameter.Value);
+
+  try {
+    for (let i = 0; i < storedData.redis_cluster_id.length; i++){
+      console.log("Checking the redis cluster state");
+      const redisClient = new ElastiCacheClient();
+      const describeCommand = new DescribeCacheClustersCommand({ CacheClusterId: storedData.redis_cluster_id[0] });
+
+      try {
+        while (true) {
+          const response = await redisClient.send(describeCommand);
+          const clusters = response.CacheClusters;
+
+          const cluster = clusters[0];
+          const currentStatus = cluster.CacheClusterStatus;
+
+          console.log(`Current status of redis cluster ${storedData.redis_cluster_id[0]}: ${currentStatus}`);
+
+          if (currentStatus === redisdesiredStatus) {
+            console.log(`Redis cluster ${storedData.redis_cluster_id[i]} is in the "${redisdesiredStatus}" state.`);
+            return;
+          }
+
+          // Wait for 5 seconds before checking the status again
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+      } catch (error) {
+        console.error('Error waiting for redis cluster status:', error);
+        throw error;
+      }
+    }
+  } catch (error) {
+    console.error('Error waiting for redis cluster status:', error);
+    throw error;
+  }
+
+  try {
+    for (let i = 0; i < storedData.db_instance_name.length; i++){
+    const rdsClient = new RDSClient();
+    const describeCommand = new DescribeDBInstancesCommand({ DBInstanceIdentifier: storedData.db_instance_name[i] });
+
+    try {
+      while (true) {
+        const response = await rdsClient.send(describeCommand);
+        const dbInstances = response.DBInstances;
+
+        if (dbInstances.length === 0) {
+          throw new Error(`DB instance ${storedData.db_instance_name[i]} not found.`);
+        }
+
+        const dbInstance = dbInstances[0];
+        const currentStatus = dbInstance.DBInstanceStatus;
+
+        console.log(`Current status of DB instance ${storedData.db_instance_name[i]}: ${currentStatus}`);
+
+        if (currentStatus === desiredStatus) {
+          console.log(`DB instance ${storedData.db_instance_name[i]} is in the "${desiredStatus}" state.`);
+          return;
+        }
+
+        // Wait for 5 seconds before checking the status again
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    } catch (error) {
+      console.error('Error waiting for DB instance status:', error);
+      throw error;
+    }
+  }
+  } catch (error) {
+    console.error('Error waiting for DB instance status:', error);
+    throw error;
+  }
+
+
+  } catch (error) {
+    console.error('Error waiting for DB/redis cluster status:', error);
+    throw error;
+  }
+};
 
 export const updateParameterValue = async(parameterName, parameterValue) => {
-  console.log("Waiting for 8 minutes");
-  await pause(480000); // Pause for 8 minutes
+  console.log("updating ssm parameter after updating the resources......");
 
   const putParameterCommand = new PutParameterCommand({
     Name: parameterName,
@@ -155,6 +252,10 @@ try {
     if (isValueValid) {
       console.log('The stored value is valid. Continuing with Lambda execution...');
       await scale_up_handler();
+
+      await waitForInstanceStatus('available', 'available');
+      console.log('DB instance is now in the "Available" state.');
+
       await updateParameterValue(parameterName, 'scaled_up');
       console.log('Hibernation state has been successfully changed to scaled up.');
       // Add your Lambda function code here

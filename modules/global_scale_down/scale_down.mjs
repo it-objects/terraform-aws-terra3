@@ -1,12 +1,13 @@
 import { ECSClient, UpdateServiceCommand, ListServicesCommand, DescribeServicesCommand } from "@aws-sdk/client-ecs";
 import { SSMClient, PutParameterCommand, GetParameterCommand} from "@aws-sdk/client-ssm";
-import { RDSClient, StopDBInstanceCommand } from "@aws-sdk/client-rds";
+import { RDSClient, StopDBInstanceCommand, DescribeDBInstancesCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
-import { ElastiCacheClient, DeleteCacheClusterCommand } from "@aws-sdk/client-elasticache";
+import { ElastiCacheClient, DeleteCacheClusterCommand, DescribeCacheClustersCommand } from "@aws-sdk/client-elasticache";
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const checkParameterValue = async(parameterName) => {
+  console.log("checking the current hibernation state:- ");
   const getParameterCommand = new GetParameterCommand({ Name: parameterName });
   try {
     const ssmClient = new SSMClient();
@@ -16,7 +17,6 @@ export const checkParameterValue = async(parameterName) => {
     if (parameterValue === 'initial' || parameterValue === 'scaled_up') {
         return true;
       }
-
       return false;
     } catch (error) {
       console.error('Error retrieving SSM parameter:', error);
@@ -25,6 +25,7 @@ export const checkParameterValue = async(parameterName) => {
 };
 
 export const scale_down_handler = async(event) => {
+  console.log("scaling down the state:- ");
  try {
   const parameterStorePath = process.env.scale_up_parameters;
 
@@ -63,6 +64,7 @@ export const scale_down_handler = async(event) => {
       const db_command = new StopDBInstanceCommand(db_input);
       const db_client = new RDSClient();
       await db_client.send(db_command);
+
       console.log(`DB instance "${storedData.db_instance_name[i]}" stopped successfully.`);
   }
 
@@ -111,9 +113,10 @@ export const scale_down_handler = async(event) => {
     const putParameterCommand = new PutParameterCommand(putParameterParams);
     const ssmClientPut = new SSMClient();
     await ssmClientPut.send(putParameterCommand);
+    console.log(`The ssm parameter "${servicesData}" stored successfully.`);
 
-   // Update the ECS service for each service in the stored data
-    for (const serviceData of servicesData) {
+  // Update the ECS service for each service in the stored data
+  for (const serviceData of servicesData) {
       const updateServiceParams = {
         cluster: clusterName, // Specify the ECS cluster name
         service: serviceData.name, // Specify the ECS service name
@@ -138,9 +141,105 @@ export const scale_down_handler = async(event) => {
   }
 };
 
+export const waitForInstanceStatus = async(desiredStatus, redisdesiredStatus) => {
+try {
+  console.log("Waiting for the update to be done:- ");
+  const parameterStorePath = process.env.scale_up_parameters;
+
+  // Retrieve stored parameter value from SSM Parameter Store
+  const getParameterCommand = new GetParameterCommand({
+    Name: parameterStorePath,
+  });
+  const ssmClient = new SSMClient();
+  const getParameterResponse = await ssmClient.send(getParameterCommand);
+
+    if (!getParameterResponse.Parameter) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'No stored parameter found' }),
+      };
+    }
+  const storedData = JSON.parse(getParameterResponse.Parameter.Value);
+
+  try {
+    for (let i = 0; i < storedData.db_instance_name.length; i++){
+    const rdsClient = new RDSClient();
+    const describeCommand = new DescribeDBInstancesCommand({ DBInstanceIdentifier: storedData.db_instance_name[i] });
+
+    try {
+      while (true) {
+        const response = await rdsClient.send(describeCommand);
+        const dbInstances = response.DBInstances;
+
+        if (dbInstances.length === 0) {
+          throw new Error(`DB instance ${storedData.db_instance_name[i]} not found.`);
+        }
+
+        const dbInstance = dbInstances[0];
+        const currentStatus = dbInstance.DBInstanceStatus;
+
+        console.log(`Current status of DB instance ${storedData.db_instance_name[i]}: ${currentStatus}`);
+
+        if (currentStatus === desiredStatus) {
+          console.log(`DB instance ${storedData.db_instance_name[i]} is in the "${desiredStatus}" state.`);
+          return;
+        }
+
+        // Wait for 5 seconds before checking the status again
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    } catch (error) {
+      console.error('Error waiting for DB instance status:', error);
+      throw error;
+    }
+  }
+  } catch (error) {
+    console.error('Error waiting for redis cluster status:', error);
+    throw error;
+  }
+
+  try {
+    for (let i = 0; i < storedData.redis_cluster_id.length; i++){
+      console.log("Checking the redis cluster state");
+      const redisClient = new ElastiCacheClient();
+      const describeCommand = new DescribeCacheClustersCommand({ CacheClusterId: storedData.redis_cluster_id[0] });
+
+      try {
+        while (false) {
+          const response = await redisClient.send(describeCommand);
+          const clusters = response.CacheClusters;
+
+          const cluster = clusters[0];
+          const currentStatus = cluster.CacheClusterStatus;
+
+          console.log(`Current status of redis cluster ${storedData.redis_cluster_id[0]}: ${currentStatus}`);
+
+          if (currentStatus === redisdesiredStatus) {
+            console.log(`Redis cluster ${storedData.redis_cluster_id[i]} is in the "${redisdesiredStatus}" state.`);
+            return;
+          }
+
+          // Wait for 5 seconds before checking the status again
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+      } catch (error) {
+        console.error('Error waiting for redis cluster status:', error);
+        throw error;
+      }
+    }
+  } catch (error) {
+    console.error('Error waiting for redis cluster status:', error);
+    throw error;
+  }
+
+  } catch (error) {
+    console.error('Error waiting for DB/redis cluster status:', error);
+    throw error;
+  }
+};
+
 export const updateParameterValue = async(parameterName, parameterValue) => {
-  console.log("Waiting for 8 minutes");
-  await pause(480000); // Pause for 8 minutes
+  console.log("updating ssm parameter after updating the resources......");
 
   const putParameterCommand = new PutParameterCommand({
     Name: parameterName,
@@ -160,15 +259,23 @@ export const updateParameterValue = async(parameterName, parameterValue) => {
 };
 
 export const handler = async(event) => {
-  const parameterName = '/g-scale-down/global_scale_down/hibernation_state';
+const parameterName = '/g-scale-down/global_scale_down/hibernation_state';
 try {
     const isValueValid = await checkParameterValue(parameterName);
 
     if (isValueValid) {
       console.log('The stored value is valid. Continuing with Lambda execution...');
+
       await scale_down_handler();
+      console.log('Scaling down on resources has been performed.');
+
+      await waitForInstanceStatus('stopped', 'deleting');
+      console.log('DB instance is now in the "Stopped temporarily" state.');
+      console.log('Redis cluster is now deleted.');
+
       await updateParameterValue(parameterName, 'scaled_down');
       console.log('Hibernation state has been successfully changed to scaled down.');
+
       // Add your Lambda function code here
     } else {
       console.log('The stored value is not valid. Stopping Lambda execution...');
