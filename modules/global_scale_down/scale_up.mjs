@@ -61,6 +61,7 @@ export const scale_up_handler = async (event) => {
                     await db_client.send(db_command);
                     console.log(`DB instance ${storedData.db_instance_name[i]} started successfully.`);
                 }
+
                 try {
                     const clusterName = storedData.cluster_name[0];
                     // Retrieve the stored service data from SSM Parameter Store
@@ -158,6 +159,7 @@ export const scale_up_handler = async (event) => {
                 }),
             };
         }
+
         // return of mail try block
     } catch (error) {
         console.error('Error updating Global scale up:', error);
@@ -259,6 +261,7 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
             console.error('Error waiting for redis cluster status:', error);
             throw error;
         }
+
     } catch (error) {
         console.error('Error waiting for DB/redis cluster status:', error);
         throw error;

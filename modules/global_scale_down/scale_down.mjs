@@ -59,7 +59,6 @@ export const scale_down_handler = async (event) => {
                 await ecs_ec2_asg_client.send(ecs_ec2_asg_command);
                 console.log(`Auto scaling groups "${storedData.asg_name[i]}" updated successfully to 0.`);
             }
-
                 try {
                     for (let i = 0; i < storedData.db_instance_name.length; i++) {
                         const db_input = {
@@ -71,7 +70,6 @@ export const scale_down_handler = async (event) => {
 
                         console.log(`DB instance "${storedData.db_instance_name[i]}" stopped successfully.`);
                     }
-
 
                         try {
                             for (let i = 0; i < storedData.redis_cluster_id.length; i++) {
@@ -181,6 +179,7 @@ export const scale_down_handler = async (event) => {
                     }),
                 };
             }
+
     } catch (error) {
         console.error('Error updating Global scale down:', error);
 
@@ -222,7 +221,6 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
                     DBInstanceIdentifier: storedData.db_instance_name[i]
                 });
 
-
                 while (true) {
                     const response = await rdsClient.send(describeCommand);
                     const dbInstances = response.DBInstances;
@@ -245,7 +243,6 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
                     await new Promise((resolve) => setTimeout(resolve, 5000));
                 }
             }
-
 
             try {
                 for (let i = 0; i < storedData.redis_cluster_id.length; i++) {
