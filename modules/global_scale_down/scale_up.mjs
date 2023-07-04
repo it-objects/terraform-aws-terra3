@@ -196,6 +196,41 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
         const storedData = JSON.parse(getParameterResponse.Parameter.Value);
 
         try {
+            for (let i = 0; i < storedData.db_instance_name.length; i++) {
+                const rdsClient = new RDSClient();
+                const describeCommand = new DescribeDBInstancesCommand({
+                    DBInstanceIdentifier: storedData.db_instance_name[i]
+                });
+
+                while (true) {
+                    const response = await rdsClient.send(describeCommand);
+                    const dbInstances = response.DBInstances;
+
+                    if (dbInstances.length === 0) {
+                        throw new Error(`DB instance ${storedData.db_instance_name[i]} not found.`);
+                    }
+
+                    const dbInstance = dbInstances[0];
+                    const currentStatus = dbInstance.DBInstanceStatus;
+
+                    console.log(`Current status of DB instance ${storedData.db_instance_name[i]}: ${currentStatus}`);
+
+                    if (currentStatus === desiredStatus) {
+                        console.log(`DB instance ${storedData.db_instance_name[i]} is in the "${desiredStatus}" state.`);
+                        break;
+                    }
+
+                    // Wait for 5 seconds before checking the status again
+                    await new Promise((resolve) => setTimeout(resolve, 5000));
+                }
+            }
+
+        } catch (error) {
+            console.error('Error waiting for DB instance status:', error);
+            throw error;
+        }
+
+        try {
             for (let i = 0; i < storedData.redis_cluster_id.length; i++) {
                 console.log("Checking the redis cluster state");
                 const redisClient = new ElastiCacheClient();
@@ -214,49 +249,13 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
 
                     if (currentStatus === redisdesiredStatus) {
                         console.log(`Redis cluster ${storedData.redis_cluster_id[i]} is in the "${redisdesiredStatus}" state.`);
-                        return;
+                        break;
                     }
 
                     // Wait for 5 seconds before checking the status again
                     await new Promise((resolve) => setTimeout(resolve, 5000));
                 }
             }
-
-            try {
-                for (let i = 0; i < storedData.db_instance_name.length; i++) {
-                    const rdsClient = new RDSClient();
-                    const describeCommand = new DescribeDBInstancesCommand({
-                        DBInstanceIdentifier: storedData.db_instance_name[i]
-                    });
-
-                    while (true) {
-                        const response = await rdsClient.send(describeCommand);
-                        const dbInstances = response.DBInstances;
-
-                        if (dbInstances.length === 0) {
-                            throw new Error(`DB instance ${storedData.db_instance_name[i]} not found.`);
-                        }
-
-                        const dbInstance = dbInstances[0];
-                        const currentStatus = dbInstance.DBInstanceStatus;
-
-                        console.log(`Current status of DB instance ${storedData.db_instance_name[i]}: ${currentStatus}`);
-
-                        if (currentStatus === desiredStatus) {
-                            console.log(`DB instance ${storedData.db_instance_name[i]} is in the "${desiredStatus}" state.`);
-                            return;
-                        }
-
-                        // Wait for 5 seconds before checking the status again
-                        await new Promise((resolve) => setTimeout(resolve, 5000));
-                    }
-                }
-
-            } catch (error) {
-                console.error('Error waiting for DB instance status:', error);
-                throw error;
-            }
-
         } catch (error) {
             console.error('Error waiting for redis cluster status:', error);
             throw error;

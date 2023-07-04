@@ -59,126 +59,126 @@ export const scale_down_handler = async (event) => {
                 await ecs_ec2_asg_client.send(ecs_ec2_asg_command);
                 console.log(`Auto scaling groups "${storedData.asg_name[i]}" updated successfully to 0.`);
             }
-                try {
-                    for (let i = 0; i < storedData.db_instance_name.length; i++) {
-                        const db_input = {
-                            "DBInstanceIdentifier": storedData.db_instance_name[i],
-                        };
-                        const db_command = new StopDBInstanceCommand(db_input);
-                        const db_client = new RDSClient();
-                        await db_client.send(db_command);
+            try {
+                for (let i = 0; i < storedData.db_instance_name.length; i++) {
+                    const db_input = {
+                        "DBInstanceIdentifier": storedData.db_instance_name[i],
+                    };
+                    const db_command = new StopDBInstanceCommand(db_input);
+                    const db_client = new RDSClient();
+                    await db_client.send(db_command);
 
-                        console.log(`DB instance "${storedData.db_instance_name[i]}" stopped successfully.`);
+                    console.log(`DB instance "${storedData.db_instance_name[i]}" stopped successfully.`);
+                }
+
+                try {
+                    for (let i = 0; i < storedData.redis_cluster_id.length; i++) {
+                        const redis_memory_db = {
+                            "CacheClusterId": storedData.redis_cluster_id[i],
+                        };
+                        const redis_memory_db_command = new DeleteCacheClusterCommand(redis_memory_db);
+                        const redis_memory_db_client = new ElastiCacheClient();
+                        await redis_memory_db_client.send(redis_memory_db_command);
+                        console.log(`Redis cluster "${storedData.redis_cluster_id[i]}" stopped successfully.`);
                     }
 
-                        try {
-                            for (let i = 0; i < storedData.redis_cluster_id.length; i++) {
-                                const redis_memory_db = {
-                                    "CacheClusterId": storedData.redis_cluster_id[i],
-                                };
-                                const redis_memory_db_command = new DeleteCacheClusterCommand(redis_memory_db);
-                                const redis_memory_db_client = new ElastiCacheClient();
-                                await redis_memory_db_client.send(redis_memory_db_command);
-                                console.log(`Redis cluster "${storedData.redis_cluster_id[i]}" stopped successfully.`);
-                            }
+                    try {
+                        const clusterName = storedData.cluster_name[0];
+                        // Call the listServices command to retrieve the list of ECS services
+                        const listServicesParams = {
+                            cluster: clusterName,
+                        };
+                        const listServicesCommand = new ListServicesCommand(listServicesParams);
+                        const ecsClient = new ECSClient();
+                        const listServicesResponse = await ecsClient.send(listServicesCommand);
+                        // Extract the service ARNs from the response
+                        const serviceArns = listServicesResponse.serviceArns;
 
-                                try {
-                                    const clusterName = storedData.cluster_name[0];
-                                    // Call the listServices command to retrieve the list of ECS services
-                                    const listServicesParams = {
-                                        cluster: clusterName,
-                                    };
-                                    const listServicesCommand = new ListServicesCommand(listServicesParams);
-                                    const ecsClient = new ECSClient();
-                                    const listServicesResponse = await ecsClient.send(listServicesCommand);
-                                    // Extract the service ARNs from the response
-                                    const serviceArns = listServicesResponse.serviceArns;
+                        // Call the describeServices command to retrieve the list of running services
+                        const describeServicesParams = {
+                            cluster: clusterName,
+                            services: serviceArns,
+                        };
+                        const describeServicesCommand = new DescribeServicesCommand(describeServicesParams);
+                        const describeServicesResponse = await ecsClient.send(describeServicesCommand);
+                        // Extract the service names and desired counts from the response
+                        const servicesData = describeServicesResponse.services.map(service => ({
+                            name: service.serviceName,
+                            desiredCount: service.desiredCount
+                        }));
 
-                                    // Call the describeServices command to retrieve the list of running services
-                                    const describeServicesParams = {
-                                        cluster: clusterName,
-                                        services: serviceArns,
-                                    };
-                                    const describeServicesCommand = new DescribeServicesCommand(describeServicesParams);
-                                    const describeServicesResponse = await ecsClient.send(describeServicesCommand);
-                                    // Extract the service names and desired counts from the response
-                                    const servicesData = describeServicesResponse.services.map(service => ({
-                                        name: service.serviceName,
-                                        desiredCount: service.desiredCount
-                                    }));
+                        // Store the service names in SSM Parameter Store
+                        const putParameterParams = {
+                            Name: process.env.ecs_service_data, // Set the desired path for the parameter
+                            Value: JSON.stringify(servicesData), // Store the service names as a comma-separated string
+                            Type: 'String',
+                            Overwrite: true,
+                        };
+                        const putParameterCommand = new PutParameterCommand(putParameterParams);
+                        const ssmClientPut = new SSMClient();
+                        await ssmClientPut.send(putParameterCommand);
+                        console.log(`The ssm parameter "${servicesData.name}" stored successfully.`);
 
-                                    // Store the service names in SSM Parameter Store
-                                    const putParameterParams = {
-                                        Name: process.env.ecs_service_data, // Set the desired path for the parameter
-                                        Value: JSON.stringify(servicesData), // Store the service names as a comma-separated string
-                                        Type: 'String',
-                                        Overwrite: true,
-                                    };
-                                    const putParameterCommand = new PutParameterCommand(putParameterParams);
-                                    const ssmClientPut = new SSMClient();
-                                    await ssmClientPut.send(putParameterCommand);
-                                    console.log(`The ssm parameter "${servicesData}" stored successfully.`);
-
-                                    // Update the ECS service for each service in the stored data
-                                    for (const serviceData of servicesData) {
-                                        const updateServiceParams = {
-                                            cluster: clusterName, // Specify the ECS cluster name
-                                            service: serviceData.name, // Specify the ECS service name
-                                            desiredCount: 0, // Set the desired count for the service
-                                        };
-                                        const updateServiceCommand = new UpdateServiceCommand(updateServiceParams);
-                                        await ecsClient.send(updateServiceCommand);
-                                        console.log(`Desired count of "${serviceData.name}"  set successfully to 0.`);
-                                    }
-                                    return {
-                                        statusCode: 200,
-                                        body: JSON.stringify({
-                                            message: 'Successfully updated ECS services'
-                                        }),
-                                    };
-                                } catch (error) {
-                                    console.error('Error updating ECS services:', error);
-
-                                    return {
-                                        statusCode: 500,
-                                        body: JSON.stringify({
-                                            error: 'Failed to update ECS services'
-                                        }),
-                                    };
-                                }
-
-                        } catch (error) {
-                            console.error('Error updating Redis cluster:', error);
-
-                            return {
-                                statusCode: 500,
-                                body: JSON.stringify({
-                                    error: 'Failed to update Redis cluster'
-                                }),
+                        // Update the ECS service for each service in the stored data
+                        for (const serviceData of servicesData) {
+                            const updateServiceParams = {
+                                cluster: clusterName, // Specify the ECS cluster name
+                                service: serviceData.name, // Specify the ECS service name
+                                desiredCount: 0, // Set the desired count for the service
                             };
+                            const updateServiceCommand = new UpdateServiceCommand(updateServiceParams);
+                            await ecsClient.send(updateServiceCommand);
+                            console.log(`Desired count of "${serviceData.name}"  set successfully to 0.`);
                         }
+                        return {
+                            statusCode: 200,
+                            body: JSON.stringify({
+                                message: 'Successfully updated ECS services'
+                            }),
+                        };
+                    } catch (error) {
+                        console.error('Error updating ECS services:', error);
+
+                        return {
+                            statusCode: 500,
+                            body: JSON.stringify({
+                                error: 'Failed to update ECS services'
+                            }),
+                        };
+                    }
 
                 } catch (error) {
-                    console.error('Error updating DB instance:', error);
+                    console.error('Error updating Redis cluster:', error);
 
                     return {
                         statusCode: 500,
                         body: JSON.stringify({
-                            error: 'Failed to update DB instance'
+                            error: 'Failed to update Redis cluster'
                         }),
                     };
                 }
 
             } catch (error) {
-                console.error('Error updating Auto scaling groups:', error);
+                console.error('Error updating DB instance:', error);
 
                 return {
                     statusCode: 500,
                     body: JSON.stringify({
-                        error: 'Failed to update Auto scaling groups'
+                        error: 'Failed to update DB instance'
                     }),
                 };
             }
+
+        } catch (error) {
+            console.error('Error updating Auto scaling groups:', error);
+
+            return {
+                statusCode: 500,
+                body: JSON.stringify({
+                    error: 'Failed to update Auto scaling groups'
+                }),
+            };
+        }
 
     } catch (error) {
         console.error('Error updating Global scale down:', error);
@@ -213,9 +213,52 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
             };
         }
         const storedData = JSON.parse(getParameterResponse.Parameter.Value);
+        let isClusterDeleted = false;
 
         try {
+            for (let i = 0; i < storedData.redis_cluster_id.length; i++) {
+                console.log("Checking the redis cluster state");
+                const redisClient = new ElastiCacheClient();
+                const describeCommand = new DescribeCacheClustersCommand({
+                    CacheClusterId: storedData.redis_cluster_id[0]
+                });
+
+
+                while (!isClusterDeleted) {
+                    const response = await redisClient.send(describeCommand);
+                    const clusters = response.CacheClusters;
+
+                    const cluster = clusters[0];
+                    const currentStatus = cluster.CacheClusterStatus;
+
+                    console.log(`Current status of redis cluster ${storedData.redis_cluster_id[0]}: ${currentStatus}`);
+
+                    if (currentStatus !== redisdesiredStatus) {
+                        console.log(`Redis cluster ${storedData.redis_cluster_id[i]} is in the "${redisdesiredStatus}" state.`);
+                        isClusterDeleted = true;
+                        break;
+                    }
+
+                    if (!isClusterDeleted) {
+                        // Wait for 5 seconds before checking the status again
+                        await new Promise((resolve) => setTimeout(resolve, 5000));
+                    }
+                }
+            }
+        } catch (error) {
+            if (error.name === "CacheClusterNotFoundFault") {
+                console.log(`Redis cluster ${storedData.redis_cluster_id[0]} deleted.`);
+                isClusterDeleted = true;
+            } else {
+                console.error("Error while describing Redis cluster:", error);
+                throw error;
+            }
+        }
+
+        try {
+            console.log("Checking what is happening inside DB instance");
             for (let i = 0; i < storedData.db_instance_name.length; i++) {
+                console.log("Checking the DB instance state");
                 const rdsClient = new RDSClient();
                 const describeCommand = new DescribeDBInstancesCommand({
                     DBInstanceIdentifier: storedData.db_instance_name[i]
@@ -236,52 +279,20 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
 
                     if (currentStatus === desiredStatus) {
                         console.log(`DB instance ${storedData.db_instance_name[i]} is in the "${desiredStatus}" state.`);
-                        return;
+                        break;
                     }
 
                     // Wait for 5 seconds before checking the status again
                     await new Promise((resolve) => setTimeout(resolve, 5000));
                 }
             }
-
-            try {
-                for (let i = 0; i < storedData.redis_cluster_id.length; i++) {
-                    console.log("Checking the redis cluster state");
-                    const redisClient = new ElastiCacheClient();
-                    const describeCommand = new DescribeCacheClustersCommand({
-                        CacheClusterId: storedData.redis_cluster_id[0]
-                    });
-
-                    while (false) {
-                        const response = await redisClient.send(describeCommand);
-                        const clusters = response.CacheClusters;
-
-                        const cluster = clusters[0];
-                        const currentStatus = cluster.CacheClusterStatus;
-
-                        console.log(`Current status of redis cluster ${storedData.redis_cluster_id[0]}: ${currentStatus}`);
-
-                        if (currentStatus === redisdesiredStatus) {
-                            console.log(`Redis cluster ${storedData.redis_cluster_id[i]} is in the "${redisdesiredStatus}" state.`);
-                            return;
-                        }
-
-                        // Wait for 5 seconds before checking the status again
-                        await new Promise((resolve) => setTimeout(resolve, 5000));
-                    }
-                }
-            } catch (error) {
-                console.error('Error waiting for redis cluster status:', error);
-                throw error;
-            }
-
         } catch (error) {
             console.error('Error waiting for DB instance status:', error);
             throw error;
         }
 
     } catch (error) {
-        console.error('Error waiting for DB/redis cluster status:', error);
+        console.error('Error waiting for DB/redis cluster deleting status:', error);
         throw error;
     }
 };
