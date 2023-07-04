@@ -25,7 +25,7 @@ export const checkParameterValue = async (parameterName) => {
 };
 
 export const scale_down_handler = async (event) => {
-    console.log("scaling down the state:- ");
+    console.log("scaling down the deployment:");
     try {
         const parameterStorePath = process.env.scale_up_parameters;
 
@@ -194,7 +194,7 @@ export const scale_down_handler = async (event) => {
 
 export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) => {
     try {
-        console.log("Waiting for the update to be done:- ");
+        console.log("Waiting for the update to be done:");
         const parameterStorePath = process.env.scale_up_parameters;
 
         // Retrieve stored parameter value from SSM Parameter Store
@@ -222,7 +222,6 @@ export const waitForInstanceStatus = async (desiredStatus, redisdesiredStatus) =
                 const describeCommand = new DescribeCacheClustersCommand({
                     CacheClusterId: storedData.redis_cluster_id[0]
                 });
-
 
                 while (!isClusterDeleted) {
                     const response = await redisClient.send(describeCommand);

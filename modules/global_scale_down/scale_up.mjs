@@ -25,7 +25,7 @@ export const checkParameterValue = async (parameterName) => {
 };
 
 export const scale_up_handler = async (event) => {
-    console.log("scaling up the state.");
+    console.log("scaling up the deployment:");
     try {
         const parameterStorePath = process.env.scale_up_parameters;
 
@@ -295,9 +295,9 @@ export const handler = async (event) => {
         if (isValueValid) {
             console.log('The stored value is valid. Continuing with Lambda execution...');
             await scale_up_handler();
+            console.log('Scaling up on resources has been performed.');
 
             await waitForInstanceStatus('available', 'available');
-            console.log('DB instance is now in the "Available" state.');
 
             await updateParameterValue(parameterName, 'scaled_up');
             console.log('Hibernation state has been successfully changed to scaled up.');
