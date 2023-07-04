@@ -288,7 +288,7 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
 };
 
 export const handler = async (event) => {
-    const parameterName = '/g-scale-down/global_scale_down/hibernation_state';
+    const parameterName = process.env.hibernation_state;
     try {
         const isValueValid = await checkParameterValue(parameterName);
 

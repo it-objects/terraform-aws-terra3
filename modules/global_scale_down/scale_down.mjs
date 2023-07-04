@@ -117,7 +117,7 @@ export const scale_down_handler = async (event) => {
                         const putParameterCommand = new PutParameterCommand(putParameterParams);
                         const ssmClientPut = new SSMClient();
                         await ssmClientPut.send(putParameterCommand);
-                        console.log(`The ssm parameter "${servicesData.name}" stored successfully.`);
+                        console.log(`The ssm parameter of ECS service stored successfully.`);
 
                         // Update the ECS service for each service in the stored data
                         for (const serviceData of servicesData) {
@@ -317,7 +317,7 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
 };
 
 export const handler = async (event) => {
-    const parameterName = '/g-scale-down/global_scale_down/hibernation_state';
+    const parameterName = process.env.hibernation_state;
     try {
         const isValueValid = await checkParameterValue(parameterName);
 
