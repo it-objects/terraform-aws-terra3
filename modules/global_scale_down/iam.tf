@@ -159,7 +159,8 @@ resource "aws_iam_policy" "scale_up_redis_policy" {
           "Sid" : "ScaleUpRedis",
           "Effect" : "Allow",
           "Action" : [
-            "elasticache:CreateCacheCluster"
+            "elasticache:CreateCacheCluster",
+            "elasticache:DescribeCacheClusters"
           ],
           "Resource" : local.redis_arn
       }]
@@ -180,7 +181,8 @@ resource "aws_iam_policy" "scale_down_redis_policy" {
           "Sid" : "ScaleDownRedis",
           "Effect" : "Allow",
           "Action" : [
-            "elasticache:DeleteCacheCluster"
+            "elasticache:DeleteCacheCluster",
+            "elasticache:DescribeCacheClusters"
           ],
           "Resource" : var.redis_cluster_arn
       }]
