@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.17.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.16.0...v1.17.0) (2023-07-05)
+
+
+### Features
+
+* make lambda function idempotent and aware of hibernation state ([#36](https://github.com/it-objects/terraform-aws-terra3/issues/36)) ([a65c501](https://github.com/it-objects/terraform-aws-terra3/commit/a65c50165bdcc2415a4d3304ed49681a31844a12))
+
 ## [1.16.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.15.0...v1.16.0) (2023-06-20)
 
 
