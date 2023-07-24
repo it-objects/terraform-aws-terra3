@@ -3,6 +3,45 @@ import { SSMClient, PutParameterCommand, GetParameterCommand} from "@aws-sdk/cli
 import { RDSClient, StopDBInstanceCommand, DescribeDBInstancesCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, DeleteCacheClusterCommand, DescribeCacheClustersCommand } from "@aws-sdk/client-elasticache";
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+
+export const handleAuthentication = async (event) => {
+  try {
+        const token = event.queryStringParameters.token;
+        console.log("Received token: ", token);
+
+
+        const admin_secret_credentials = process.env.admin_secret_credentials;
+
+        const hashInput = token;
+        console.log("Received token: ", hashInput);
+
+        const secretsManager = new SecretsManagerClient();
+        const input = { // GetSecretValueRequest
+          SecretId: admin_secret_credentials
+        };
+        const command = new GetSecretValueCommand(input);
+        const secretValue = await secretsManager.send(command);
+
+        const storedHash = JSON.parse(secretValue.SecretString).hash;
+
+        console.log("storedHash");
+        console.log(storedHash);
+
+
+        if (hashInput === storedHash) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error(error);
+        return {
+          statusCode: 500,
+          body: 'Error'
+        };
+    }
+};
+
 
 export const checkParameterValue = async (parameterName) => {
     console.log("checking the current hibernation state:- ");
@@ -316,28 +355,59 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
     }
 };
 
+
+
 export const handler = async (event) => {
-    const parameterName = process.env.hibernation_state;
-    try {
-        const isValueValid = await checkParameterValue(parameterName);
+  const parameterName = process.env.hibernation_state;
 
-        if (isValueValid) {
-            console.log('The stored value is valid. Continuing with Lambda execution...');
+  const isAuthenticated = await handleAuthentication(event);
 
-            await scale_down_handler();
-            console.log('Scaling down on resources has been performed.');
+  if (isAuthenticated === true) {
+            try {
+                const isValueValid = await checkParameterValue(parameterName);
 
-            await waitForInstanceStatus('stopped', 'deleting');
+                if (isValueValid) {
+                    console.log('The stored value is valid. Continuing with Lambda execution...');
 
-            await updateParameterValue(parameterName, 'scaled_down');
-            console.log('Hibernation state has been successfully changed to scaled down.');
+                    await scale_down_handler();
+                    console.log('Scaling down on resources has been performed.');
 
-            // Add your Lambda function code here
-        } else {
-            console.log('The stored value is not valid. Stopping Lambda execution...');
-            return; // Stop Lambda execution
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+                    await waitForInstanceStatus('stopped', 'deleting');
+
+                    await updateParameterValue(parameterName, 'scaled_down');
+                    console.log('Hibernation state has been successfully changed to scaled down.');
+                    return {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            'Log': 'Hibernation state has been successfully changed to scaled down.'
+                        }),
+                    };
+                    // Add your Lambda function code here
+                } else {
+                    console.log('The stored value is neither initial nor scaled up. Stopping Lambda execution... Please execute again after some time.');
+                    //return; // Stop Lambda execution
+                    return {
+                        statusCode: 400,
+                        body: JSON.stringify({
+                            'Error': 'Scale down is in progress. Please be patient.'
+                        }),
+                    };
+                }
+            } catch (error) {
+                //console.error('Error:', error);
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        'Error': error
+                    }),
+                };
+            }
+
+  } else {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ message: 'Unauthorized' }),
+
+    };
+  }
 };

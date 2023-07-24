@@ -3,6 +3,54 @@ import { SSMClient, PutParameterCommand, GetParameterCommand} from "@aws-sdk/cli
 import { RDSClient, StartDBInstanceCommand, DescribeDBInstancesCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, CreateCacheClusterCommand, DescribeCacheClustersCommand } from "@aws-sdk/client-elasticache";
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+
+export const handleAuthentication = async (event) => {
+  try {
+        //const requestBody = event.queryStringParameters.token; //event.hash;  // JSON.parse(event.body || '{}'); // JSON.parse(event.body).hash; // JSON.parse(event.body || '{}'); // '$2b$10$n5oi6MSqgXanRZTsBOfu9eWxR2uH31wf8yoDSMXLdlf5asOD5z9Jy'; //  JSON.parse(event.body || '{}'); // '$2b$10$n5oi6MSqgXanRZTsBOfu9eWxR2uH31wf8yoDSMXLdlf5asOD5z9Jy'; //
+        const token = event.queryStringParameters.token;
+        console.log("Received token: ", token);
+
+
+        const admin_secret_credentials = process.env.admin_secret_credentials;
+
+        const hashInput = token; //'$2b$10$n5oi6MSqgXanRZTsBOfu9eWxR2uH31wf8yoDSMXLdlf5asOD5z9Jy';//event.queryStringParameters.token; //requestBody; // requestBody.hash;
+
+        console.log("Received token: ", hashInput);
+
+        console.log("Entered value from the website");
+        //console.log(requestBody);
+        console.log(hashInput);
+
+
+        const secretsManager = new SecretsManagerClient();
+        const input = { // GetSecretValueRequest
+          SecretId: admin_secret_credentials
+        };
+        const command = new GetSecretValueCommand(input);
+        const secretValue = await secretsManager.send(command);
+
+        console.log("secretValue");
+        console.log(JSON.parse(secretValue.SecretString));
+
+        const storedHash = JSON.parse(secretValue.SecretString).hash;
+
+        console.log("storedHash");
+        console.log(storedHash);
+
+
+        if (hashInput === storedHash) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error(error);
+        return {
+          statusCode: 500,
+          body: 'Error'
+        };
+    }
+};
 
 export const checkParameterValue = async (parameterName) => {
     console.log("Currently checking the hibernation state");
@@ -289,24 +337,54 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
 
 export const handler = async (event) => {
     const parameterName = process.env.hibernation_state;
-    try {
-        const isValueValid = await checkParameterValue(parameterName);
 
-        if (isValueValid) {
-            console.log('The stored value is valid. Continuing with Lambda execution...');
-            await scale_up_handler();
-            console.log('Scaling up on resources has been performed.');
+    const isAuthenticated = await handleAuthentication(event);
+    if (isAuthenticated === true) {
 
-            await waitForInstanceStatus('available', 'available');
+        try {
+            const isValueValid = await checkParameterValue(parameterName);
 
-            await updateParameterValue(parameterName, 'scaled_up');
-            console.log('Hibernation state has been successfully changed to scaled up.');
-            // Add your Lambda function code here
-        } else {
-            console.log('The stored value is not valid. Stopping Lambda execution...');
-            return; // Stop Lambda execution
+            if (isValueValid) {
+                console.log('The stored value is valid. Continuing with Lambda execution...');
+                await scale_up_handler();
+                console.log('Scaling up on resources has been performed.');
+
+                await waitForInstanceStatus('available', 'available');
+
+                await updateParameterValue(parameterName, 'scaled_up');
+                console.log('Hibernation state has been successfully changed to scaled up.');
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        'Log': 'Hibernation state has been successfully changed to scaled up.'
+                    }),
+                };
+                // Add your Lambda function code here
+            } else {
+                console.log('The stored value is not scaled down. Stopping Lambda execution... Please execute again after some time.');
+                //return; // Stop Lambda execution
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        'Error': 'Scale up is in progress. Please be patient.'
+                    }),
+                };
+            }
+        } catch (error) {
+            //console.error('Error:', error);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    'Error': error
+                }),
+            };
         }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+
+  } else {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ message: 'Unauthorized' }),
+
+    };
+  }
 };
