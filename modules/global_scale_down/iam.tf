@@ -96,6 +96,16 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
           "Resource" : [
             "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
           ]
+        },
+        {
+          "Sid" : "ScaleUpGetSecretValue",
+          "Effect" : "Allow",
+          "Action" : [
+            aws_secretsmanager_secret.hashed_credentials.arn
+          ],
+          "Resource" : [
+
+          ]
         }
       ]
   })
