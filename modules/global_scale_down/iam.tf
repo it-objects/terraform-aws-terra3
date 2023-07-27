@@ -101,10 +101,10 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
           "Sid" : "ScaleUpGetSecretValue",
           "Effect" : "Allow",
           "Action" : [
-            aws_secretsmanager_secret.hashed_credentials.arn
+            "secretsmanager:GetSecretValue"
           ],
           "Resource" : [
-
+            aws_secretsmanager_secret.s3-admin-website-auth-token[0].arn
           ]
         }
       ]
