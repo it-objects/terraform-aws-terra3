@@ -214,6 +214,9 @@ module "cloudfront_cdn" {
 
   # ignored if static web page is deactivated
   add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html
+
+  s3_admin_website_url  = module.global_scale_down.s3_admin_website_url
+  isAdminWebsiteEnabled = var.enable_environment_hibernation_sleep_schedule
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -552,7 +555,8 @@ module "global_scale_down" {
   environment_hibernation_sleep_schedule        = var.environment_hibernation_sleep_schedule
   environment_hibernation_wakeup_schedule       = var.environment_hibernation_wakeup_schedule
 
-  solution_name = var.solution_name
+  solution_name  = var.solution_name
+  cloudfront_arn = module.cloudfront_cdn.cloudfront_arn
 
   ecs_ec2_instances_autoscaling_group_arn = module.cluster.ecs_ec2_instances_autoscaling_group_arn
   nat_instances_autoscaling_group_arn     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_arn)
