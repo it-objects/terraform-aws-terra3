@@ -47,7 +47,7 @@
     <p style="font-size: 14px; color: #666;">(Hint: Your token value can be found in the AWS Secret Manager at "/your_solution_name/s3-admin-website-auth-token-*****".)</p>
     <button id="scale_down_button" type="submit" onclick="handle_scale_down()">Scale Down</button>
     <button id="scale_up_button" type="submit" onclick="handle_scale_up()">Scale Up</button>
-    <p id="statusMessage">Click the button to start the Lambda function.</p>
+    <p id="statusMessage">Click the button to start a Lambda function.</p>
     <pre id="message-display"></pre>
 </form>
 <script>
