@@ -52,7 +52,7 @@ locals {
     s3_mini_admin_website_bucket = {
       domain_name              = var.s3_admin_website_url
       origin_path              = ""
-      origin_access_control_id = aws_cloudfront_origin_access_control.s3_admin_website.id
+      origin_access_control_id = aws_cloudfront_origin_access_control.s3_admin_website[0].id
     }
   }
 
@@ -635,6 +635,8 @@ resource "aws_s3_object" "object" {
 # OCA for s3 admin website
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
+  count = var.isAdminWebsiteEnabled ? 1 : 0
+
   name                              = "OCA for s3 admin website"
   description                       = "OCA for s3 admin website"
   origin_access_control_origin_type = "s3"
