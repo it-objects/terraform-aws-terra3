@@ -25,7 +25,11 @@ locals {
   ecs_service_data         = "/${var.solution_name}/global_scale_down/ecs_service_data"
   scale_up_parameters      = "/${var.solution_name}/global_scale_down/scale_up_parameters"
   hibernation_state        = " /${var.solution_name}/global_scale_down/hibernation_state"
-  admin_secret_credentials = aws_secretsmanager_secret.hashed_credentials.arn
+  admin_secret_credentials = var.enable_environment_hibernation_sleep_schedule ? aws_secretsmanager_secret.s3-admin-website-auth-token[0].arn : ""
+
+  scale_down_api_endpoint = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_down_lambda_function_url[0].function_url : ""
+  scale_up_api_endpoint   = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_up_lambda_function_url[0].function_url : ""
+
 }
 
 module "lambda_scale_up" {
@@ -168,7 +172,9 @@ module "eventbridge_scale_down" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "${var.solution_name}-global-scale-up-and-down-hosting-bucket-${random_string.random_s3_postfix.result}"
+  count         = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  bucket        = "${var.solution_name}-mini-admin-website-s3-bucket-${random_string.random_s3_postfix.result}"
+  force_destroy = true
 }
 
 resource "random_string" "random_s3_postfix" {
@@ -177,25 +183,16 @@ resource "random_string" "random_s3_postfix" {
   min_lower = 4
 }
 
-resource "aws_s3_bucket_website_configuration" "b_website" {
-  bucket = aws_s3_bucket.bucket.id
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "error.html"
-  }
-}
-
 resource "aws_s3_object" "object" {
-  bucket = aws_s3_bucket.bucket.id
-  key    = "index.html"
-  source = "${path.module}/index.html"
+  count  = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  bucket = aws_s3_bucket.bucket[0].id
+  key    = "admin/index.html"
+  source = local_file.local_index[0].filename
 }
 
 resource "aws_s3_bucket_ownership_controls" "s3_data_bucket" {
-  bucket = aws_s3_bucket.bucket.id
+  count  = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  bucket = aws_s3_bucket.bucket[0].id
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -203,15 +200,43 @@ resource "aws_s3_bucket_ownership_controls" "s3_data_bucket" {
 }
 
 resource "aws_s3_bucket_public_access_block" "s3_bucket_public_access_block" {
-  bucket = aws_s3_bucket.bucket.id
+  count  = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  bucket = aws_s3_bucket.bucket[0].id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_policy" "static_website_bucket_policy" {
+  count  = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  bucket = aws_s3_bucket.bucket[0].bucket
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          "Service" : "cloudfront.amazonaws.com"
+        },
+        Action   = "s3:GetObject",
+        Resource = "${aws_s3_bucket.bucket[0].arn}/*",
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = var.cloudfront_arn
+          }
+        }
+      },
+    ],
+  })
+}
+
+
 resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
   function_name      = module.lambda_scale_down[0].lambda_function_name
   authorization_type = "NONE" #"AWS_IAM"
 
@@ -224,6 +249,8 @@ resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
 }
 
 resource "aws_lambda_function_url" "scale_up_lambda_function_url" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
   function_name      = module.lambda_scale_up[0].lambda_function_name
   authorization_type = "NONE" #"AWS_IAM"
 
@@ -239,34 +266,43 @@ data "template_file" "index" {
   template = file("${path.module}/index.tpl")
 
   vars = {
-    scale_down_api_endpoint = aws_lambda_function_url.scale_down_lambda_function_url.function_url
-    scale_up_api_endpoint   = aws_lambda_function_url.scale_up_lambda_function_url.function_url
+    scale_down_api_endpoint = local.scale_down_api_endpoint
+    scale_up_api_endpoint   = local.scale_up_api_endpoint
   }
 }
 
 resource "local_file" "local_index" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
   content  = data.template_file.index.rendered
   filename = "${path.module}/index.html"
 }
 
-resource "aws_secretsmanager_secret" "hashed_credentials" {
-  name = "hashed-credentials-${random_string.random_secret_character.result}"
+resource "aws_secretsmanager_secret" "s3-admin-website-auth-token" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  name  = "/${var.solution_name}/s3-admin-website-auth-token-${random_string.s3-admin-website-secret-postfix[0].result}" #"hashed-credentials-${random_string.random_secret_character.result}"
 }
 
 resource "aws_secretsmanager_secret_version" "hashed_credentials_version" {
-  secret_id = aws_secretsmanager_secret.hashed_credentials.id
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  secret_id = aws_secretsmanager_secret.s3-admin-website-auth-token[0].id
   secret_string = jsonencode({
-    "hash" : random_string.random_secret_hash.result
+    "hash" : random_string.s3-admin-website-auth-token[0].result
   })
 }
 
-resource "random_string" "random_secret_character" {
+resource "random_string" "s3-admin-website-secret-postfix" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
   length    = 5
   special   = false
   min_lower = 4
 }
 
-resource "random_string" "random_secret_hash" {
+resource "random_string" "s3-admin-website-auth-token" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
   length  = 16
   special = false
   lower   = true
