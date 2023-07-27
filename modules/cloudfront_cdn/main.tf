@@ -630,3 +630,14 @@ resource "aws_s3_object" "object" {
   content      = "<h1>Hello world, Terra3!</h1>"
   content_type = "text/html"
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# OCA for s3 admin website
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
+  name                              = "OCA for s3 admin website"
+  description                       = "OCA for s3 admin website"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
