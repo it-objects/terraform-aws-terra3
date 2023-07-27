@@ -85,3 +85,11 @@ variable "redis_security_group_arn" {
   description = ""
   type        = string
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Others
+# ---------------------------------------------------------------------------------------------------------------------
+variable "cloudfront_arn" {
+  description = "cloudfront_ arn to access the s3 admin website"
+  type        = string
+}
