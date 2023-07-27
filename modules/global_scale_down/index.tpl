@@ -1,5 +1,5 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html  lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -48,7 +48,7 @@
         type="password"
         placeholder="Your token value"
         name="token-input"
-        required
+        required=""
       />
       <p style="font-size: 14px; color: #666">
         (Hint: Your token value can be found in the AWS Secret Manager at
