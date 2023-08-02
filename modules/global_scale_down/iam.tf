@@ -76,7 +76,7 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
           ]
         },
         {
-          "Sid" : "ScaleUpSSM",
+          "Sid" : "ScaleUpSSMGet",
           "Effect" : "Allow",
           "Action" : [
             "ssm:GetParameter"
@@ -84,27 +84,18 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
           "Resource" : [
             "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}",
             "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.scale_up_parameters}",
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}",
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.token}"
           ]
         },
         {
-          "Sid" : "PutParameterSSM",
+          "Sid" : "ScaleUpSSMPut",
           "Effect" : "Allow",
           "Action" : [
             "ssm:PutParameter"
           ],
           "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
-          ]
-        },
-        {
-          "Sid" : "ScaleUpGetSecretValue",
-          "Effect" : "Allow",
-          "Action" : [
-            "secretsmanager:GetSecretValue"
-          ],
-          "Resource" : [
-            aws_secretsmanager_secret.s3-admin-website-auth-token[0].arn
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}"
           ]
         }
       ]
