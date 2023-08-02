@@ -22,14 +22,18 @@ locals {
     aws_iam_policy.scale_down_redis_policy[*].arn
   )
 
-  ecs_service_data         = "/${var.solution_name}/global_scale_down/ecs_service_data"
-  scale_up_parameters      = "/${var.solution_name}/global_scale_down/scale_up_parameters"
-  hibernation_state        = " /${var.solution_name}/global_scale_down/hibernation_state"
-  admin_secret_credentials = var.enable_environment_hibernation_sleep_schedule ? aws_secretsmanager_secret.s3-admin-website-auth-token[0].arn : ""
+  ecs_service_data    = "/${var.solution_name}/global_scale_down/ecs_service_data"
+  scale_up_parameters = "/${var.solution_name}/global_scale_down/scale_up_parameters"
+  hibernation_state   = "/${var.solution_name}/global_scale_down/hibernation_state"
+  token               = "/${var.solution_name}/global_scale_down/token"
 
   scale_down_api_endpoint = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_down_lambda_function_url[0].function_url : ""
   scale_up_api_endpoint   = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_up_lambda_function_url[0].function_url : ""
 
+  json_data = jsonencode({
+    user_token = random_string.s3-admin-website-auth-token[0].result,
+    api_token  = random_string.api-auth-token[0].result
+  })
 }
 
 module "lambda_scale_up" {
@@ -64,7 +68,7 @@ module "lambda_scale_up" {
     ecs_service_data         = local.ecs_service_data
     scale_up_parameters      = local.scale_up_parameters
     hibernation_state        = local.hibernation_state
-    admin_secret_credentials = local.admin_secret_credentials
+    admin_secret_credentials = local.token
   }
 }
 
@@ -93,6 +97,7 @@ module "eventbridge_scale_up" {
         input = jsonencode({
           "ecs_service_data" : local.ecs_service_data,
           "scale_up_parameters" : local.scale_up_parameters
+          "api_token" : random_string.api-auth-token[0].result
         })
       }
     ]
@@ -138,7 +143,7 @@ module "lambda_scale_down" {
     ecs_service_data         = local.ecs_service_data
     scale_up_parameters      = local.scale_up_parameters
     hibernation_state        = local.hibernation_state
-    admin_secret_credentials = local.admin_secret_credentials
+    admin_secret_credentials = local.token
   }
 }
 
@@ -165,6 +170,7 @@ module "eventbridge_scale_down" {
         name = "${var.solution_name}-global-scale-down"
         arn  = module.lambda_scale_down[0].lambda_function_arn
         input = jsonencode({
+          "api_token" : random_string.api-auth-token[0].result
         })
       }
     ]
@@ -184,10 +190,11 @@ resource "random_string" "random_s3_postfix" {
 }
 
 resource "aws_s3_object" "object" {
-  count  = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-  bucket = aws_s3_bucket.bucket[0].id
-  key    = "admin/index.html"
-  source = local_file.local_index[0].filename
+  count        = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  bucket       = aws_s3_bucket.bucket[0].id
+  key          = "admin/index.html"
+  source       = local_file.local_index[0].filename
+  content_type = "text/html"
 }
 
 resource "aws_s3_bucket_ownership_controls" "s3_data_bucket" {
@@ -233,7 +240,6 @@ resource "aws_s3_bucket_policy" "static_website_bucket_policy" {
   })
 }
 
-
 resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -278,20 +284,6 @@ resource "local_file" "local_index" {
   filename = "${path.module}/index.html"
 }
 
-resource "aws_secretsmanager_secret" "s3-admin-website-auth-token" {
-  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-  name  = "/${var.solution_name}/s3-admin-website-auth-token-${random_string.s3-admin-website-secret-postfix[0].result}" #"hashed-credentials-${random_string.random_secret_character.result}"
-}
-
-resource "aws_secretsmanager_secret_version" "hashed_credentials_version" {
-  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-
-  secret_id = aws_secretsmanager_secret.s3-admin-website-auth-token[0].id
-  secret_string = jsonencode({
-    "hash" : random_string.s3-admin-website-auth-token[0].result
-  })
-}
-
 resource "random_string" "s3-admin-website-secret-postfix" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -306,4 +298,20 @@ resource "random_string" "s3-admin-website-auth-token" {
   length  = 16
   special = false
   lower   = true
+}
+
+resource "random_string" "api-auth-token" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  length  = 16
+  special = false
+  lower   = true
+}
+
+resource "aws_ssm_parameter" "mini-website-token" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  name  = "/${var.solution_name}/global_scale_down/token"
+  type  = "SecureString" # This encrypts the value at rest
+  value = local.json_data
 }
