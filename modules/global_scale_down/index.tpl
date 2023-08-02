@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html  lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scale Operations</title>
+    <title>Environment Hibernation</title>
     <style>
       body {
         text-align: center;
@@ -13,10 +13,10 @@
         font-size: 50px;
         color: black;
       }
-      label[for="token-input"] {
+      label[for="ScaleDownToken"] {
         font-size: 30px;
       }
-      input#token-input {
+      input#ScaleDownToken {
         font-size: 20px;
         padding: 8px;
       }
@@ -27,133 +27,99 @@
         cursor: pointer;
         color: green;
       }
-      #statusMessage {
+      #StatusMessage {
         font-size: 24px;
       }
-      #message-display {
+      #FunctionLog {
         font-size: 24px;
         color: green;
-      }
-      .active {
-        color: red;
       }
     </style>
   </head>
   <body>
     <h1>Global Scale Up/Down Operations</h1>
-    <form id="authForm">
-      <label for="token-input">Enter token:</label>
+    <form id="ScaleDownForm" onsubmit="invoke_scale_down_lambda()">
+      <label for="ScaleDownToken">Enter token:</label>
       <input
-        id="token-input"
+        id="ScaleDownToken"
         type="password"
         placeholder="Your token value"
-        name="token-input"
-        required=""
+        name="token"
+        required
       />
       <p style="font-size: 14px; color: #666">
         (Hint: Your token value can be found in the AWS Secret Manager at
         "/your_solution_name/s3-admin-website-auth-token-*****".)
       </p>
-      <button
-        id="scale_down_button"
-        type="submit"
-        onclick="handle_scale_down()"
-      >
-        Scale Down
-      </button>
-      <button id="scale_up_button" type="submit" onclick="handle_scale_up()">
-        Scale Up
-      </button>
-      <p id="statusMessage">Click the button to start a Lambda function.</p>
-      <pre id="message-display"></pre>
+      <button id="ScaleDownButton" type="submit">Scale Down</button>
     </form>
+
+    <form id="ScaleUpForm" onsubmit="return invoke_scale_up_lambda()">
+      <input id="ScaleUpToken" type="hidden" name="token" />
+      <button id="ScaleUpButton" type="submit">Scale Up</button>
+    </form>
+
+    <form id="MessageForm">
+      <p id="StatusMessage">Click the button to start a Lambda function.</p>
+      <pre id="FunctionLog"></pre>
+    </form>
+
     <script>
       function invoke_scale_down_lambda() {
-        var scale_down_button = document.getElementById("scale_down_button");
+        var ScaleDownButton = document.getElementById("ScaleDownButton");
 
-        scale_down_button.disabled = true; // Disable the button
         event.preventDefault();
-        // Add the 'disabled-button' class to blur the button
-        scale_down_button.classList.add("disabled-button");
 
         // Show the "pressed button" message
-        document.getElementById("statusMessage").innerText =
+        document.getElementById("StatusMessage").innerText =
           "You have pressed Scale Down Button.";
 
-        var token = document.getElementById("token-input").value;
+        var token = document.getElementById("ScaleDownToken").value;
+
         var apiEndpoint = "${scale_down_api_endpoint}";
         var url = apiEndpoint + "?token=" + token;
         fetch(url)
           .then((response) => response.json())
           .then((data) => {
-            document.getElementById("message-display").textContent =
+            document.getElementById("FunctionLog").textContent =
               JSON.stringify(data);
           })
           .catch((error) => {
             console.error("Error:", error);
           });
-
-        setTimeout(function () {
-          scale_down_button.disabled = false;
-          scale_down_button.classList.remove("active");
-        }, 500); // Adjust the delay as needed
-      }
-
-      function change_scale_down_button_color() {
-        var scale_down_button = document.getElementById("scale_down_button");
-        scale_down_button.classList.add("active");
-        setTimeout(function () {
-          scale_down_button.classList.remove("active");
-        }, 30000);
-      }
-
-      function handle_scale_down() {
-        invoke_scale_down_lambda();
-        change_scale_down_button_color();
       }
 
       function invoke_scale_up_lambda() {
-        var scale_up_button = document.getElementById("scale_up_button");
+        var ScaleUpButton = document.getElementById("ScaleUpButton");
 
-        scale_up_button.disabled = true; // Disable the button
         event.preventDefault();
-        // Add the 'disabled-button' class to blur the button
-        scale_up_button.classList.add("disabled-button");
 
         // Show the "pressed button" message
-        document.getElementById("statusMessage").innerText =
+        document.getElementById("StatusMessage").innerText =
           "You have pressed Scale Up Button.";
 
-        var token = document.getElementById("token-input").value;
+        const ScaleDownTokenInput = document.getElementById("ScaleDownToken");
+        const ScaleUpTokenInput = document.getElementById("ScaleUpToken");
+        const token = ScaleDownTokenInput.value.trim();
+        ScaleUpTokenInput.value = token; // Set the token in the hidden input field
+
+        if (token === "") {
+          alert("Token cannot be empty. Please enter a valid token.");
+          return false; // Prevent form submission
+        }
+
+        //var token = document.getElementById("token").value;
         var apiEndpoint = "${scale_up_api_endpoint}";
         var url = apiEndpoint + "?token=" + token;
         fetch(url)
           .then((response) => response.json())
           .then((data) => {
-            document.getElementById("message-display").textContent =
+            document.getElementById("FunctionLog").textContent =
               JSON.stringify(data);
           })
           .catch((error) => {
             console.error("Error:", error);
           });
-
-        setTimeout(function () {
-          scale_up_button.disabled = false;
-          scale_up_button.classList.remove("active");
-        }, 500); // Adjust the delay as needed
-      }
-
-      function change_scale_up_button_color() {
-        var scale_up_button = document.getElementById("scale_up_button");
-        scale_up_button.classList.add("active");
-        setTimeout(function () {
-          scale_up_button.classList.remove("active");
-        }, 30000);
-      }
-
-      function handle_scale_up() {
-        invoke_scale_up_lambda();
-        change_scale_up_button_color();
       }
     </script>
   </body>
