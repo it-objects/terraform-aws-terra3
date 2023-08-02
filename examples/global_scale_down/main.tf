@@ -15,11 +15,11 @@ module "terra3_examples" {
   enable_account_best_practices = true
 
   # configure your environment here
-  create_load_balancer     = true
-  create_bastion_host      = true
-  create_database          = true
-  database                 = "postgres"
-  create_elasticache_redis = true
+  create_load_balancer = true
+  create_bastion_host  = true
+  #create_database          = true
+  #database                 = "postgres"
+  #create_elasticache_redis = true
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
