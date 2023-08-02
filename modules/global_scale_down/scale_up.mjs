@@ -3,30 +3,87 @@ import { SSMClient, PutParameterCommand, GetParameterCommand } from "@aws-sdk/cl
 import { RDSClient, StartDBInstanceCommand, DescribeDBInstancesCommand } from "@aws-sdk/client-rds";
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, CreateCacheClusterCommand, DescribeCacheClustersCommand } from "@aws-sdk/client-elasticache";
-import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+
+export const handler = async (event) => {
+  const parameterName = process.env.hibernation_state;
+  await handleAuthentication(event);
+  const isAuthenticated = await handleAuthentication(event);
+  try {
+    if (isAuthenticated === true) {
+      const isValueValid = await checkParameterValue(parameterName);
+      if (isValueValid) {
+        console.log(
+          "The stored value is valid. Continuing with Lambda execution...",
+        );
+
+        await scale_up_handler();
+        console.log("Scaling up on resources has been performed.");
+
+        await waitForInstanceStatus("available", "available");
+
+        await updateParameterValue(parameterName, "scaled_up");
+        console.log(
+          "Hibernation state has been successfully changed to scaled up.",
+        );
+        return {
+          statusCode: 200,
+          body: JSON.stringify({
+            Log: "Hibernation state has been successfully changed to scaled up.",
+          }),
+        };
+      } else {
+        console.log(
+          "The stored value is not scaled down. Stopping Lambda execution... Please execute again after some time.",
+        );
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            Error: "The environment is already Scaled up.",
+          }),
+        };
+      }
+    } else {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ Message: "Entered token value is incorrect." }),
+      };
+    }
+  } catch (error) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        Error: error,
+      }),
+    };
+  }
+};
 
 export const handleAuthentication = async (event) => {
+  console.log("checking the token:- ");
+  const userProvidedToken = event?.queryStringParameters?.token;
+  const EventBridgeToken = event.api_token;
+  const tokenPath = process.env.admin_secret_credentials;
+
+  const getParameterCommand = new GetParameterCommand({
+    Name: tokenPath,
+    WithDecryption: true,
+  });
   try {
-    const admin_secret_credentials = process.env.admin_secret_credentials;
-    const hashInput = event.queryStringParameters.token;
-    console.log("Received token: ", hashInput);
+    const ssmClient = new SSMClient();
+    const response = await ssmClient.send(getParameterCommand);
 
-    const secretsManager = new SecretsManagerClient();
-    const input = {
-      // GetSecretValueRequest
-      SecretId: admin_secret_credentials,
-    };
-    const command = new GetSecretValueCommand(input);
-    const secretValue = await secretsManager.send(command);
-    const storedHash = JSON.parse(secretValue.SecretString).hash;
-    console.log("Stored token: ", storedHash);
+    // Parse the JSON data from the response
+    const jsonData = JSON.parse(response.Parameter.Value);
+    const userToken = jsonData.user_token;
+    const apiToken = jsonData.api_token;
 
-    if (hashInput === storedHash) {
+    if (userProvidedToken === userToken || EventBridgeToken === apiToken) {
       return true;
+    } else {
+      return false;
     }
-    return false;
   } catch (error) {
-    console.error(error);
+    console.error("Error retrieving SSM parameter:", error);
     return {
       statusCode: 500,
       body: "Error",
@@ -344,58 +401,5 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
   } catch (error) {
     console.error("Error updating SSM parameter:", error);
     throw error;
-  }
-};
-
-export const handler = async (event) => {
-  const parameterName = process.env.hibernation_state;
-  const isAuthenticated = await handleAuthentication(event);
-  if (isAuthenticated === true) {
-    try {
-      const isValueValid = await checkParameterValue(parameterName);
-      if (isValueValid) {
-        console.log(
-          "The stored value is valid. Continuing with Lambda execution...",
-        );
-
-        await scale_up_handler();
-        console.log("Scaling up on resources has been performed.");
-
-        await waitForInstanceStatus("available", "available");
-
-        await updateParameterValue(parameterName, "scaled_up");
-        console.log(
-          "Hibernation state has been successfully changed to scaled up.",
-        );
-        return {
-          statusCode: 200,
-          body: JSON.stringify({
-            Log: "Hibernation state has been successfully changed to scaled up.",
-          }),
-        };
-      } else {
-        console.log(
-          "The stored value is not scaled down. Stopping Lambda execution... Please execute again after some time.",
-        );
-        return {
-          statusCode: 400,
-          body: JSON.stringify({
-            Error: "The environment is already Scaled up.",
-          }),
-        };
-      }
-    } catch (error) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          Error: error,
-        }),
-      };
-    }
-  } else {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({ message: "Entered token value is incorrect." }),
-    };
   }
 };
