@@ -48,8 +48,8 @@
         required
       />
       <p style="font-size: 14px; color: #666">
-        (Hint: Your token value can be found in the AWS Secret Manager at
-        "/your_solution_name/s3-admin-website-auth-token-*****".)
+        (Hint: Your token value can be found in the AWS Systems Manager
+        under Parameter Store with the name "/your_solution_name/global_scale_down/token".)
       </p>
       <button id="ScaleDownButton" type="submit">Scale Down</button>
     </form>
@@ -75,6 +75,11 @@
           "You have pressed Scale Down Button.";
 
         var token = document.getElementById("ScaleDownToken").value;
+
+        if (token === "") {
+          alert("Token cannot be empty. Please enter a valid token.");
+          return false; // Prevent form submission
+        }
 
         var apiEndpoint = "${scale_down_api_endpoint}";
         var url = apiEndpoint + "?token=" + token;
