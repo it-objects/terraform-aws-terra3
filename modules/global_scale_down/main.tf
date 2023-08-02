@@ -177,6 +177,7 @@ module "eventbridge_scale_down" {
   }
 }
 
+#tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "bucket" {
   count         = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   bucket        = "${var.solution_name}-mini-admin-website-s3-bucket-${random_string.random_s3_postfix.result}"
@@ -187,6 +188,19 @@ resource "random_string" "random_s3_postfix" {
   length    = 4
   special   = false
   min_lower = 4
+}
+
+#tfsec:ignore:aws-s3-encryption-customer-key
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3_static_website_enc_config" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  bucket = aws_s3_bucket.bucket[0].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
 resource "aws_s3_object" "object" {
