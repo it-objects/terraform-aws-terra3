@@ -32,8 +32,8 @@ locals {
   status_api_endpoint     = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.status_lambda_function_url[0].function_url : ""
 
   json_data = jsonencode({
-    user_token = random_string.s3-admin-website-auth-token[0].result,
-    api_token  = random_string.api-auth-token[0].result
+    user_token = var.enable_environment_hibernation_sleep_schedule ? random_string.s3-admin-website-auth-token[0].result : ""
+    api_token  = var.enable_environment_hibernation_sleep_schedule ? random_string.api-auth-token[0].result : ""
   })
 }
 
