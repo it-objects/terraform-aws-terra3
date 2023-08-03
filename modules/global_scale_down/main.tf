@@ -29,6 +29,7 @@ locals {
 
   scale_down_api_endpoint = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_down_lambda_function_url[0].function_url : ""
   scale_up_api_endpoint   = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_up_lambda_function_url[0].function_url : ""
+  status_api_endpoint     = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.status_lambda_function_url[0].function_url : ""
 
   json_data = jsonencode({
     user_token = random_string.s3-admin-website-auth-token[0].result,
@@ -69,6 +70,20 @@ module "lambda_scale_up" {
     scale_up_parameters      = local.scale_up_parameters
     hibernation_state        = local.hibernation_state
     admin_secret_credentials = local.token
+  }
+}
+
+resource "aws_lambda_function_url" "scale_up_lambda_function_url" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  function_name      = module.lambda_scale_up[0].lambda_function_name
+  authorization_type = "NONE" #"AWS_IAM"
+
+  cors {
+    allow_credentials = false
+    allow_origins     = ["*"]
+    allow_methods     = ["GET", "POST"]
+    max_age           = 86400
   }
 }
 
@@ -147,6 +162,20 @@ module "lambda_scale_down" {
   }
 }
 
+resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  function_name      = module.lambda_scale_down[0].lambda_function_name
+  authorization_type = "NONE" #"AWS_IAM"
+
+  cors {
+    allow_credentials = false
+    allow_origins     = ["*"]
+    allow_methods     = ["GET", "POST"]
+    max_age           = 86400
+  }
+}
+
 module "eventbridge_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
@@ -174,6 +203,46 @@ module "eventbridge_scale_down" {
         })
       }
     ]
+  }
+}
+
+module "global_scale_status" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "4.18.0"
+
+  function_name = "${var.solution_name}-global-scale-status"
+  description   = "Shows the current status of deployment."
+  handler       = "status.handler"
+  runtime       = "nodejs18.x"
+  source_path   = "${path.module}/status.mjs"
+  timeout       = 600
+
+  create_current_version_allowed_triggers = false
+
+  tracing_mode          = "Active"
+  attach_tracing_policy = true
+
+  attach_policy = true
+  policy        = aws_iam_policy.status_lambda_get_parameter[0].arn
+
+  environment_variables = {
+    hibernation_state = local.hibernation_state
+  }
+}
+
+resource "aws_lambda_function_url" "status_lambda_function_url" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  function_name      = module.global_scale_status[0].lambda_function_name
+  authorization_type = "NONE" #"AWS_IAM"
+
+  cors {
+    allow_credentials = false
+    allow_origins     = ["*"]
+    allow_methods     = ["GET", "POST"]
+    max_age           = 86400
   }
 }
 
@@ -254,41 +323,15 @@ resource "aws_s3_bucket_policy" "static_website_bucket_policy" {
   })
 }
 
-resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
-  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-
-  function_name      = module.lambda_scale_down[0].lambda_function_name
-  authorization_type = "NONE" #"AWS_IAM"
-
-  cors {
-    allow_credentials = false
-    allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST"]
-    max_age           = 86400
-  }
-}
-
-resource "aws_lambda_function_url" "scale_up_lambda_function_url" {
-  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-
-  function_name      = module.lambda_scale_up[0].lambda_function_name
-  authorization_type = "NONE" #"AWS_IAM"
-
-  cors {
-    allow_credentials = false
-    allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST"]
-    max_age           = 86400
-  }
-}
-
 data "template_file" "index" {
   template = file("${path.module}/index.tpl")
 
   vars = {
     scale_down_api_endpoint = local.scale_down_api_endpoint
     scale_up_api_endpoint   = local.scale_up_api_endpoint
+    status_api_endpoint     = local.status_api_endpoint
     solution_name           = var.solution_name
+
   }
 }
 

@@ -34,11 +34,19 @@
         font-size: 24px;
         color: green;
       }
+      #StatusLog {
+        font-size: 24px;
+        color: green;
+      }
     </style>
   </head>
   <body>
-    <h1>${solution_name}</h1>
-    <h2>Global Scale Up/Down Operations</h2>
+    <h1>${solution_name} : Global Scale Up/Down Operations</h1>
+    <form id="StatusForm" onsubmit="return status_lambda()">
+      <button id="StatusButton" type="submit">Current Status</button>
+      <pre id="StatusLog"> </pre>
+    </form>
+
     <form id="ScaleDownForm" onsubmit="invoke_scale_down_lambda()">
       <label for="ScaleDownToken">Enter token:</label>
       <input
@@ -60,11 +68,31 @@
     </form>
 
     <form id="MessageForm">
-      <p id="StatusMessage">Click the button to start a Lambda function.</p>
-      <pre id="FunctionLog"></pre>
+      <p id="StatusMessage"> </p>
+      <pre id="FunctionLog"> </pre>
     </form>
 
     <script>
+
+        function status_lambda() {
+        var StatusLogButton = document.getElementById("StatusLogButton");
+
+        event.preventDefault();
+
+        var token = document.getElementById("ScaleDownToken").value;
+
+        var apiEndpoint = "${status_api_endpoint}";
+        fetch(apiEndpoint)
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("StatusLog").textContent =
+              JSON.stringify(data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
       function invoke_scale_down_lambda() {
         var ScaleDownButton = document.getElementById("ScaleDownButton");
 
