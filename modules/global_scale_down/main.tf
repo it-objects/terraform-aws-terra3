@@ -288,6 +288,7 @@ data "template_file" "index" {
   vars = {
     scale_down_api_endpoint = local.scale_down_api_endpoint
     scale_up_api_endpoint   = local.scale_up_api_endpoint
+    solution_name           = var.solution_name
   }
 }
 

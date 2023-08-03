@@ -37,7 +37,8 @@
     </style>
   </head>
   <body>
-    <h1>Global Scale Up/Down Operations</h1>
+    <h1>${solution_name}</h1>
+    <h2>Global Scale Up/Down Operations</h2>
     <form id="ScaleDownForm" onsubmit="invoke_scale_down_lambda()">
       <label for="ScaleDownToken">Enter token:</label>
       <input
@@ -45,11 +46,10 @@
         type="password"
         placeholder="Your token value"
         name="token"
-        required
       />
       <p style="font-size: 14px; color: #666">
         (Hint: Your token value can be found in the AWS Systems Manager
-        under Parameter Store with the name "/your_solution_name/global_scale_down/token".)
+        under Parameter Store with the name "/${solution_name}/global_scale_down/token".)
       </p>
       <button id="ScaleDownButton" type="submit">Scale Down</button>
     </form>
