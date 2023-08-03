@@ -102,6 +102,32 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
   })
 }
 
+resource "aws_iam_policy" "status_lambda_get_parameter" {
+  count       = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  name        = "${var.solution_name}-status_lambda_get_parameter"
+  path        = "/"
+  description = "Iam policy to get parameter for current status of the deployment."
+
+  policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Sid" : "SSMGetParameter",
+          "Effect" : "Allow",
+          "Action" : [
+            "ssm:GetParameter"
+          ],
+          "Resource" : [
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}",
+          ]
+        }
+      ]
+  })
+}
+
+
+
 resource "aws_iam_policy" "scale_up_rds_db_policy" {
   count       = length(var.db_instance_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "${var.solution_name}-scale_up_rds_db_policy"
