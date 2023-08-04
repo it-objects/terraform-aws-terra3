@@ -126,8 +126,6 @@ resource "aws_iam_policy" "status_lambda_get_parameter" {
   })
 }
 
-
-
 resource "aws_iam_policy" "scale_up_rds_db_policy" {
   count       = length(var.db_instance_arn) != 0 && var.enable_environment_hibernation_sleep_schedule == true ? 1 : 0
   name        = "${var.solution_name}-scale_up_rds_db_policy"
