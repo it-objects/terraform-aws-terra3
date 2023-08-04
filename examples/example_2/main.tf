@@ -55,7 +55,7 @@ module "terra3_examples" {
   create_ecr      = true
   ecr_custom_name = "artproject-api"
   #ecr_access_for_account_id = "433774759729"
-  #ecr_access_for_account_ids = [ "433774759729", "777458043667" ]
+  ecr_access_for_account_ids = ["433774759729", "777458043667"]
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
