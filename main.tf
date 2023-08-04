@@ -369,8 +369,9 @@ module "ecr" {
 
   source = "./modules/ecr"
 
-  ecr_name              = length(var.ecr_custom_name) > 3 ? var.ecr_custom_name : var.solution_name
-  access_for_account_id = var.ecr_access_for_account_id # allow production account
+  ecr_name               = length(var.ecr_custom_name) > 3 ? var.ecr_custom_name : var.solution_name
+  access_for_account_id  = var.ecr_access_for_account_id  # allow production account
+  access_for_account_ids = var.ecr_access_for_account_ids # allow production accounts
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
