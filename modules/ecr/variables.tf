@@ -9,5 +9,5 @@ variable "access_for_account_id" {
 
 variable "access_for_account_ids" {
   type    = list(string)
-  default = [""]
+  default = []
 }

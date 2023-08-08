@@ -472,7 +472,7 @@ variable "ecr_access_for_account_id" {
 
 variable "ecr_access_for_account_ids" {
   type    = list(string)
-  default = [""]
+  default = []
 }
 
 variable "create_deployment_user" {
