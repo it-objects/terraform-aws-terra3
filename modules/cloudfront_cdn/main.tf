@@ -78,22 +78,24 @@ locals {
         }
       }
     ],
-    var.origin_alb_url == null ? [] : [{
-      path_pattern           = var.enable_s3_for_static_website ? "/api/*" : "/*"
-      target_origin_id       = "elb"
-      viewer_protocol_policy = "redirect-to-https"
+    var.origin_alb_url == null ? [] : [
+      for custom_elb_cf_path_pattern in var.custom_elb_cf_path_patterns :
+      {
+        path_pattern           = custom_elb_cf_path_pattern
+        target_origin_id       = "elb"
+        viewer_protocol_policy = "redirect-to-https"
 
-      allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-      cached_methods  = ["GET", "HEAD"]
-      compress        = true
+        allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+        cached_methods  = ["GET", "HEAD"]
+        compress        = true
 
-      min_ttl     = 0
-      default_ttl = 0
-      max_ttl     = 0
+        min_ttl     = 0
+        default_ttl = 0
+        max_ttl     = 0
 
-      use_forwarded_values     = false
-      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
-      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+        use_forwarded_values     = false
+        origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
+        cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
     }],
     !var.enable_s3_for_static_website ? [] : [{
       path_pattern           = "/*"

@@ -12,16 +12,7 @@ locals {
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
   domain_name = var.enable_custom_domain ? module.dns_and_certificates[0].internal_domain_name : ""
-}
 
-resource "aws_ssm_parameter" "domain_name" {
-  name  = "/${var.solution_name}/domain_name"
-  type  = "String"
-  value = var.enable_custom_domain ? local.domain_name : "-"
-}
-
-
-locals {
   # Variable definitions of using existing VPC or create VPC
   vpc_id                  = var.use_an_existing_vpc ? var.external_vpc_id : module.vpc[0].vpc_id
   public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : module.vpc[0].public_subnets
@@ -30,6 +21,15 @@ locals {
   public_route_table_ids  = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].public_route_table_ids
   db_subnet_group_name    = var.use_an_existing_vpc ? var.external_db_subnet_group_name : module.vpc[0].database_subnet_group
   elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
+
+  # calculate app_components' path
+  app_component_paths = length(var.app_components) == 0 ? ["/api/*"] : values(var.app_components)[*].path_mapping
+}
+
+resource "aws_ssm_parameter" "domain_name" {
+  name  = "/${var.solution_name}/domain_name"
+  type  = "String"
+  value = var.enable_custom_domain ? local.domain_name : "-"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -207,6 +207,8 @@ module "cloudfront_cdn" {
 
   s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
   disable_custom_error_response    = var.disable_custom_error_response
+
+  custom_elb_cf_path_patterns = local.app_component_paths
 
   s3_solution_bucket_name        = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
   s3_solution_bucket_arn         = try(module.s3_solution_bucket[0].s3_bucket_arn, "")

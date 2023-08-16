@@ -59,6 +59,12 @@ variable "s3_solution_bucket_cf_behaviours" {
   default     = []
 }
 
+variable "custom_elb_cf_path_patterns" {
+  type        = list(string)
+  description = "Option that exposes custom ELB paths via Cloudfront."
+  default     = []
+}
+
 variable "s3_solution_bucket_name" {
   type        = string
   description = "S3 solution bucket's name."
