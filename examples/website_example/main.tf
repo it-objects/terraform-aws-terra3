@@ -17,9 +17,8 @@ module "terra3_environment" {
         module.api_container
       ]
 
-      listener_rule_prio = 200
-      path_mapping       = "/api/*"
-      service_port       = 80
+      path_mapping = "/api/*"
+      service_port = 80
     }
   }
 }

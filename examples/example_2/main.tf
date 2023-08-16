@@ -34,9 +34,8 @@ module "terra3_examples" {
         module.container_my_sidecar
       ]
 
-      listener_rule_prio = 200
-      path_mapping       = "/api/*"
-      service_port       = 80
+      path_mapping = "/api/*"
+      service_port = 80
 
       # for cost savings undeploy outside work hours
       enable_autoscaling = true
