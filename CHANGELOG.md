@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.17.0...v1.18.0) (2023-08-16)
+
+
+### Features
+
+* have the loadbalancer prios be calculated automatically according to the app_components' sequence ([a4c7524](https://github.com/it-objects/terraform-aws-terra3/commit/a4c7524a13d7c98730119bb147c5e26415003c8c))
+* multiple containers are now reachable via Cloudfront under different top level directory paths ([dcf3a9d](https://github.com/it-objects/terraform-aws-terra3/commit/dcf3a9df31b533092407ca38fc89dc58cb0f76e0))
+
 ## [1.17.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.16.0...v1.17.0) (2023-07-05)
 
 
