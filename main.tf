@@ -208,7 +208,8 @@ module "cloudfront_cdn" {
   s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
   disable_custom_error_response    = var.disable_custom_error_response
 
-  custom_elb_cf_path_patterns = local.app_component_paths
+  # when custom_elb_cf_path_patterns is not given by developer, it is being calculated (calculation only works in single state setups)
+  custom_elb_cf_path_patterns = length(var.custom_elb_cf_path_patterns) == 0 ? local.app_component_paths : var.custom_elb_cf_path_patterns
 
   s3_solution_bucket_name        = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
   s3_solution_bucket_arn         = try(module.s3_solution_bucket[0].s3_bucket_arn, "")

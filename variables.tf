@@ -593,3 +593,9 @@ variable "environment_hibernation_wakeup_schedule" {
   description = "Enter schedule details of wakeup schedule."
   default     = ""
 }
+
+variable "custom_elb_cf_path_patterns" {
+  type        = list(string)
+  description = "Option that exposes custom ELB paths via Cloudfront."
+  default     = []
+}
