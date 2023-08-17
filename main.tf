@@ -216,6 +216,8 @@ module "cloudfront_cdn" {
 
   # ignored if static web page is deactivated
   add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html
+
+  enable_cloudfront_url_signing_for_solution_bucket = var.enable_cloudfront_url_signing_for_solution_bucket
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

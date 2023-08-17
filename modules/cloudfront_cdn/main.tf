@@ -76,6 +76,8 @@ locals {
         function_association = lookup(behaviour, "s3_solution_bucket_cloudfront_function", null) == null ? {} : {
           viewer-request : { function_arn : behaviour.s3_solution_bucket_cloudfront_function }
         }
+
+        trusted_key_groups = var.enable_cloudfront_url_signing_for_solution_bucket ? [aws_cloudfront_key_group.cf_keygroup[0].id] : []
       }
     ],
     var.origin_alb_url == null ? [] : [
@@ -605,4 +607,55 @@ resource "aws_s3_object" "object" {
   key          = "index.html"
   content      = "<h1>Hello world, Terra3!</h1>"
   content_type = "text/html"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Code for Cloudfront URL Signing
+# Good resources: https://advancedweb.hu/how-to-generate-keys-for-cloudfront-url-signing-with-terraform/
+# ---------------------------------------------------------------------------------------------------------------------
+resource "tls_private_key" "keypair" {
+  count = var.enable_cloudfront_url_signing_for_solution_bucket ? 1 : 0
+
+  algorithm = "RSA"
+}
+
+resource "random_id" "id" {
+  count = var.enable_cloudfront_url_signing_for_solution_bucket ? 1 : 0
+
+  byte_length = 4
+}
+
+resource "aws_cloudfront_key_group" "cf_keygroup" {
+  count = var.enable_cloudfront_url_signing_for_solution_bucket ? 1 : 0
+
+  items = [aws_cloudfront_public_key.cf_key[0].id]
+  name  = "${random_id.id[0].hex}-group"
+}
+
+resource "aws_cloudfront_public_key" "cf_key" {
+  count = var.enable_cloudfront_url_signing_for_solution_bucket ? 1 : 0
+
+  comment     = "Terra3 generated public key for signing Cloudfront URLs."
+  encoded_key = tls_private_key.keypair[0].public_key_pem
+  name        = "${var.solution_name}-cf-key"
+}
+
+# Store private key in AWS SSM parameter store
+resource "aws_ssm_parameter" "cf_private_signing_key" {
+  count = var.enable_cloudfront_url_signing_for_solution_bucket ? 1 : 0
+
+  name        = "/${var.solution_name}/cloudfront/private_signing_key"
+  description = "Terra3 generated private key in PEM format for signing Cloudfront URLs."
+  type        = "SecureString"
+  value       = tls_private_key.keypair[0].private_key_pem
+}
+
+# Store key pair id in AWS SSM parameter store
+resource "aws_ssm_parameter" "cf_private_key_pair_id" {
+  count = var.enable_cloudfront_url_signing_for_solution_bucket ? 1 : 0
+
+  name        = "/${var.solution_name}/cloudfront/key_pair_id"
+  description = "Terra3 generated private key's id for signing Cloudfront URLs."
+  type        = "SecureString"
+  value       = tls_private_key.keypair[0].id
 }

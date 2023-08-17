@@ -82,3 +82,9 @@ variable "s3_solution_bucket_domain_name" {
   description = "S3 solution bucket's domain name."
   default     = ""
 }
+
+variable "enable_cloudfront_url_signing_for_solution_bucket" {
+  description = "Setups Cloudfront requests signing."
+  type        = bool
+  default     = false
+}
