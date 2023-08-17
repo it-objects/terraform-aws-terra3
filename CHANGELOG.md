@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.20.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.19.0...v1.20.0) (2023-08-17)
+
+
+### Features
+
+* also works now for two TF state approach - multiple containers are now reachable via Cloudfront under different top level directory paths ([7ffb788](https://github.com/it-objects/terraform-aws-terra3/commit/7ffb78833b34be663587c040368ebd8a2e57441a))
+
 ## [1.19.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.18.0...v1.19.0) (2023-08-17)
 
 
