@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.19.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.18.0...v1.19.0) (2023-08-17)
+
+
+### Features
+
+* cloudfront url signing ([cd23726](https://github.com/it-objects/terraform-aws-terra3/commit/cd23726fa28cf950e8383b4bb2f0756e771cd507))
+
 ## [1.18.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.17.0...v1.18.0) (2023-08-16)
 
 
