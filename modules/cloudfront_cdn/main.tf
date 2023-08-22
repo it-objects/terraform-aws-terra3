@@ -657,5 +657,5 @@ resource "aws_ssm_parameter" "cf_private_key_pair_id" {
   name        = "/${var.solution_name}/cloudfront/key_pair_id"
   description = "Terra3 generated private key's id for signing Cloudfront URLs."
   type        = "SecureString"
-  value       = aws_cloudfront_public_key[0].cf_key.id
+  value       = aws_cloudfront_public_key.cf_key[0].id
 }
