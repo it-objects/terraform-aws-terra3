@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.20.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.1...v1.20.2) (2023-08-22)
+
+
+### Bug Fixes
+
+* **cloudfront-url-signing:** write correct Cloudfront key pair id into SSM parameter ([2c01476](https://github.com/it-objects/terraform-aws-terra3/commit/2c01476c13966c55d678840831a5ca582f34b606))
+
 ### [1.20.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.0...v1.20.1) (2023-08-22)
 
 
