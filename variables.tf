@@ -20,6 +20,12 @@ variable "enable_account_best_practices" {
   default     = false
 }
 
+variable "enable_cloudfront_url_signing_for_solution_bucket" {
+  description = "Setups Cloudfront requests signing."
+  type        = bool
+  default     = false
+}
+
 variable "nat" {
   description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
   type        = string
@@ -591,4 +597,10 @@ variable "environment_hibernation_wakeup_schedule" {
   type        = string
   description = "Enter schedule details of wakeup schedule."
   default     = ""
+}
+
+variable "custom_elb_cf_path_patterns" {
+  type        = list(string)
+  description = "Option that exposes custom ELB paths via Cloudfront."
+  default     = []
 }

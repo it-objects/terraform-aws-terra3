@@ -27,15 +27,15 @@ The easiest way to get started with Mastodon with Terra3 is to follow this guide
 5. Test your Mastodon instance using the URL <solution_name>.<aws_hosted_zone_domain_name>
 6. On the website, register a new user and confirm your email address via the confirmation mail you've been sent
 7. Determine your cluster name and task arn using the AWS console
-8. The final step is promote this user to an admin user using tootctl. For this, exec into your container with the following command:
+8. The final step is promote this user to an admin user using tootctl. For this, exec into your web container with the following command:
 
 ```
 # Make sure you're logged in to your AWS account to be able to use the aws cli
 # Add the cluster name and task arn from your AWS console from step 7 and add these to the command below
-$ aws ecs execute-command --interactive --command "/bin/sh" --cluster <CLUSTER_NAME> --task <TASK_ARN>
+$ aws ecs execute-command --interactive --command "/bin/bash" --cluster <CLUSTER_NAME> --task <TASK_ARN>
 
 # It should look something like this:
-$ aws ecs execute-command --interactive --command "/bin/sh" --cluster terra3-mastodon-cluster --task arn:aws:ecs:eu-central-1:111111111111:task/terra3-mastodon-cluster/1f5a00a38bea43459cc1071fc5b14280
+$ aws ecs execute-command --interactive --command "/bin/bash" --cluster terra3-mastodon-cluster --task arn:aws:ecs:eu-central-1:111111111111:task/terra3-mastodon-cluster/1f5a00a38bea43459cc1071fc5b14280
 
 # A shell in your container should open. Run tootctl to promote your user
 $ tootctl accounts modify <USERNAME_FROM_STEP_6> --role Admin --confirm

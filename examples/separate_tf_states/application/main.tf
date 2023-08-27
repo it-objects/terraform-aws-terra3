@@ -1,7 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is example 2 showcasing Terra3's capabilities.
-#
-# Outcome: Like example 1 + a container runtime and no custom domain
+# This is an example showcasing Terra3's capabilities.
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
@@ -23,19 +21,33 @@ module "terra3_examples" {
       total_memory = 512
 
       container = [
-        module.container_my_main,
-        module.container_my_sidecar
+        module.container_my_main
       ]
-      enable_firelens_container = true
 
-      listener_rule_prio = 200
-      path_mapping       = "/api/*"
-      service_port       = 80
+      path_mapping = "/api/*"
+      service_port = 80
 
       # for cost savings undeploy outside work hours
       enable_autoscaling = true
     }
 
+    t3-two-states-component-2 = {
+
+      instances = 1
+
+      total_cpu    = 256
+      total_memory = 512
+
+      container = [
+        module.container_my_main
+      ]
+
+      path_mapping = "/custom/*"
+      service_port = 80
+
+      # for cost savings undeploy outside work hours
+      enable_autoscaling = true
+    }
   }
 }
 
@@ -63,36 +75,5 @@ module "container_my_main" {
     "my_var_name2" : "my_var_value2",
   }
 
-  log_configuration = {
-    "logDriver" : "awsfirelens",
-    "options" : {
-      Name : "newrelic"
-    }
-  }
-
   readonlyRootFilesystem = false # disable because of entrypoint script
-}
-
-module "container_my_sidecar" {
-  source = "../../../modules/container"
-
-  name = "my_sidecar"
-
-  container_image  = "mockserver/mockserver"
-  container_cpu    = 100
-  container_memory = 200
-
-  port_mappings = [{ # container reachable by load balancer must have the same name and port
-    protocol      = "tcp"
-    containerPort = 1090
-  }]
-
-  map_environment = {
-    "my_var_name_sidecar" : "my_var_value",
-    "MOCKSERVER_SERVER_PORT" : "1090"
-  }
-
-  essential = false
-
-  readonlyRootFilesystem = true
 }

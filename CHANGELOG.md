@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.20.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.1...v1.20.2) (2023-08-22)
+
+
+### Bug Fixes
+
+* **cloudfront-url-signing:** write correct Cloudfront key pair id into SSM parameter ([2c01476](https://github.com/it-objects/terraform-aws-terra3/commit/2c01476c13966c55d678840831a5ca582f34b606))
+
+### [1.20.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.0...v1.20.1) (2023-08-22)
+
+
+### Bug Fixes
+
+* **cloudfront-url-signing:** write correct Cloudfront key pair id into SSM parameter ([e6fe2ee](https://github.com/it-objects/terraform-aws-terra3/commit/e6fe2ee6586cd66b4ff1337c931f11114b6c34e0))
+
+## [1.20.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.19.0...v1.20.0) (2023-08-17)
+
+
+### Features
+
+* also works now for two TF state approach - multiple containers are now reachable via Cloudfront under different top level directory paths ([7ffb788](https://github.com/it-objects/terraform-aws-terra3/commit/7ffb78833b34be663587c040368ebd8a2e57441a))
+
+## [1.19.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.18.0...v1.19.0) (2023-08-17)
+
+
+### Features
+
+* cloudfront url signing ([cd23726](https://github.com/it-objects/terraform-aws-terra3/commit/cd23726fa28cf950e8383b4bb2f0756e771cd507))
+
+## [1.18.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.17.0...v1.18.0) (2023-08-16)
+
+
+### Features
+
+* have the loadbalancer prios be calculated automatically according to the app_components' sequence ([a4c7524](https://github.com/it-objects/terraform-aws-terra3/commit/a4c7524a13d7c98730119bb147c5e26415003c8c))
+* multiple containers are now reachable via Cloudfront under different top level directory paths ([dcf3a9d](https://github.com/it-objects/terraform-aws-terra3/commit/dcf3a9df31b533092407ca38fc89dc58cb0f76e0))
+
 ## [1.17.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.16.0...v1.17.0) (2023-07-05)
 
 

@@ -513,6 +513,29 @@ resource "aws_iam_role_policy_attachment" "ExecutionRole_to_ecsTaskExecutionRole
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# required task role to access cf private key
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role_policy" "ssm_parameter_cloudfront_private_key" {
+  #count = var.enable_ecs_exec ? 1 : 0
+
+  name   = "cf-private-key-access-permissions"
+  role   = aws_iam_role.ExecutionRole.id
+  policy = data.aws_iam_policy_document.ssm_parameter_cloudfront_private_key.json
+}
+
+data "aws_iam_policy_document" "ssm_parameter_cloudfront_private_key" {
+  #count = var.enable_ecs_exec ? 1 : 0
+  statement {
+    sid       = "cfPrivatekeyAccessPermissions"
+    effect    = "Allow"
+    resources = ["arn:aws:ssm:${data.aws_region.current_region.name}:${data.aws_caller_identity.this.account_id}:parameter/${var.solution_name}/cloudfront/*"]
+    actions = [
+      "ssm:GetParameters"
+    ]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Construct IAM policies
 # ---------------------------------------------------------------------------------------------------------------------
 locals {
@@ -737,6 +760,9 @@ resource "aws_iam_role_policy" "log_agent" {
   policy = data.aws_iam_policy_document.task_permissions.json
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# required task role access for ecs exec
+# ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role_policy" "ecs_exec_inline_policy" {
   count = var.enable_ecs_exec ? 1 : 0
 
@@ -745,9 +771,6 @@ resource "aws_iam_role_policy" "ecs_exec_inline_policy" {
   policy = data.aws_iam_policy_document.task_ecs_exec_policy[0].json
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# required task role access for ecs exec
-# ---------------------------------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "kms_cmk_access_for_ecs_exec" {
   count = var.enable_ecs_exec ? 1 : 0
   statement {
