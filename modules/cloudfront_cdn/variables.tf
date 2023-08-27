@@ -76,3 +76,15 @@ variable "s3_solution_bucket_domain_name" {
   description = "S3 solution bucket's domain name."
   default     = ""
 }
+
+variable "s3_admin_website_url" {
+  description = "URL of s3 admin website"
+  type        = string
+  default     = ""
+}
+
+variable "isAdminWebsiteEnabled" {
+  type        = bool
+  description = "Select true to enable sleep environment hibernation."
+  default     = false
+}
