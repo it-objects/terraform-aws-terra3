@@ -214,6 +214,9 @@ module "cloudfront_cdn" {
 
   # ignored if static web page is deactivated
   add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html
+
+  s3_admin_website_url  = module.global_scale_down.s3_admin_website_url
+  isAdminWebsiteEnabled = var.enable_environment_hibernation_sleep_schedule
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
