@@ -323,22 +323,19 @@ resource "aws_s3_bucket_policy" "static_website_bucket_policy" {
   })
 }
 
-data "template_file" "index" {
-  template = file("${path.module}/index.tpl")
-
-  vars = {
+locals {
+  vars = templatefile("${path.module}/index.tpl", {
     scale_down_api_endpoint = local.scale_down_api_endpoint
     scale_up_api_endpoint   = local.scale_up_api_endpoint
     status_api_endpoint     = local.status_api_endpoint
     solution_name           = var.solution_name
-
-  }
+  })
 }
 
 resource "local_file" "local_index" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
-  content  = data.template_file.index.rendered
+  content  = local.vars
   filename = "${path.module}/index.html"
 }
 
