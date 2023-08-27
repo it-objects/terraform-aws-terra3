@@ -17,4 +17,17 @@ module "terra3_examples" {
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
+
+  create_s3_solution_bucket = true
+  s3_solution_bucket_cf_behaviours = [
+    {
+      s3_solution_bucket_cloudfront_path = "/media_attachments/*"
+    }
+  ]
+
+  enable_cloudfront_url_signing_for_solution_bucket = true
+
+  # In single TF state setup, these are being calculated. Otherwise, these need to be given
+  # to indicate Cloudfront, that it should forward multiple directories to containers.
+  custom_elb_cf_path_patterns = ["/api/*", "/custom/*"]
 }

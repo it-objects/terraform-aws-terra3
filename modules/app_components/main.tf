@@ -57,9 +57,11 @@ module "app_components" {
   # if true the next block's variables are ignored internally
   internal_service = lookup(each.value, "internal_service", false)
 
-  listener_rule_prio = lookup(each.value, "listener_rule_prio", null)
-  path_mapping       = lookup(each.value, "path_mapping", null)
-  service_port       = lookup(each.value, "service_port", null)
+  // generate listener_rule_prios according to sequence from app_components' map; using index function to calculate the next increment
+  listener_rule_prio = lookup(each.value, "listener_rule_prio", null) == null ? ((index(keys(var.app_components), each.key) + 1) * 200) : lookup(each.value, "listener_rule_prio", null)
+
+  path_mapping = lookup(each.value, "path_mapping", null)
+  service_port = lookup(each.value, "service_port", null)
 
   lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
   health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)

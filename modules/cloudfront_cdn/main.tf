@@ -48,15 +48,7 @@ locals {
     }
   }
 
-  s3_admin_website = var.isAdminWebsiteEnabled != true ? {} : {
-    s3_mini_admin_website_bucket = {
-      domain_name              = var.s3_admin_website_url
-      origin_path              = ""
-      origin_access_control_id = aws_cloudfront_origin_access_control.s3_admin_website[0].id
-    }
-  }
-
-  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins, local.s3_admin_website)
+  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins)
 
   # -------------------------------------------------------------------------------------------------------------------
   # Define behaviours either with or without ALB
@@ -86,23 +78,6 @@ locals {
         }
       }
     ],
-    !var.isAdminWebsiteEnabled ? [] : [{
-      path_pattern           = "/admin/*"
-      target_origin_id       = "s3_mini_admin_website_bucket" #aws_s3_bucket.bucket.bucket_regional_domain_name
-      viewer_protocol_policy = "redirect-to-https"
-
-      allowed_methods = ["GET", "HEAD", "OPTIONS"]
-      cached_methods  = ["GET", "HEAD"]
-      compress        = true
-
-      min_ttl     = 0
-      default_ttl = 0
-      max_ttl     = 0
-
-      use_forwarded_values     = false
-      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
-      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
-    }],
     var.origin_alb_url == null ? [] : [{
       path_pattern           = var.enable_s3_for_static_website ? "/api/*" : "/*"
       target_origin_id       = "elb"
@@ -192,12 +167,11 @@ resource "aws_cloudfront_distribution" "general_distribution" {
     for_each = local.all_origins
 
     content {
-      domain_name              = origin.value.domain_name
-      origin_id                = lookup(origin.value, "origin_id", origin.key)
-      origin_path              = lookup(origin.value, "origin_path", "")
-      connection_attempts      = lookup(origin.value, "connection_attempts", null)
-      connection_timeout       = lookup(origin.value, "connection_timeout", null)
-      origin_access_control_id = lookup(origin.value, "origin_access_control_id", null)
+      domain_name         = origin.value.domain_name
+      origin_id           = lookup(origin.value, "origin_id", origin.key)
+      origin_path         = lookup(origin.value, "origin_path", "")
+      connection_attempts = lookup(origin.value, "connection_attempts", null)
+      connection_timeout  = lookup(origin.value, "connection_timeout", null)
 
       dynamic "s3_origin_config" {
         for_each = length(keys(lookup(origin.value, "s3_origin_config", {}))) == 0 ? [] : [lookup(origin.value, "s3_origin_config", {})]
@@ -629,17 +603,4 @@ resource "aws_s3_object" "object" {
   key          = "index.html"
   content      = "<h1>Hello world, Terra3!</h1>"
   content_type = "text/html"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# OCA for s3 admin website
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
-  count = var.isAdminWebsiteEnabled ? 1 : 0
-
-  name                              = "OCA for s3 admin website"
-  description                       = "OCA for s3 admin website"
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
 }
