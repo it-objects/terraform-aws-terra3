@@ -90,6 +90,6 @@ variable "redis_security_group_arn" {
 # Others
 # ---------------------------------------------------------------------------------------------------------------------
 variable "cloudfront_arn" {
-  description = "cloudfront_ arn to access the s3 admin website"
+  description = "cloudfront arn to access the s3 admin website"
   type        = string
 }
