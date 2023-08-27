@@ -472,13 +472,15 @@ variable "ecr_custom_name" {
 }
 
 variable "ecr_access_for_account_id" {
-  type    = string
-  default = ""
+  description = "The AWS account ID for which access permissions will be configured to Amazon ECR repositories."
+  type        = string
+  default     = ""
 }
 
 variable "ecr_access_for_account_ids" {
-  type    = list(string)
-  default = []
+  description = "The AWS account IDs for which access permissions will be configured to Amazon ECR repositories."
+  type        = list(string)
+  default     = []
 }
 
 variable "create_deployment_user" {

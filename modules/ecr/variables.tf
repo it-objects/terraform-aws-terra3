@@ -3,11 +3,13 @@ variable "ecr_name" {
 }
 
 variable "access_for_account_id" {
-  type    = string
-  default = ""
+  description = "The AWS account ID for which access permissions will be configured to Amazon ECR repositories."
+  type        = string
+  default     = ""
 }
 
 variable "access_for_account_ids" {
-  type    = list(string)
-  default = []
+  description = "The AWS account IDs for which access permissions will be configured to Amazon ECR repositories."
+  type        = list(string)
+  default     = []
 }
