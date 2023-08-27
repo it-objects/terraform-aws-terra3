@@ -59,6 +59,12 @@ variable "s3_solution_bucket_cf_behaviours" {
   default     = []
 }
 
+variable "custom_elb_cf_path_patterns" {
+  type        = list(string)
+  description = "Option that exposes custom ELB paths via Cloudfront."
+  default     = []
+}
+
 variable "s3_solution_bucket_name" {
   type        = string
   description = "S3 solution bucket's name."
@@ -75,6 +81,12 @@ variable "s3_solution_bucket_domain_name" {
   type        = string
   description = "S3 solution bucket's domain name."
   default     = ""
+}
+
+variable "enable_cloudfront_url_signing_for_solution_bucket" {
+  description = "Setups Cloudfront requests signing."
+  type        = bool
+  default     = false
 }
 
 variable "s3_admin_website_url" {
