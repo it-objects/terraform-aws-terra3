@@ -12,25 +12,36 @@ resource "aws_ecr_repository" "ecr_repo" {
   }
 }
 
-resource "aws_ecr_repository_policy" "ecr_repo_policy" {
-  count      = var.access_for_account_id == "" ? 0 : 1
-  repository = aws_ecr_repository.ecr_repo.name
+# Create the list of account ids, works for both the parameters => ID and IDs.
+locals {
+  aws_principals_account_id_list_1 = length(var.access_for_account_id) > 0 ? [var.access_for_account_id] : [] # to make sure when it is not provided it should pass empty list.
+  all_account_ids                  = concat(local.aws_principals_account_id_list_1, var.access_for_account_ids)
+}
 
-  policy = jsonencode({
-    "Version" : "2008-10-17",
-    "Statement" : [
-      {
-        "Sid" : "AllowCrossAccountPull",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${var.access_for_account_id}:root"
-        },
-        "Action" : [
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer"
-        ]
-      }
+resource "aws_ecr_repository_policy" "ecr_repo_policy" {
+  count = length(local.all_account_ids) > 0 ? 1 : 0
+
+  repository = aws_ecr_repository.ecr_repo.name
+  policy     = data.aws_iam_policy_document.ecr_repo_policy_xyz.json
+
+}
+
+data "aws_iam_policy_document" "ecr_repo_policy_xyz" {
+  statement {
+    sid    = "AllowCrossAccountPull"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        for account_id in local.all_account_ids : format("arn:aws:iam::%s:root", account_id)
+      ]
+    }
+
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer"
     ]
-  })
+  }
 }
