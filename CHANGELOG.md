@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.21.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.2...v1.21.0) (2023-08-28)
+
+
+### Features
+
+* enabled access to ecr repo for more than one account ([#38](https://github.com/it-objects/terraform-aws-terra3/issues/38)) ([d08a191](https://github.com/it-objects/terraform-aws-terra3/commit/d08a1911fc4e3c003d776b1327853a51e7be9fb4))
+
 ### [1.20.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.1...v1.20.2) (2023-08-22)
 
 
