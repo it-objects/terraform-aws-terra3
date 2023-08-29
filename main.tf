@@ -525,7 +525,7 @@ resource "aws_ssm_parameter" "hibernation_state" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   name  = "/${var.solution_name}/global_scale_down/hibernation_state"
-  value = "initial"
+  value = "scaled_up"
   type  = "String"
 }
 
