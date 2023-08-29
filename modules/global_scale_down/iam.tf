@@ -95,6 +95,7 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
             "ssm:PutParameter"
           ],
           "Resource" : [
+            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}",
             "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}"
           ]
         }
