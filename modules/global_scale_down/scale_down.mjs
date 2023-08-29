@@ -39,7 +39,7 @@ export const handler = async (event, context) => {
         return {
           statusCode: 400,
           body: JSON.stringify({
-            Error: "The environment is already Scaled down.",
+            Error: "The environment is already Scaled down or in process of Scaling down.",
           }),
         };
       }
