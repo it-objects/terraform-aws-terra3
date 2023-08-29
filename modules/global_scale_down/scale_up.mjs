@@ -19,6 +19,8 @@ export const handler = async (event) => {
         await scale_up_handler();
         console.log("Scaling up on resources has been performed.");
 
+        await updatingParameterValue(parameterName, "scaling_up");
+
         await waitForInstanceStatus("available", "available");
 
         await updateParameterValue(parameterName, "scaled_up");
@@ -276,6 +278,26 @@ export const scale_up_handler = async (event) => {
         error: "Failed to update Global scale up",
       }),
     };
+  }
+};
+
+export const updatingParameterValue = async (parameterName, parameterValue) => {
+  console.log("updating ssm parameter after updating the resources......");
+
+  const putParameterCommand = new PutParameterCommand({
+    Name: parameterName,
+    Value: parameterValue,
+    Type: "String",
+    Overwrite: true,
+  });
+
+  try {
+    const ssmClientPUT = new SSMClient();
+    await ssmClientPUT.send(putParameterCommand);
+    console.log("SSM parameter value updated successfully.");
+  } catch (error) {
+    console.error("Error updating SSM parameter:", error);
+    throw error;
   }
 };
 

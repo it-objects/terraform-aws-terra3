@@ -10,7 +10,7 @@ export const handler = async (event) => {
     const ssmClient = new SSMClient();
     const response = await ssmClient.send(getParameterCommand);
     const parameterValue = response.Parameter.Value;
-    if (parameterValue === "scaled_down"  || parameterValue === "initial" || parameterValue === "scaled_up") {
+    if (parameterValue === "scaled_down"  || parameterValue === "initial" || parameterValue === "scaled_up"  || parameterValue === "scaling_up" || parameterValue === "scaling_down") {
       return {
         statusCode: 200,
         body: JSON.stringify({
