@@ -100,9 +100,3 @@ variable "isAdminWebsiteEnabled" {
   description = "Select true to enable sleep environment hibernation."
   default     = false
 }
-
-variable "s3_mini_admin_path_pattern" {
-  type        = bool
-  description = "Enter the path pattern for mini admin website to access."
-  default     = false
-}
