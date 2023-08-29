@@ -51,6 +51,7 @@ module "lambda_scale_up" {
   timeout       = 600
 
   create_current_version_allowed_triggers = false
+  cloudwatch_logs_retention_in_days       = 30
   allowed_triggers = {
     ScanAmiRule = {
       principal  = "events.amazonaws.com"
@@ -140,6 +141,7 @@ module "lambda_scale_down" {
   timeout       = 600
 
   create_current_version_allowed_triggers = false
+  cloudwatch_logs_retention_in_days       = 30
   allowed_triggers = {
     ScanAmiRule = {
       principal  = "events.amazonaws.com"
@@ -220,6 +222,7 @@ module "global_scale_status" {
   timeout       = 600
 
   create_current_version_allowed_triggers = false
+  cloudwatch_logs_retention_in_days       = 30
 
   tracing_mode          = "Active"
   attach_tracing_policy = true
@@ -275,7 +278,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_static_website
 resource "aws_s3_object" "object" {
   count        = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   bucket       = aws_s3_bucket.bucket[0].id
-  key          = "admin/index.html"
+  key          = "admin-terra3/index.html"
   source       = local_file.local_index[0].filename
   content_type = "text/html"
 }
