@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.22.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.21.0...v1.22.0) (2023-09-04)
+
+
+### Features
+
+* add option to disable VPC endpoint for S3 ([8b3c7fd](https://github.com/it-objects/terraform-aws-terra3/commit/8b3c7fd7eda02796984ba5485ce5da1fd9a21529))
+* make terra3 module work in other regions than eu-central-1 ([3496ea1](https://github.com/it-objects/terraform-aws-terra3/commit/3496ea1174761bbaec92d75b390471ce1359c596))
+
 ## [1.21.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.2...v1.21.0) (2023-08-28)
 
 
