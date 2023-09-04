@@ -90,6 +90,8 @@ resource "aws_ssm_parameter" "vpc_id" {
 # Enable S3 gateway endpoint. Best practice to keep S3 traffic internal
 # ---------------------------------------------------------------------------------------------------------------------
 module "vpc_endpoints" {
+  count = var.enable_vpc_s3_endpoint ? 1 : 0
+
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "3.19.0"
 

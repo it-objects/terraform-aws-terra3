@@ -606,3 +606,9 @@ variable "custom_elb_cf_path_patterns" {
   description = "Option that exposes custom ELB paths via Cloudfront."
   default     = []
 }
+
+variable "enable_vpc_s3_endpoint" {
+  type        = bool
+  description = "Enable or disable the creation of the S3 endpoint for the VPC."
+  default     = true
+}
