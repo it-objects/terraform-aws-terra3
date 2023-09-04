@@ -16,10 +16,10 @@ export const handler = async (event) => {
           "The stored value is valid. Continuing with Lambda execution...",
         );
 
+        await updateParameterValue(parameterName, "scaling_up");
+
         await scale_up_handler();
         console.log("Scaling up on resources has been performed.");
-
-        await updatingParameterValue(parameterName, "scaling_up");
 
         await waitForInstanceStatus("available", "available");
 
@@ -40,7 +40,7 @@ export const handler = async (event) => {
         return {
           statusCode: 400,
           body: JSON.stringify({
-            Error: "The environment is already Scaled up or in process of Scaling up.",
+            Error: "The environment is already scaled up or in process of scaling up.",
           }),
         };
       }
@@ -278,26 +278,6 @@ export const scale_up_handler = async (event) => {
         error: "Failed to update Global scale up",
       }),
     };
-  }
-};
-
-export const updatingParameterValue = async (parameterName, parameterValue) => {
-  console.log("updating ssm parameter after updating the resources......");
-
-  const putParameterCommand = new PutParameterCommand({
-    Name: parameterName,
-    Value: parameterValue,
-    Type: "String",
-    Overwrite: true,
-  });
-
-  try {
-    const ssmClientPUT = new SSMClient();
-    await ssmClientPUT.send(putParameterCommand);
-    console.log("SSM parameter value updated successfully.");
-  } catch (error) {
-    console.error("Error updating SSM parameter:", error);
-    throw error;
   }
 };
 

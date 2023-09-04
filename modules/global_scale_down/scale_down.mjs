@@ -15,10 +15,10 @@ export const handler = async (event, context) => {
           "The stored value is valid. Continuing with Lambda execution...",
         );
 
+        await updateParameterValue(parameterName, "scaling_down");
+
         await scale_down_handler();
         console.log("Scaling down on resources has been performed.");
-
-        await updatingParameterValue(parameterName, "scaling_down");
 
         await waitForInstanceStatus("stopped", "deleting");
 
@@ -39,7 +39,7 @@ export const handler = async (event, context) => {
         return {
           statusCode: 400,
           body: JSON.stringify({
-            Error: "The environment is already Scaled down or in process of Scaling down.",
+            Error: "The environment is already scaled down or in process of scaling down.",
           }),
         };
       }
@@ -109,7 +109,6 @@ export const checkParameterValue = async (parameterName) => {
     return false;
   } catch (error) {
     console.error("Error retrieving SSM parameter:", error);
-    throw error;
   }
 };
 
@@ -305,26 +304,6 @@ export const scale_down_handler = async (event) => {
   }
 };
 
-export const updatingParameterValue = async (parameterName, parameterValue) => {
-  console.log("updating ssm parameter after updating the resources......");
-
-  const putParameterCommand = new PutParameterCommand({
-    Name: parameterName,
-    Value: parameterValue,
-    Type: "String",
-    Overwrite: true,
-  });
-
-  try {
-    const ssmClientPUT = new SSMClient();
-    await ssmClientPUT.send(putParameterCommand);
-    console.log("SSM parameter value updated successfully.");
-  } catch (error) {
-    console.error("Error updating SSM parameter:", error);
-    throw error;
-  }
-};
-
 export const waitForInstanceStatus = async (
   desiredStatus,
   redisdesiredStatus,
@@ -390,7 +369,6 @@ export const waitForInstanceStatus = async (
         isClusterDeleted = true;
       } else {
         console.error("Error while describing Redis cluster:", error);
-        throw error;
       }
     }
 
@@ -433,11 +411,9 @@ export const waitForInstanceStatus = async (
       }
     } catch (error) {
       console.error("Error waiting for DB instance status:", error);
-      throw error;
     }
   } catch (error) {
     console.error("Error waiting for DB/redis cluster deleting status:", error);
-    throw error;
   }
 };
 
@@ -457,6 +433,5 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
     console.log("SSM parameter value updated successfully.");
   } catch (error) {
     console.error("Error updating SSM parameter:", error);
-    throw error;
   }
 };
