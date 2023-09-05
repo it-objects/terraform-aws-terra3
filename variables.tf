@@ -559,6 +559,12 @@ variable "external_db_subnet_group_name" {
   default     = ""
 }
 
+variable "external_database_cidr" {
+  type        = list(string)
+  description = ""
+  default     = []
+}
+
 variable "external_elasticache_subnet_ids" {
   type        = list(string)
   description = "Elasticache subnet ids of existing vpc."
