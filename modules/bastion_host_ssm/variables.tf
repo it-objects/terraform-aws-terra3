@@ -9,3 +9,8 @@ variable "environment_name" {
 variable "vpc_id" {
   type = string
 }
+
+variable "private_subnets" {
+  type        = list(string)
+  description = "Private subnets of vpc."
+}
