@@ -6,15 +6,15 @@ data "aws_security_group" "bastion_host_ssm_sg" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# fetch private subnet ids using the vpc_id
+# fetch latest amazon image with arm architecture
 # ---------------------------------------------------------------------------------------------------------------------
-data "aws_subnets" "private_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [var.vpc_id]
-  }
 
-  tags = {
-    "Tier" = "private"
+data "aws_ami" "amazon-linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-kernel-6.1-arm64"]
   }
 }
