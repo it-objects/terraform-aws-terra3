@@ -332,6 +332,7 @@ module "bastion_host_ssm" {
   solution_name    = var.solution_name
   environment_name = var.solution_name
   vpc_id           = local.vpc_id
+  private_subnets  = local.private_subnets
 
   depends_on = [module.security_groups]
 }
