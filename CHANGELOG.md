@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.23.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.22.0...v1.23.0) (2023-09-06)
+
+
+### Features
+
+* added configurations for db subnet group while using existing vpc. ([c4cbdd5](https://github.com/it-objects/terraform-aws-terra3/commit/c4cbdd549ca7cb397d9d6f5320e00bb6acd6d4dc))
+* added list of private subnets to the launch bastion host. ([8dc7560](https://github.com/it-objects/terraform-aws-terra3/commit/8dc7560b0b1fbb3095ee01bd57f2640a3683a452))
+* added subnets as a variable. ([096fb7e](https://github.com/it-objects/terraform-aws-terra3/commit/096fb7eed3eae0b87533628874bd51236ae69a38))
+* added variable of external database cidr. ([f03e476](https://github.com/it-objects/terraform-aws-terra3/commit/f03e476e784fd005db1b082d861d76076bbf3ba6))
+* removed data resource of vpc and added ami data resource to get latest amazon image. ([74decb7](https://github.com/it-objects/terraform-aws-terra3/commit/74decb739768a0b9b40eeddadfefae99d2af81a8))
+* updated ami id via data resource, latest volume type and added subnets as a variable. ([364575a](https://github.com/it-objects/terraform-aws-terra3/commit/364575a709a4b3b9165b37315b3e8b538d817b11))
+
 ## [1.22.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.21.0...v1.22.0) (2023-09-04)
 
 
