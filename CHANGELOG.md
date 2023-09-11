@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.24.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.23.0...v1.24.0) (2023-09-11)
+
+
+### Features
+
+* added ssm parameter for private subnets. ([78d20f3](https://github.com/it-objects/terraform-aws-terra3/commit/78d20f35b8687850a20da9532f3421928b9a4dfc))
+* updated subnet value accessing form tag to parameter. ([bb31d01](https://github.com/it-objects/terraform-aws-terra3/commit/bb31d01084dd594b4109d687806bc17c43466a97))
+
 ## [1.23.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.22.0...v1.23.0) (2023-09-06)
 
 
