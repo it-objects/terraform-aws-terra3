@@ -63,7 +63,7 @@ resource "aws_route_table_association" "database" {
 resource "aws_db_subnet_group" "external_db_subnet_group" {
   count = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? 1 : 0
 
-  name        = "db-subnet-group"
+  name        = "${var.solution_name}-db-subnet-group"
   description = "Database subnet group."
   subnet_ids  = aws_subnet.database_subnet[*].id
 }
