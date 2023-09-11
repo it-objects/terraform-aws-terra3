@@ -465,6 +465,11 @@ variable "create_ecr" {
   default = false
 }
 
+variable "create_ecr_with_names" {
+  type    = list(string)
+  default = []
+}
+
 variable "ecr_custom_name" {
   description = "Custom name for ECR repo. Otherwise, solution name is taken."
   type        = string
