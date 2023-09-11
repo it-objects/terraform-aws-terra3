@@ -26,8 +26,7 @@ resource "aws_ecs_service" "ecs_service" {
   enable_execute_command = var.enable_ecs_exec
 
   network_configuration {
-    subnets = data.aws_subnets.private_subnets.ids
-
+    subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
     # if security groups are given, then overwrite default, otherwise take default (ecs_default + mysql_marker)
     security_groups = length(var.service_sg) == 0 ? [
       data.aws_security_group.ecs_default_sg.id,
