@@ -122,6 +122,12 @@ resource "aws_ssm_parameter" "vpc_id" {
   value = local.vpc_id
 }
 
+resource "aws_ssm_parameter" "private_subnets" {
+  name  = "/${var.solution_name}/private_subnets"
+  type  = "StringList"
+  value = join(",", local.private_subnets)
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Enable S3 gateway endpoint. Best practice to keep S3 traffic internal
 # ---------------------------------------------------------------------------------------------------------------------
