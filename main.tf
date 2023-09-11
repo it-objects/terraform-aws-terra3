@@ -415,10 +415,11 @@ resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
 # ECR repo used for storing container images
 # ---------------------------------------------------------------------------------------------------------------------
 module "ecr" {
-  count = var.create_ecr ? 1 : 0
+  count = length(var.create_ecr_with_names) > 0 ? 1 : 0
 
   source = "./modules/ecr"
 
+  create_ecr_with_names  = var.create_ecr_with_names
   ecr_name               = length(var.ecr_custom_name) > 3 ? var.ecr_custom_name : var.solution_name
   access_for_account_id  = var.ecr_access_for_account_id  # allow production account
   access_for_account_ids = var.ecr_access_for_account_ids # allow production accounts
