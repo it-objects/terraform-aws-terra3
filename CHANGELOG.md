@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.25.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.24.0...v1.25.0) (2023-09-12)
+
+
+### Features
+
+* added ecr names variable. ([0719da6](https://github.com/it-objects/terraform-aws-terra3/commit/0719da6d3f5eb4df61e01a50c91087c1e77dacf0))
+* implemented logic for creating more than one ecr repository based on the number of names specified by user. ([b1990a1](https://github.com/it-objects/terraform-aws-terra3/commit/b1990a1c26268588d966152532b890b53f87cfd0))
+* updated db subnet group name with solution name ([8ad8c7a](https://github.com/it-objects/terraform-aws-terra3/commit/8ad8c7a52d6a5c072974f79ae2dd6e0722733125))
+
 ## [1.24.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.23.0...v1.24.0) (2023-09-11)
 
 
