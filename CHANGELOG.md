@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.25.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.25.0...v1.25.1) (2023-09-13)
+
+
+### Bug Fixes
+
+* fixes issue with path_mapping reconciliation when app_components don't have the optional path_mapping defined ([a2ace80](https://github.com/it-objects/terraform-aws-terra3/commit/a2ace80add918d44d9b39f6569d43f45b77f29e3))
+
 ## [1.25.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.24.0...v1.25.0) (2023-09-12)
 
 
