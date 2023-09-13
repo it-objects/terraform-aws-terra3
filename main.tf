@@ -25,7 +25,7 @@ locals {
   elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
 
   # calculate app_components' path
-  app_component_paths = length(var.app_components) == 0 ? ["/api/*"] : values(var.app_components)[*].path_mapping
+  app_component_paths = length(var.app_components) == 0 ? ["/api/*"] : [for component in values(var.app_components) : (contains(keys(component), "path_mapping") ? component.path_mapping : "/api/*")]
 }
 
 resource "aws_ssm_parameter" "domain_name" {
