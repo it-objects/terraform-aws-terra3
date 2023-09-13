@@ -431,9 +431,9 @@ module "ecr" {
 module "s3_solution_bucket" {
   count = var.create_s3_solution_bucket ? 1 : 0
 
-  source                    = "./modules/s3_bucket"
-  solution_name             = var.solution_name
-  s3_solution_bucket_policy = var.s3_solution_bucket_policy
+  source                        = "./modules/s3_bucket"
+  solution_name                 = var.solution_name
+  s3_solution_bucket_enable_acl = var.s3_solution_bucket_enable_acl
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

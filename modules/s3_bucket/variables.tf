@@ -2,13 +2,8 @@ variable "solution_name" {
   type = string
 }
 
-variable "s3_solution_bucket_policy" {
-  type        = string
-  description = "Type of database."
-  default     = "PRIVATE"
-
-  validation {
-    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
-    error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
-  }
+variable "s3_solution_bucket_enable_acl" {
+  type        = bool
+  description = "Option that overwrites more secure ACL-less S3 buckets. Please note, that enabling ACL comes with certain security considerations"
+  default     = false
 }

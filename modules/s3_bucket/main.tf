@@ -24,7 +24,7 @@ resource "aws_s3_bucket_ownership_controls" "s3_data_bucket" {
   bucket = aws_s3_bucket.s3_data_bucket.id
 
   rule {
-    object_ownership = "BucketOwnerEnforced"
+    object_ownership = var.s3_solution_bucket_enable_acl ? "BucketOwnerPreferred" : "BucketOwnerEnforced"
   }
 }
 
@@ -51,15 +51,17 @@ resource "random_string" "random_s3_postfix" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Block public access per-se
+# Only allow overwrite in special case of enabling deprecated ACL, required for some seldom use cases.
 # TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
 # ---------------------------------------------------------------------------------------------------------------------
+# tfsec:ignore:aws-s3-block-public-acls tfsec:ignore:aws-s3-ignore-public-acls
 resource "aws_s3_bucket_public_access_block" "block" {
   bucket = aws_s3_bucket.s3_data_bucket.bucket
 
-  block_public_acls       = var.s3_solution_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
-  block_public_policy     = var.s3_solution_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
-  ignore_public_acls      = var.s3_solution_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
-  restrict_public_buckets = var.s3_solution_bucket_policy == "PUBLIC_READ_ONLY" ? false : true
+  block_public_acls       = !var.s3_solution_bucket_enable_acl
+  ignore_public_acls      = !var.s3_solution_bucket_enable_acl
+  block_public_policy     = true
+  restrict_public_buckets = true
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

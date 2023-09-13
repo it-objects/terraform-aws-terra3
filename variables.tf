@@ -259,17 +259,6 @@ variable "create_s3_solution_bucket" {
   default     = false
 }
 
-variable "s3_bucket_policy" {
-  type        = string
-  description = "Option that generally controls blocking public S3 access."
-  default     = "PRIVATE"
-
-  validation {
-    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_bucket_policy)
-    error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
-  }
-}
-
 variable "s3_solution_bucket_cf_behaviours" {
   type        = list(any)
   description = "Option that exposes S3 solution bucket via Cloudfront with different behaviours."
@@ -493,15 +482,10 @@ variable "create_deployment_user" {
   default = false
 }
 
-variable "s3_solution_bucket_policy" {
-  type        = string
-  description = "Option that generally controls blocking public S3 access."
-  default     = "PRIVATE"
-
-  validation {
-    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
-    error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
-  }
+variable "s3_solution_bucket_enable_acl" {
+  type        = bool
+  description = "Option that overwrites more secure ACL-less S3 buckets."
+  default     = false
 }
 
 variable "create_ses" {
