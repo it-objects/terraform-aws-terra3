@@ -27,21 +27,29 @@ module "mastodon-on-aws" {
 
   # provision an S3 solution bucket to store uploaded media
   create_s3_solution_bucket = true
-  s3_bucket_policy          = "PUBLIC_READ_ONLY"
 
-  # configure cloudfront to forward URL paths to S3 solution bucket
+  # Mastodon specialty 1:
+  # although ACL for S3 are deprecated, it's still needed for Mastodon as of v4.1.x
+  # there is an open PR that will make the option below obsolete
+  # PR: https://github.com/mastodon/mastodon/pull/17979
+  s3_solution_bucket_enable_acl = true
+
+  # Mastodon specialty 2:
+  # Configure Cloudfront to forward URL paths to S3 solution bucket.
   s3_solution_bucket_cf_behaviours = [
     {
       s3_solution_bucket_cloudfront_path = "/media_attachments/*"
     },
     {
-      # needed to rewrite /system/media_attachments => /media_attachments
+      # Mastodon provides the image under /system/media_attachments immediately after the upload. Only after a page
+      # reload, the image is served from /media_attachments. Thus, this Cloudfront function rewrites requests from
+      # /system/* => /*
       s3_solution_bucket_cloudfront_path     = "/system/media_attachments/*"
       s3_solution_bucket_cloudfront_function = aws_cloudfront_function.cf_function_rewrite_system_dir_request.arn
     }
   ]
 
-  # enable ECS exec to allow to shell into a container for debug purposes
+  # prepare cluster to allow enabling ECS exec; each component requires enable_ecs_exec for which it should be activated
   enable_ecs_exec = true
 
   # dependency: required for downloading container images
@@ -49,12 +57,31 @@ module "mastodon-on-aws" {
 
   # define the three Mastodon application components (web, streaming api and sidekiq)
   app_components = {
-    mastodon_web = {
-      path_mapping       = "/*"
-      listener_rule_prio = 300
+
+    mastodon_streaming_api = {
+      path_mapping = "/api/v1/streaming/*"
 
       instances    = 1
       total_cpu    = 256
+      total_memory = 512
+
+      container = [
+        module.mastodon_streaming_api
+      ]
+
+      service_port       = 4000
+      lb_healthcheck_url = "/api/v1/streaming/health"
+      enable_ecs_exec    = true
+
+      # for cost savings undeploy outside work hours
+      enable_autoscaling = true
+    }
+
+    mastodon_web = {
+      path_mapping = "/*"
+
+      instances    = 1
+      total_cpu    = 512
       total_memory = 1024
 
       container = [
@@ -69,26 +96,6 @@ module "mastodon-on-aws" {
       enable_ecs_exec = true
 
       s3_solution_bucket_access = true
-
-      # for cost savings undeploy outside work hours
-      enable_autoscaling = true
-    }
-
-    mastodon_streaming_api = {
-      path_mapping       = "/api/v1/streaming/*"
-      listener_rule_prio = 200
-
-      instances    = 1
-      total_cpu    = 256
-      total_memory = 512
-
-      container = [
-        module.mastodon_streaming_api
-      ]
-
-      service_port       = 4000
-      lb_healthcheck_url = "/api/v1/streaming/health"
-      enable_ecs_exec    = true
 
       # for cost savings undeploy outside work hours
       enable_autoscaling = true
@@ -133,7 +140,7 @@ module "mastodon_web" {
   name = "mastodon_web"
 
   container_image  = var.mastodon_image
-  container_cpu    = 256
+  container_cpu    = 512
   container_memory = 1024
 
   command = ["bash", "-c", "bundle exec rails db:migrate && bundle exec rails s -p 3000"]
@@ -158,6 +165,7 @@ module "mastodon_web" {
     "S3_PROTOCOL" : "https"
     "S3_HOSTNAME" : "s3-${data.aws_region.current_region.id}.amazonaws.com"
     "S3_ALIAS_HOST" : module.mastodon-on-aws.domain_name
+    # "S3_ACL_DISABLED" : "true", # mastodon PR still pending; until then, solution buckets needs to have ACL enabled with s3_solution_bucket_enable_acl = true
     "DB_NAME" : local.db_name,
     "DB_USER" : local.db_user,
     "DB_HOST" : local.db_host
@@ -167,6 +175,15 @@ module "mastodon_web" {
     "SMTP_LOGIN" : var.smtp_login,
     "SMTP_PASSWORD" : var.smtp_password,
     "SMTP_FROM_ADDRESS" : var.smtp_from_address
+  }
+
+  log_configuration = {
+    "logDriver" : "awslogs",
+    "options" : {
+      awslogs-group : "mastodon_webLogGroup",
+      awslogs-region : "eu-central-1",
+      awslogs-stream-prefix : var.solution_name
+    }
   }
 
   readonlyRootFilesystem = false # disable because of entrypoint script
@@ -201,6 +218,15 @@ module "mastodon_streaming_api" {
     "DB_USER" : local.db_user,
     "DB_HOST" : local.db_host
     "RAILS_ENV" : "production",
+  }
+
+  log_configuration = {
+    "logDriver" : "awslogs",
+    "options" : {
+      awslogs-group : "mastodon_streaming_apiLogGroup",
+      awslogs-region : "eu-central-1",
+      awslogs-stream-prefix : var.solution_name
+    }
   }
 
   readonlyRootFilesystem = false # disable because of entrypoint script
@@ -240,6 +266,15 @@ module "mastodon_sidekiq" {
     "SMTP_LOGIN" : var.smtp_login,
     "SMTP_PASSWORD" : var.smtp_password,
     "SMTP_FROM_ADDRESS" : var.smtp_from_address
+  }
+
+  log_configuration = {
+    "logDriver" : "awslogs",
+    "options" : {
+      awslogs-group : "mastodon_sidekiqLogGroup",
+      awslogs-region : "eu-central-1",
+      awslogs-stream-prefix : var.solution_name
+    }
   }
 
   readonlyRootFilesystem = false # disable because of entrypoint script
