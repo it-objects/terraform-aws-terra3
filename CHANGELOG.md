@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.26.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.25.1...v1.26.0) (2023-09-15)
+
+
+### Features
+
+* Introducing ECS Fargate container-based cron jobs triggered by a step function. It only requires a single line of configuration. See also the ecs_cronjob in the examples subfolder. ([d6af032](https://github.com/it-objects/terraform-aws-terra3/commit/d6af032b2c7e14ec0fa9b2622b605cc284a13b53))
+
 ### [1.25.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.25.0...v1.25.1) (2023-09-13)
 
 
