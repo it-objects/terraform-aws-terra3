@@ -11,9 +11,32 @@
 # ---------------------------------------------------------------------------------------------------------------------
 locals {
   launch_type = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? "FARGATE" : "EC2"
+
+  security_groups = length(var.service_sg) == 0 ? [
+    data.aws_security_group.ecs_default_sg.id,
+    data.aws_security_group.mysql_marker_sg.id,
+    data.aws_security_group.redis_marker_sg.id,
+    data.aws_security_group.postgres_marker_sg.id
+  ] : var.service_sg
+  security_groups_as_string = jsonencode(local.security_groups)
+
+  # convert string to list
+  private_subnets           = split(",", data.aws_ssm_parameter.private_subnets.value)
+  private_subnets_as_string = jsonencode(local.private_subnets)
+
+  # configure dependent options in case of cronjob mode
+  enable_autoscaling       = length(var.configure_as_cronjob) >= 1 ? false : var.enable_autoscaling
+  internal_service         = length(var.configure_as_cronjob) >= 1 ? true : var.internal_service
+  cpu_utilization_alert    = length(var.configure_as_cronjob) >= 1 ? false : var.cpu_utilization_alert
+  memory_utilization_alert = length(var.configure_as_cronjob) >= 1 ? false : var.memory_utilization_alert
+  task_count_alert         = length(var.configure_as_cronjob) >= 1 ? false : var.task_count_alert
+
+  timeout_in_seconds = 300 # the time in seconds after the cronjob should be terminated
 }
 
 resource "aws_ecs_service" "ecs_service" {
+  count = length(var.configure_as_cronjob) == 0 ? 1 : 0
+
   name            = "${var.name}Service"
   cluster         = data.aws_ecs_cluster.selected.arn
   task_definition = aws_ecs_task_definition.ecs_task_definition.arn
@@ -26,18 +49,13 @@ resource "aws_ecs_service" "ecs_service" {
   enable_execute_command = var.enable_ecs_exec
 
   network_configuration {
-    subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
+    subnets = local.private_subnets
     # if security groups are given, then overwrite default, otherwise take default (ecs_default + mysql_marker)
-    security_groups = length(var.service_sg) == 0 ? [
-      data.aws_security_group.ecs_default_sg.id,
-      data.aws_security_group.mysql_marker_sg.id,
-      data.aws_security_group.redis_marker_sg.id,
-      data.aws_security_group.postgres_marker_sg.id
-    ] : var.service_sg
+    security_groups = local.security_groups
   }
 
   dynamic "load_balancer" {
-    for_each = var.internal_service ? [] : [true]
+    for_each = local.internal_service ? [] : [true]
     content {
       target_group_arn = aws_lb_target_group.target_group[0].arn
       container_name   = var.container[0].name
@@ -82,7 +100,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
 # Link to loadbalancer: target group and lb listener
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_target_group" "target_group" {
-  count = var.internal_service ? 0 : 1
+  count = local.internal_service ? 0 : 1
 
   name_prefix          = substr(replace(var.name, "_", "-"), 0, 6)
   port                 = var.service_port
@@ -111,7 +129,7 @@ resource "aws_lb_target_group" "target_group" {
 ## HTTPS (Port 443) listener rules
 ## ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "https_listener_rule" {
-  count = var.enable_custom_domain && !var.internal_service ? 1 : 0
+  count = var.enable_custom_domain && !local.internal_service ? 1 : 0
 
   listener_arn = data.aws_ssm_parameter.alb_listener_443_arn.value
   priority     = var.listener_rule_prio
@@ -134,7 +152,7 @@ resource "aws_lb_listener_rule" "https_listener_rule" {
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
-  count = var.enable_custom_domain && !var.internal_service ? 1 : 0
+  count = var.enable_custom_domain && !local.internal_service ? 1 : 0
 
   listener_arn = data.aws_ssm_parameter.alb_listener_443_arn.value
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
@@ -161,7 +179,7 @@ resource "aws_lb_listener_rule" "https_trailing_slash_redirect" {
 }
 
 resource "aws_lb_listener_rule" "http_listener_rule" {
-  count = !var.enable_custom_domain && !var.internal_service ? 1 : 0
+  count = !var.enable_custom_domain && !local.internal_service ? 1 : 0
 
   listener_arn = data.aws_ssm_parameter.alb_listener_80_arn.value
   priority     = var.listener_rule_prio
@@ -184,7 +202,7 @@ resource "aws_lb_listener_rule" "http_listener_rule" {
 # attaches trailing slash in case it recognizes one
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_lb_listener_rule" "http_trailing_slash_redirect" {
-  count = !var.enable_custom_domain && !var.internal_service ? 1 : 0
+  count = !var.enable_custom_domain && !local.internal_service ? 1 : 0
 
   listener_arn = data.aws_ssm_parameter.alb_listener_80_arn.value
   priority     = var.listener_rule_prio + 1 # make rule appear after the default rule
@@ -229,7 +247,7 @@ resource "aws_cloudwatch_log_group" "CloudWatchLogGroup" {
 # to send a notification when the alarm reaches the desired alarm state
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_high" {
-  count               = var.cpu_utilization_alert && var.cpu_utilization_high_threshold != 0 ? 1 : 0
+  count               = local.cpu_utilization_alert && var.cpu_utilization_high_threshold != 0 ? 1 : 0
   alarm_name          = "ecs_svc_cpu_high_${var.name}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.cpu_utilization_high_evaluation_periods
@@ -243,13 +261,13 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_high" {
   ok_actions          = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = aws_ecs_service.ecs_service.name
+    ServiceName = aws_ecs_service.ecs_service[0].name
     ClusterName = var.container_runtime
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_low" {
-  count               = var.cpu_utilization_alert && var.cpu_utilization_low_threshold != 0 ? 1 : 0
+  count               = local.cpu_utilization_alert && var.cpu_utilization_low_threshold != 0 ? 1 : 0
   alarm_name          = "ecs_svc_cpu_low_${var.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.cpu_utilization_low_evaluation_periods
@@ -263,13 +281,13 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_cpu_utilization_low" {
   ok_actions          = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = aws_ecs_service.ecs_service.name
+    ServiceName = aws_ecs_service.ecs_service[0].name
     ClusterName = var.container_runtime
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_high" {
-  count               = var.memory_utilization_alert && var.memory_utilization_high_threshold != 0 ? 1 : 0
+  count               = local.memory_utilization_alert && var.memory_utilization_high_threshold != 0 ? 1 : 0
   alarm_name          = "ecs_svc_mem_high_${var.name}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.memory_utilization_high_evaluation_periods
@@ -283,13 +301,13 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_high" {
   ok_actions          = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = aws_ecs_service.ecs_service.name
+    ServiceName = aws_ecs_service.ecs_service[0].name
     ClusterName = var.container_runtime
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
-  count               = var.memory_utilization_alert && var.memory_utilization_low_threshold != 0 ? 1 : 0
+  count               = local.memory_utilization_alert && var.memory_utilization_low_threshold != 0 ? 1 : 0
   alarm_name          = "ecs_svc_mem_low_${var.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.memory_utilization_low_evaluation_periods
@@ -303,7 +321,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
   ok_actions          = var.sns_topic_arn
 
   dimensions = {
-    ServiceName = aws_ecs_service.ecs_service.name
+    ServiceName = aws_ecs_service.ecs_service[0].name
     ClusterName = var.container_runtime
   }
 }
@@ -317,7 +335,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
   count              = var.enable_ecs_autoscaling ? 1 : 0
   max_capacity       = var.ecs_autoscaling_max_capacity
   min_capacity       = var.ecs_autoscaling_min_capacity
-  resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service.name}"
+  resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service[0].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   role_arn           = aws_iam_role.ecs-autoscale-role[0].arn
@@ -396,7 +414,7 @@ locals {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_running_task_count" {
-  count               = var.task_count_alert ? 1 : 0
+  count               = local.task_count_alert ? 1 : 0
   alarm_name          = "ecs_running_task_count_${var.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.task_count_evaluation_periods
@@ -411,7 +429,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_running_task_count" {
   treat_missing_data  = local.treat_missing_data
 
   dimensions = {
-    ServiceName = aws_ecs_service.ecs_service.name
+    ServiceName = aws_ecs_service.ecs_service[0].name
     ClusterName = var.container_runtime
   }
 }
@@ -424,10 +442,10 @@ resource "aws_cloudwatch_metric_alarm" "ecs_running_task_count" {
 # Create autoscaling target linked to ECS
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_target" "ServiceAutoScalingTarget" {
-  count              = var.enable_autoscaling ? 1 : 0
+  count              = local.enable_autoscaling ? 1 : 0
   min_capacity       = var.autoscale_task_weekday_scale_down
   max_capacity       = var.desired_count
-  resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service.name}" # service/(clusterName)/(serviceName)
+  resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service[0].name}" # service/(clusterName)/(serviceName)
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 
@@ -443,7 +461,7 @@ resource "aws_appautoscaling_target" "ServiceAutoScalingTarget" {
 # Scale up weekdays at beginning of day
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_scheduled_action" "WeekdayScaleUp" {
-  count              = var.enable_autoscaling ? 1 : 0
+  count              = local.enable_autoscaling ? 1 : 0
   name               = "${var.name}ScaleUp"
   service_namespace  = aws_appautoscaling_target.ServiceAutoScalingTarget[0].service_namespace
   resource_id        = aws_appautoscaling_target.ServiceAutoScalingTarget[0].resource_id
@@ -461,7 +479,7 @@ resource "aws_appautoscaling_scheduled_action" "WeekdayScaleUp" {
 # Scale down weekdays at end of day
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_scheduled_action" "WeekdayScaleDown" {
-  count              = var.enable_autoscaling ? 1 : 0
+  count              = local.enable_autoscaling ? 1 : 0
   name               = "${var.name}ScaleDown"
   service_namespace  = aws_appautoscaling_target.ServiceAutoScalingTarget[0].service_namespace
   resource_id        = aws_appautoscaling_target.ServiceAutoScalingTarget[0].resource_id
@@ -811,4 +829,162 @@ resource "aws_iam_role_policy_attachment" "ecs_role_s3_data_bucket_policy_attach
 
   role       = aws_iam_role.task.name
   policy_arn = data.aws_iam_policy.s3_bucket_accesss_policy[0].arn
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# If configure_as_cronjob is set to true, build up this state machine which creates a container based on the given
+# task def.
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role" "state_machine_role" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  name = "${var.name}-ecs-cronjob-sfn"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "states.amazonaws.com"
+        },
+      },
+    ],
+  })
+
+  inline_policy {
+    name = "StateMachine"
+
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Action   = "iam:PassRole",
+          Effect   = "Allow",
+          Resource = [aws_iam_role.ExecutionRole.arn, aws_iam_role.task.arn],
+        },
+        {
+          Action   = "ecs:RunTask",
+          Effect   = "Allow",
+          Resource = aws_ecs_task_definition.ecs_task_definition.arn,
+          Condition = {
+            ArnEquals = {
+              "ecs:cluster" = data.aws_ecs_cluster.selected.arn,
+            },
+          },
+        },
+        {
+          Action   = ["ecs:StopTask", "ecs:DescribeTasks"],
+          Effect   = "Allow",
+          Resource = "*",
+          Condition = {
+            ArnEquals = {
+              "ecs:cluster" = data.aws_ecs_cluster.selected.arn,
+            },
+          },
+        },
+        {
+          Action   = ["events:PutTargets", "events:PutRule", "events:DescribeRule"],
+          Effect   = "Allow",
+          Resource = "arn:aws:events:${data.aws_region.current_region.id}:${data.aws_caller_identity.this.account_id}:rule/StepFunctionsGetEventsForECSTaskRule",
+        },
+      ],
+    })
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "rule" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  name                = "${var.name}-events-rule"
+  schedule_expression = "cron(${var.configure_as_cronjob})"
+}
+
+resource "aws_cloudwatch_event_target" "target" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  rule      = aws_cloudwatch_event_rule.rule[0].name
+  target_id = "poller-cronjob-statemachine"
+  arn       = aws_sfn_state_machine.state_machine[0].arn
+  role_arn  = aws_iam_role.rule_role[0].arn
+}
+
+resource "aws_iam_role" "rule_role" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  name = "${var.name}-rule-role"
+
+  assume_role_policy = jsonencode({
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+      },
+    ],
+  })
+
+  inline_policy {
+    name = "EventRulePolicy"
+
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Action   = "states:StartExecution",
+          Effect   = "Allow",
+          Resource = aws_sfn_state_machine.state_machine[0].arn,
+        },
+      ],
+    })
+  }
+}
+
+resource "aws_sfn_state_machine" "state_machine" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  name       = "${var.name}-statemachine"
+  definition = <<EOF
+{
+  "Version": "1.0",
+  "Comment": "Run ECS/Fargate enplug Poller cronjob.",
+  "TimeoutSeconds": ${local.timeout_in_seconds},
+  "StartAt": "RunTask",
+  "States": {
+    "RunTask": {
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "Cluster": "${data.aws_ecs_cluster.selected.arn}",
+        "TaskDefinition": "${aws_ecs_task_definition.ecs_task_definition.arn}",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "Subnets": ${local.private_subnets_as_string},
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": ${local.security_groups_as_string}
+          }
+        }
+      },
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+
+  role_arn = aws_iam_role.state_machine_role[0].arn
 }

@@ -263,6 +263,12 @@ variable "enable_ecs_exec" {
   description = "Enable ECS exec."
 }
 
+variable "configure_as_cronjob" {
+  type        = string
+  default     = ""
+  description = "Doesn't create an ECS service but a task def only to be triggered by a step function."
+}
+
 variable "lb_healthcheck_url" {
   type        = string
   default     = "/"

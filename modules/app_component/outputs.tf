@@ -3,13 +3,13 @@ output "json_map" {
 }
 
 output "ecs_service_name" {
-  value = aws_ecs_service.ecs_service.name
+  value = try(aws_ecs_service.ecs_service[0].name, null)
 }
 
 output "ecs_desire_task_count" {
-  value = aws_ecs_service.ecs_service.desired_count
+  value = try(aws_ecs_service.ecs_service[0].desired_count, null)
 }
 
 output "ecs_service_arn" {
-  value = aws_ecs_service.ecs_service.id
+  value = try(aws_ecs_service.ecs_service[0].id, null)
 }

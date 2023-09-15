@@ -525,15 +525,15 @@ module "app_components" {
 
 locals {
   ecs_service_names = [
-    for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name
+    for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name if ecs_service_names.ecs_service_name != null
   ]
 
   ecs_desire_task_counts = [
-    for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count
+    for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count if ecs_desire_task_counts.ecs_desire_task_count != null
   ]
 
   ecs_service_arn = [
-    for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn
+    for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn if ecs_service_arn.ecs_service_arn != null
   ]
 
   db_instance_name = var.create_database ? split(",", module.database[0].db_instance_name) : []

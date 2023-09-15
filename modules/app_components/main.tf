@@ -69,6 +69,8 @@ module "app_components" {
 
   enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
 
+  configure_as_cronjob = lookup(each.value, "configure_as_cronjob", "")
+
   # for cost savings undeploy outside work hours
   enable_autoscaling                = lookup(each.value, "enable_autoscaling", false)
   autoscale_task_weekday_scale_down = lookup(each.value, "autoscale_task_weekday_scale_down", 0)
