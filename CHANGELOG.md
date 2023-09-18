@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.26.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.26.0...v1.26.1) (2023-09-18)
+
+
+### Bug Fixes
+
+* added iam policy version for container-based cron job ([2ddf4bf](https://github.com/it-objects/terraform-aws-terra3/commit/2ddf4bf91a63385d0c97af83275ea7b05b379ba9))
+* updated rds engine version for mysql ([20ca2bf](https://github.com/it-objects/terraform-aws-terra3/commit/20ca2bfe303e79618dc85ab2fd20fea837c75d8f))
+* updated solution name ([c45fb67](https://github.com/it-objects/terraform-aws-terra3/commit/c45fb676b23193e869b4091cb8d9879b4c2e46c3))
+
 ## [1.26.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.25.1...v1.26.0) (2023-09-15)
 
 
