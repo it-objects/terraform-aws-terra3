@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "ecs_cronjob"
+  solution_name = "ecs-cronjob"
 }
 
 module "terra3_examples" {
