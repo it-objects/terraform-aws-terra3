@@ -568,6 +568,18 @@ locals {
     [],
   )
 
+  # Find all ssm parameter ARNs and output as a list
+  execution_iam_ssm_parameters = try(
+    flatten([
+      for permission_type, permission_targets in var.execution_iam_access : [
+        for ssm_parameter in permission_targets : "${ssm_parameter}*"
+      ]
+      if permission_type == "ssm_parameters"
+    ]),
+    # If nothing provided, default to empty set
+    [],
+  )
+
   # Final all S3 bucket ARNs and output as list
   execution_iam_s3_buckets = try(
     flatten([
@@ -625,6 +637,32 @@ resource "aws_iam_role_policy" "ecs_secrets_access_role_policy" {
   name   = "EcsSecretExecutionRolePolicy"
   role   = aws_iam_role.ExecutionRole.id
   policy = data.aws_iam_policy_document.ecs_secrets_access[0].json
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Construct the ssm parameter policy
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_iam_policy_document" "ssm_parameter_access" {
+  count = local.execution_iam_ssm_parameters == [] ? 0 : 1
+  statement {
+    sid = "SSMParameterValueAccess"
+    #effect = "Allow"
+    resources = local.execution_iam_ssm_parameters
+    actions = [
+      "ssm:GetParameters", # Permission to get SSM parameters
+      "ssm:GetParameter"   # Permission to get a specific SSM parameter
+    ]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Build role policy using data, link to role
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role_policy" "ssm_parameter_access_role_policy" {
+  count  = local.execution_iam_ssm_parameters == [] ? 0 : 1
+  name   = "SSMParameterValueExecutionRolePolicy"
+  role   = aws_iam_role.ExecutionRole.id
+  policy = data.aws_iam_policy_document.ssm_parameter_access[0].json
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
