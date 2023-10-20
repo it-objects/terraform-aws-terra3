@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.27.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.26.1...v1.27.0) (2023-10-20)
+
+
+### Features
+
+* added output of s3 bucket name. ([f6f65ba](https://github.com/it-objects/terraform-aws-terra3/commit/f6f65ba3ce4b76c2d89f773921621f696d060f68))
+
 ### [1.26.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.26.0...v1.26.1) (2023-09-18)
 
 
