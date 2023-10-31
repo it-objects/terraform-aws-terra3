@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.27.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.0...v1.27.1) (2023-10-31)
+
+
+### Bug Fixes
+
+* **bastion:** remove dynamic fetching of latest ami; it is pinned now and should only updated along new terra3 versions. Otherwise we'll experience continuous state drift. ([8d4fbba](https://github.com/it-objects/terraform-aws-terra3/commit/8d4fbbad2b8b390a79852c5b9e5742821e749ea7))
+
 ## [1.27.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.26.1...v1.27.0) (2023-10-20)
 
 
