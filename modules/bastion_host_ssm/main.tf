@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_launch_template" "my_asg_launch_template" {
   name_prefix   = "${var.solution_name}_"
-  image_id      = data.aws_ami.amazon-linux.id
+  image_id      = "ami-06e14f82ec5afe2af" # updated Oct 31st 2023
   instance_type = "t4g.nano"
   metadata_options {
     http_endpoint               = "enabled"
