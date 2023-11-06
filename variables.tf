@@ -121,12 +121,6 @@ variable "memory_utilization_low_threshold" {
   default     = 20
 }
 
-variable "sns_topic_arn" {
-  type        = set(string)
-  description = ""
-  default     = []
-}
-
 variable "alert_receivers_email" {
   type        = list(string)
   default     = []
