@@ -338,7 +338,6 @@ resource "aws_appautoscaling_target" "ecs_target" {
   resource_id        = "service/${var.container_runtime}/${aws_ecs_service.ecs_service[0].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
-  role_arn           = aws_iam_role.ecs-autoscale-role[0].arn
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -376,34 +375,6 @@ resource "aws_appautoscaling_policy" "ecs_target_memory" {
     target_value = var.ecs_autoscaling_target_value
   }
   depends_on = [aws_appautoscaling_target.ecs_target]
-}
-# ---------------------------------------------------------------------------------------------------------------------
-# IAM Role Definitions
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_iam_role" "ecs-autoscale-role" {
-  count = var.enable_ecs_autoscaling ? 1 : 0
-  name  = "${var.name}-ecs-auto-scaling-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "ecs-autoscale" {
-  count      = var.enable_ecs_autoscaling ? 1 : 0
-  role       = aws_iam_role.ecs-autoscale-role[0].id
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"
 }
 
 locals {
