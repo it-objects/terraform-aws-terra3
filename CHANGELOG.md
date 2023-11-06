@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.27.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.1...v1.27.2) (2023-11-06)
+
+
+### Bug Fixes
+
+* **alerting:** fix state drift due to unnecessary explicit IAM role given although it is identical with the default ([7ba13a9](https://github.com/it-objects/terraform-aws-terra3/commit/7ba13a9a1c34bbd44784c0917b2681947eb29f0e))
+
 ### [1.27.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.0...v1.27.1) (2023-10-31)
 
 
