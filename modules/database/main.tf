@@ -66,7 +66,18 @@ resource "aws_db_instance" "db" {
   vpc_security_group_ids          = var.rds_cluster_security_group_ids
   parameter_group_name            = var.database == "mysql" ? aws_db_parameter_group.mysql_logbin_parameter_group[0].name : null
 
-  iam_database_authentication_enabled = false #tfsec:ignore:AVD-AWS-0176
+  # default: rds-ca-2019 (expires Aug 2024); newer options are: rds-ca-rsa2048-g1, rds-ca-rsa4096-g1 or rds-ca-ecc384-g1
+  ca_cert_identifier = var.ca_cert_identifier
+
+  iam_database_authentication_enabled = var.iam_database_authentication_enabled #tfsec:ignore:AVD-AWS-0176
+
+  # Enhanced monitoring
+  monitoring_interval = var.monitoring_interval # 0 means disabled
+  monitoring_role_arn = var.monitoring_interval == 0 ? null : aws_iam_role.rds_enhanced_monitoring[0].arn
+
+  performance_insights_enabled          = var.performance_insights_enabled
+  performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
+  #performance_insights_kms_key_id = "" # => leave emtpy to pick default aws/rds
 
   lifecycle {
     ignore_changes = [
@@ -74,6 +85,41 @@ resource "aws_db_instance" "db" {
       # updates these based on some ruleset managed elsewhere.
       tags,
     ]
+  }
+}
+
+################################################################################
+# Create an IAM role to allow enhanced monitoring
+################################################################################
+
+resource "aws_iam_role" "rds_enhanced_monitoring" {
+  count = var.monitoring_interval == 0 ? 0 : 1
+
+  name_prefix        = "rds-enhanced-monitoring-"
+  assume_role_policy = data.aws_iam_policy_document.rds_enhanced_monitoring[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "rds_enhanced_monitoring" {
+  count = var.monitoring_interval == 0 ? 0 : 1
+
+  role       = aws_iam_role.rds_enhanced_monitoring[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+}
+
+data "aws_iam_policy_document" "rds_enhanced_monitoring" {
+  count = var.monitoring_interval == 0 ? 0 : 1
+
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["monitoring.rds.amazonaws.com"]
+    }
   }
 }
 

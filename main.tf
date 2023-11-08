@@ -376,6 +376,12 @@ module "database" {
   rds_cluster_storage_encrypted       = true                                 # true for prod env or non-db.t2x.micro free tier instance
 
   rds_cluster_enable_cloudwatch_logs_export = local.rds_cluster_enable_cloudwatch_logs_export
+
+  ca_cert_identifier                    = var.database_ca_cert_identifier
+  iam_database_authentication_enabled   = var.database_iam_database_authentication_enabled
+  monitoring_interval                   = var.database_enhanced_monitoring
+  performance_insights_enabled          = var.database_performance_insights_enabled
+  performance_insights_retention_period = var.database_performance_insights_retention_period
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
