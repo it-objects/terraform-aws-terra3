@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.28.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.2...v1.28.0) (2023-11-08)
+
+
+### Features
+
+* **alb:** make deletion protection configurable ([dc2a756](https://github.com/it-objects/terraform-aws-terra3/commit/dc2a75674edc3c8c2937e940f2f4b094240ecbe3))
+* **rds:** make RDS more configurable ([2f8c5e2](https://github.com/it-objects/terraform-aws-terra3/commit/2f8c5e25e3e88d7ee5ce161fb2169aeba8d06da0))
+
+
+### Bug Fixes
+
+* **alb:** fixed issue when alb logs are enabled ([f237929](https://github.com/it-objects/terraform-aws-terra3/commit/f2379290ab9fc1ec08422a6d0a3ca7ba4977e3cf))
+
 ### [1.27.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.1...v1.27.2) (2023-11-06)
 
 
