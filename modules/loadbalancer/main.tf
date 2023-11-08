@@ -10,7 +10,7 @@ resource "aws_lb" "this" {
   subnets            = var.public_subnets
   security_groups    = var.security_groups
 
-  enable_deletion_protection = false
+  enable_deletion_protection = var.enable_deletion_protection
   drop_invalid_header_fields = true
 
   access_logs {

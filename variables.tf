@@ -163,6 +163,12 @@ variable "enable_alb_logs" {
   default     = false
 }
 
+variable "enable_alb_deletion_protection" {
+  type        = bool
+  description = "Enable or disable deletion protection of ALB."
+  default     = false
+}
+
 variable "enable_custom_domain" {
   description = "Creates DNS entries and ACM certificates to be consumed by other resources."
   type        = bool

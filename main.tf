@@ -180,7 +180,8 @@ module "l7_loadbalancer" {
   public_subnets  = local.public_subnets
   security_groups = [module.security_groups.loadbalancer_sg]
 
-  enable_alb_logs = var.enable_alb_logs
+  enable_alb_logs            = var.enable_alb_logs
+  enable_deletion_protection = var.enable_alb_deletion_protection
 
   enable_custom_domain = var.enable_custom_domain
   default_redirect_url = var.default_redirect_url
