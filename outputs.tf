@@ -45,7 +45,12 @@ output "redis_endpoint" {
 
 output "ecr_arn" {
   value       = try(module.ecr[0].ecr_arn, "")
-  description = "Return ARN of ecr if enabled."
+  description = "Return ARN of first ECR. Kept for backwards compatibility. See ecr_arns for new out var."
+}
+
+output "ecr_arns" {
+  value       = module.ecr[0]
+  description = "Return all ARN's of all defined ECR's"
 }
 
 output "vpc_id" {
