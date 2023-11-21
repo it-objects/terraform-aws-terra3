@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.29.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.28.0...v1.29.0) (2023-11-21)
+
+
+### Features
+
+* adding options for creating a KMS to be used e.g. for SOPS ([a46d3ad](https://github.com/it-objects/terraform-aws-terra3/commit/a46d3ad0c39f0dc8fa6bd817d10289306dac2112))
+* **ecr:** output all declared ECR's ([b91c544](https://github.com/it-objects/terraform-aws-terra3/commit/b91c5440d4c4142d3426e88c48167321ead65c9c))
+
+
+### Bug Fixes
+
+* **ecr:** if ecr is not enabled make output work ([f22deb5](https://github.com/it-objects/terraform-aws-terra3/commit/f22deb5b5a407200a23e6362b71f1d56bb09e830))
+
 ## [1.28.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.2...v1.28.0) (2023-11-08)
 
 
