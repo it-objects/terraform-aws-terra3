@@ -642,3 +642,15 @@ variable "enable_vpc_s3_endpoint" {
   description = "Enable or disable the creation of the S3 endpoint for the VPC."
   default     = true
 }
+
+variable "enable_kms_key" {
+  type        = bool
+  description = "Generates a KMS key e.g. to be used for SOPS."
+  default     = false
+}
+
+variable "kms_key_alias" {
+  type        = string
+  description = "Which alias name to pick for the KMS key. Default is kms-key."
+  default     = "kms"
+}

@@ -623,3 +623,13 @@ module "global_scale_down" {
   redis_subnet_group_arn                  = local.redis.subnet_group_arn
   redis_security_group_arn                = local.redis.security_group_arn
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# scheduled HTTPS API call
+# ---------------------------------------------------------------------------------------------------------------------
+module "enable_kms" {
+  count = var.enable_kms_key ? 1 : 0
+
+  source = "./modules/kms"
+  name   = var.kms_key_alias
+}
