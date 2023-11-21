@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.29.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.29.0...v1.29.1) (2023-11-21)
+
+
+### Bug Fixes
+
+* remove unnecessary code ([66b09e4](https://github.com/it-objects/terraform-aws-terra3/commit/66b09e44b2a4b07a58fd2c419a7a7f43ed0e8c02))
+
 ## [1.29.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.28.0...v1.29.0) (2023-11-21)
 
 
