@@ -49,7 +49,7 @@ output "ecr_arn" {
 }
 
 output "ecr_arns" {
-  value       = module.ecr[0]
+  value       = try(module.ecr[0], "")
   description = "Return all ARN's of all defined ECR's"
 }
 
