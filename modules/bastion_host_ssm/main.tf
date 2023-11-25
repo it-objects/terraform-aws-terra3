@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_launch_template" "my_asg_launch_template" {
   name_prefix   = "${var.solution_name}_"
-  image_id      = "ami-0aac4d36ec040d2c1"
+  image_id      = "ami-06e14f82ec5afe2af" # updated Oct 31st 2023
   instance_type = "t4g.nano"
   metadata_options {
     http_endpoint               = "enabled"
@@ -26,7 +26,7 @@ resource "aws_launch_template" "my_asg_launch_template" {
     ebs {
       encrypted   = true
       volume_size = "8"
-      volume_type = "gp2"
+      volume_type = "gp3"
     }
   }
 
@@ -49,7 +49,7 @@ resource "aws_autoscaling_group" "my_autoscaling_group" {
   max_size         = 1
   min_size         = 1
 
-  vpc_zone_identifier = data.aws_subnets.private_subnets.ids
+  vpc_zone_identifier = var.private_subnets
 
   launch_template {
     id      = aws_launch_template.my_asg_launch_template.id

@@ -137,3 +137,38 @@ variable "database" {
     error_message = "Only 'mysql' and 'postgres' are allowed."
   }
 }
+
+variable "ca_cert_identifier" {
+  type        = string
+  description = "CA certificate."
+  default     = "rds-ca-2019"
+
+  validation {
+    condition     = contains(["rds-ca-2019", "rds-ca-rsa2048-g1", "rds-ca-rsa4096-g1", "rds-ca-ecc384-g1"], var.ca_cert_identifier)
+    error_message = "Only one of the values 'rds-ca-2019', 'rds-ca-rsa2048-g1', 'rds-ca-rsa4096-g1' or 'rds-ca-ecc384-g1' is allowed."
+  }
+}
+
+variable "iam_database_authentication_enabled" {
+  description = "Enable IAM authentication in addition to password authentication."
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_interval" {
+  description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60."
+  type        = number
+  default     = 0
+}
+
+variable "performance_insights_enabled" {
+  description = "Specifies whether Performance Insights are enabled. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "performance_insights_retention_period" {
+  description = "Amount of time in days to retain Performance Insights data. Valid values are 7, 731 (2 years) or a multiple of 31."
+  type        = number
+  default     = 7
+}

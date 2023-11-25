@@ -6,7 +6,7 @@ variable "solution_name" {
 variable "mastodon_image" {
   type        = string
   description = "Pointer to official Mastodon image + image tag."
-  default     = "tootsuite/mastodon:v4.0.2"
+  default     = "tootsuite/mastodon:v4.1.7"
 }
 
 variable "route53_zone_id" {

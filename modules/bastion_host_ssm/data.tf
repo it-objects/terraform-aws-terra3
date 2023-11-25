@@ -4,17 +4,3 @@
 data "aws_security_group" "bastion_host_ssm_sg" {
   name = "${var.environment_name}_bastion_host_ssm_sg"
 }
-
-# ---------------------------------------------------------------------------------------------------------------------
-# fetch private subnet ids using the vpc_id
-# ---------------------------------------------------------------------------------------------------------------------
-data "aws_subnets" "private_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [var.vpc_id]
-  }
-
-  tags = {
-    "Tier" = "private"
-  }
-}

@@ -18,6 +18,11 @@ output "domain_name" {
   description = "URL of Cloudfront distribution. Please wait some minutes until the distribution becomes available."
 }
 
+output "s3_static_website_name" {
+  value       = module.cloudfront_cdn.s3_static_website_bucket
+  description = "Name of S3 static website bucket."
+}
+
 output "s3_solution_bucket_name" {
   value       = var.create_s3_solution_bucket ? module.s3_solution_bucket[0].s3_solution_bucket_name : ""
   description = "Return solution bucket's URL."
@@ -40,7 +45,12 @@ output "redis_endpoint" {
 
 output "ecr_arn" {
   value       = try(module.ecr[0].ecr_arn, "")
-  description = "Return ARN of ecr if enabled."
+  description = "Return ARN of first ECR. Kept for backwards compatibility. See ecr_arns for new out var."
+}
+
+output "ecr_arns" {
+  value       = try(module.ecr[0], "")
+  description = "Return all ARN's of all defined ECR's"
 }
 
 output "vpc_id" {

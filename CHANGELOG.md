@@ -2,6 +2,120 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.29.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.29.0...v1.29.1) (2023-11-21)
+
+
+### Bug Fixes
+
+* remove unnecessary code ([66b09e4](https://github.com/it-objects/terraform-aws-terra3/commit/66b09e44b2a4b07a58fd2c419a7a7f43ed0e8c02))
+
+## [1.29.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.28.0...v1.29.0) (2023-11-21)
+
+
+### Features
+
+* adding options for creating a KMS to be used e.g. for SOPS ([a46d3ad](https://github.com/it-objects/terraform-aws-terra3/commit/a46d3ad0c39f0dc8fa6bd817d10289306dac2112))
+* **ecr:** output all declared ECR's ([b91c544](https://github.com/it-objects/terraform-aws-terra3/commit/b91c5440d4c4142d3426e88c48167321ead65c9c))
+
+
+### Bug Fixes
+
+* **ecr:** if ecr is not enabled make output work ([f22deb5](https://github.com/it-objects/terraform-aws-terra3/commit/f22deb5b5a407200a23e6362b71f1d56bb09e830))
+
+## [1.28.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.2...v1.28.0) (2023-11-08)
+
+
+### Features
+
+* **alb:** make deletion protection configurable ([dc2a756](https://github.com/it-objects/terraform-aws-terra3/commit/dc2a75674edc3c8c2937e940f2f4b094240ecbe3))
+* **rds:** make RDS more configurable ([2f8c5e2](https://github.com/it-objects/terraform-aws-terra3/commit/2f8c5e25e3e88d7ee5ce161fb2169aeba8d06da0))
+
+
+### Bug Fixes
+
+* **alb:** fixed issue when alb logs are enabled ([f237929](https://github.com/it-objects/terraform-aws-terra3/commit/f2379290ab9fc1ec08422a6d0a3ca7ba4977e3cf))
+
+### [1.27.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.1...v1.27.2) (2023-11-06)
+
+
+### Bug Fixes
+
+* **alerting:** fix state drift due to unnecessary explicit IAM role given although it is identical with the default ([7ba13a9](https://github.com/it-objects/terraform-aws-terra3/commit/7ba13a9a1c34bbd44784c0917b2681947eb29f0e))
+
+### [1.27.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.27.0...v1.27.1) (2023-10-31)
+
+
+### Bug Fixes
+
+* **bastion:** remove dynamic fetching of latest ami; it is pinned now and should only updated along new terra3 versions. Otherwise we'll experience continuous state drift. ([8d4fbba](https://github.com/it-objects/terraform-aws-terra3/commit/8d4fbbad2b8b390a79852c5b9e5742821e749ea7))
+
+## [1.27.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.26.1...v1.27.0) (2023-10-20)
+
+
+### Features
+
+* added output of s3 bucket name. ([f6f65ba](https://github.com/it-objects/terraform-aws-terra3/commit/f6f65ba3ce4b76c2d89f773921621f696d060f68))
+
+### [1.26.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.26.0...v1.26.1) (2023-09-18)
+
+
+### Bug Fixes
+
+* added iam policy version for container-based cron job ([2ddf4bf](https://github.com/it-objects/terraform-aws-terra3/commit/2ddf4bf91a63385d0c97af83275ea7b05b379ba9))
+* updated rds engine version for mysql ([20ca2bf](https://github.com/it-objects/terraform-aws-terra3/commit/20ca2bfe303e79618dc85ab2fd20fea837c75d8f))
+* updated solution name ([c45fb67](https://github.com/it-objects/terraform-aws-terra3/commit/c45fb676b23193e869b4091cb8d9879b4c2e46c3))
+
+## [1.26.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.25.1...v1.26.0) (2023-09-15)
+
+
+### Features
+
+* Introducing ECS Fargate container-based cron jobs triggered by a step function. It only requires a single line of configuration. See also the ecs_cronjob in the examples subfolder. ([d6af032](https://github.com/it-objects/terraform-aws-terra3/commit/d6af032b2c7e14ec0fa9b2622b605cc284a13b53))
+
+### [1.25.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.25.0...v1.25.1) (2023-09-13)
+
+
+### Bug Fixes
+
+* fixes issue with path_mapping reconciliation when app_components don't have the optional path_mapping defined ([a2ace80](https://github.com/it-objects/terraform-aws-terra3/commit/a2ace80add918d44d9b39f6569d43f45b77f29e3))
+
+## [1.25.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.24.0...v1.25.0) (2023-09-12)
+
+
+### Features
+
+* added ecr names variable. ([0719da6](https://github.com/it-objects/terraform-aws-terra3/commit/0719da6d3f5eb4df61e01a50c91087c1e77dacf0))
+* implemented logic for creating more than one ecr repository based on the number of names specified by user. ([b1990a1](https://github.com/it-objects/terraform-aws-terra3/commit/b1990a1c26268588d966152532b890b53f87cfd0))
+* updated db subnet group name with solution name ([8ad8c7a](https://github.com/it-objects/terraform-aws-terra3/commit/8ad8c7a52d6a5c072974f79ae2dd6e0722733125))
+
+## [1.24.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.23.0...v1.24.0) (2023-09-11)
+
+
+### Features
+
+* added ssm parameter for private subnets. ([78d20f3](https://github.com/it-objects/terraform-aws-terra3/commit/78d20f35b8687850a20da9532f3421928b9a4dfc))
+* updated subnet value accessing form tag to parameter. ([bb31d01](https://github.com/it-objects/terraform-aws-terra3/commit/bb31d01084dd594b4109d687806bc17c43466a97))
+
+## [1.23.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.22.0...v1.23.0) (2023-09-06)
+
+
+### Features
+
+* added configurations for db subnet group while using existing vpc. ([c4cbdd5](https://github.com/it-objects/terraform-aws-terra3/commit/c4cbdd549ca7cb397d9d6f5320e00bb6acd6d4dc))
+* added list of private subnets to the launch bastion host. ([8dc7560](https://github.com/it-objects/terraform-aws-terra3/commit/8dc7560b0b1fbb3095ee01bd57f2640a3683a452))
+* added subnets as a variable. ([096fb7e](https://github.com/it-objects/terraform-aws-terra3/commit/096fb7eed3eae0b87533628874bd51236ae69a38))
+* added variable of external database cidr. ([f03e476](https://github.com/it-objects/terraform-aws-terra3/commit/f03e476e784fd005db1b082d861d76076bbf3ba6))
+* removed data resource of vpc and added ami data resource to get latest amazon image. ([74decb7](https://github.com/it-objects/terraform-aws-terra3/commit/74decb739768a0b9b40eeddadfefae99d2af81a8))
+* updated ami id via data resource, latest volume type and added subnets as a variable. ([364575a](https://github.com/it-objects/terraform-aws-terra3/commit/364575a709a4b3b9165b37315b3e8b538d817b11))
+
+## [1.22.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.21.0...v1.22.0) (2023-09-04)
+
+
+### Features
+
+* add option to disable VPC endpoint for S3 ([8b3c7fd](https://github.com/it-objects/terraform-aws-terra3/commit/8b3c7fd7eda02796984ba5485ce5da1fd9a21529))
+* make terra3 module work in other regions than eu-central-1 ([3496ea1](https://github.com/it-objects/terraform-aws-terra3/commit/3496ea1174761bbaec92d75b390471ce1359c596))
+
 ## [1.21.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.20.2...v1.21.0) (2023-08-28)
 
 

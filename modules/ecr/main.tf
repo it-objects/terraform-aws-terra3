@@ -1,5 +1,6 @@
 resource "aws_ecr_repository" "ecr_repo" {
-  name                 = var.ecr_name
+  count                = length(var.create_ecr_with_names)
+  name                 = element(var.create_ecr_with_names, count.index) #var.create_ecr_with_names[count.index]
   image_tag_mutability = "IMMUTABLE"
 
   # enable encryption and create and use AWS managed ECR KMS key
@@ -19,9 +20,9 @@ locals {
 }
 
 resource "aws_ecr_repository_policy" "ecr_repo_policy" {
-  count = length(local.all_account_ids) > 0 ? 1 : 0
+  count = length(local.all_account_ids) > 0 ? length(var.create_ecr_with_names) : 0
 
-  repository = aws_ecr_repository.ecr_repo.name
+  repository = aws_ecr_repository.ecr_repo[count.index].name
   policy     = data.aws_iam_policy_document.ecr_repo_policy_xyz.json
 
 }

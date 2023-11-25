@@ -1,4 +1,6 @@
 provider "aws" {
+  region = "eu-central-1"
+
   # Make it faster by skipping something
   skip_metadata_api_check     = true
   skip_region_validation      = true
@@ -9,9 +11,9 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "terra3"
-      Environment = "qa"
-      Terraform   = "true"
+      "terra3.io/project" = "terra3-examples"
+      Environment         = "qa"
+      Terraform           = "true"
     }
   }
 }

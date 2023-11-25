@@ -121,12 +121,6 @@ variable "memory_utilization_low_threshold" {
   default     = 20
 }
 
-variable "sns_topic_arn" {
-  type        = set(string)
-  description = ""
-  default     = []
-}
-
 variable "alert_receivers_email" {
   type        = list(string)
   default     = []
@@ -166,6 +160,12 @@ variable "create_load_balancer" {
 variable "enable_alb_logs" {
   type        = bool
   description = "Select to enable storing alb logs in s3 bucket."
+  default     = false
+}
+
+variable "enable_alb_deletion_protection" {
+  type        = bool
+  description = "Enable or disable deletion protection of ALB."
   default     = false
 }
 
@@ -253,21 +253,56 @@ variable "database_instance_instance_class" {
   default     = "db.t3.small"
 }
 
-variable "create_s3_solution_bucket" {
-  description = "Creates an AWS S3 bucket and gives access to it from ECS containers."
+variable "database_ca_cert_identifier" {
+  type        = string
+  description = "CA certificate."
+  default     = "rds-ca-2019"
+
+  validation {
+    condition     = contains(["rds-ca-2019", "rds-ca-rsa2048-g1", "rds-ca-rsa4096-g1", "rds-ca-ecc384-g1"], var.database_ca_cert_identifier)
+    error_message = "Only one of the values 'rds-ca-2019', 'rds-ca-rsa2048-g1', 'rds-ca-rsa4096-g1' or 'rds-ca-ecc384-g1' is allowed."
+  }
+}
+
+variable "database_iam_database_authentication_enabled" {
+  description = "Enable IAM authentication in addition to password authentication."
   type        = bool
   default     = false
 }
 
-variable "s3_bucket_policy" {
+variable "database_enhanced_monitoring" {
+  description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60."
+  type        = number
+  default     = 0
+}
+
+variable "database_performance_insights_enabled" {
+  description = "Specifies whether Performance Insights are enabled. Defaults to false."
+  type        = bool
+  default     = false
+}
+
+variable "database_performance_insights_retention_period" {
+  description = "Amount of time in days to retain Performance Insights data. Valid values are 7, 731 (2 years) or a multiple of 31."
+  type        = number
+  default     = 7
+}
+
+variable "database" {
   type        = string
-  description = "Option that generally controls blocking public S3 access."
-  default     = "PRIVATE"
+  description = "Type of database."
+  default     = "mysql"
 
   validation {
-    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_bucket_policy)
-    error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
+    condition     = contains(["mysql", "postgres"], var.database)
+    error_message = "Only 'mysql' and 'postgres' are allowed."
   }
+}
+
+variable "create_s3_solution_bucket" {
+  description = "Creates an AWS S3 bucket and gives access to it from ECS containers."
+  type        = bool
+  default     = false
 }
 
 variable "s3_solution_bucket_cf_behaviours" {
@@ -304,17 +339,6 @@ variable "enable_container_insights" {
   description = "Enables/disables more detailed logging via Container Insights for ECS."
   type        = bool
   default     = false
-}
-
-variable "database" {
-  type        = string
-  description = "Type of database."
-  default     = "mysql"
-
-  validation {
-    condition     = contains(["mysql", "postgres"], var.database)
-    error_message = "Only 'mysql' and 'postgres' are allowed."
-  }
 }
 
 variable "cluster_type" {
@@ -465,6 +489,11 @@ variable "create_ecr" {
   default = false
 }
 
+variable "create_ecr_with_names" {
+  type    = list(string)
+  default = []
+}
+
 variable "ecr_custom_name" {
   description = "Custom name for ECR repo. Otherwise, solution name is taken."
   type        = string
@@ -488,15 +517,10 @@ variable "create_deployment_user" {
   default = false
 }
 
-variable "s3_solution_bucket_policy" {
-  type        = string
-  description = "Option that generally controls blocking public S3 access."
-  default     = "PRIVATE"
-
-  validation {
-    condition     = contains(["PRIVATE", "PUBLIC_READ_ONLY"], var.s3_solution_bucket_policy)
-    error_message = "Only 'PRIVATE' and 'PUBLIC_READ_ONLY' are allowed."
-  }
+variable "s3_solution_bucket_enable_acl" {
+  type        = bool
+  description = "Option that overwrites more secure ACL-less S3 buckets."
+  default     = false
 }
 
 variable "create_ses" {
@@ -559,6 +583,12 @@ variable "external_db_subnet_group_name" {
   default     = ""
 }
 
+variable "external_database_cidr" {
+  type        = list(string)
+  description = ""
+  default     = []
+}
+
 variable "external_elasticache_subnet_ids" {
   type        = list(string)
   description = "Elasticache subnet ids of existing vpc."
@@ -605,4 +635,22 @@ variable "custom_elb_cf_path_patterns" {
   type        = list(string)
   description = "Option that exposes custom ELB paths via Cloudfront."
   default     = []
+}
+
+variable "enable_vpc_s3_endpoint" {
+  type        = bool
+  description = "Enable or disable the creation of the S3 endpoint for the VPC."
+  default     = true
+}
+
+variable "enable_kms_key" {
+  type        = bool
+  description = "Generates a KMS key e.g. to be used for SOPS."
+  default     = false
+}
+
+variable "kms_key_alias" {
+  type        = string
+  description = "Which alias name to pick for the KMS key. Default is kms-key."
+  default     = "kms"
 }

@@ -20,6 +20,12 @@ variable "enable_alb_logs" {
   default     = false
 }
 
+variable "enable_deletion_protection" {
+  type        = bool
+  description = "Enable or disable deletion protection of ALB."
+  default     = false
+}
+
 variable "enable_custom_domain" {
   description = "Indicates whether to use a custom domain or the AWS default domains for CloudFront and ALB."
   type        = bool

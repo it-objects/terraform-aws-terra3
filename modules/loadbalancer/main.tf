@@ -10,11 +10,11 @@ resource "aws_lb" "this" {
   subnets            = var.public_subnets
   security_groups    = var.security_groups
 
-  enable_deletion_protection = false
+  enable_deletion_protection = var.enable_deletion_protection
   drop_invalid_header_fields = true
 
   access_logs {
-    bucket  = try(aws_s3_bucket.lb-logs[0].bucket, "")
+    bucket  = try(module.log_bucket[0].s3_bucket_id, "")
     prefix  = "${var.solution_name}-alb"
     enabled = var.enable_alb_logs
   }
@@ -77,54 +77,29 @@ resource "aws_ssm_parameter" "alb_listener_arn" {
   value = !var.enable_custom_domain ? aws_lb_listener.port_80[0].arn : "-"
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# ALB Log S3 bucket
+# ---------------------------------------------------------------------------------------------------------------------
 # tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
-resource "aws_s3_bucket" "lb-logs" {
-  count  = var.enable_alb_logs ? 1 : 0
-  bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
-
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_ownership_controls" "lb-logs" {
+module "log_bucket" {
   count = var.enable_alb_logs ? 1 : 0
 
-  bucket = aws_s3_bucket.lb-logs[0].id
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "3.15.1"
 
-  rule {
-    object_ownership = "BucketOwnerEnforced"
-  }
-}
+  bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
+  acl    = "log-delivery-write"
 
-# ---------------------------------------------------------------------------------------------------------------------
-# Block public access per-se
-# TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
-# ---------------------------------------------------------------------------------------------------------------------
-resource "aws_s3_bucket_public_access_block" "block" {
-  count  = var.enable_alb_logs ? 1 : 0
-  bucket = aws_s3_bucket.lb-logs[0].bucket
+  force_destroy = true
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
+  control_object_ownership = true
+  object_ownership         = "ObjectWriter"
 
-# tfsec:ignore:aws-s3-encryption-customer-key
-resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption_config" {
-  count  = var.enable_alb_logs ? 1 : 0
-  bucket = aws_s3_bucket.lb-logs[0].id
+  attach_elb_log_delivery_policy = true # Required for ALB logs
+  #attach_lb_log_delivery_policy  = true # Required for ALB/NLB logs
 
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-resource "aws_s3_bucket_policy" "allow-lb" {
-  count  = var.enable_alb_logs ? 1 : 0
-  bucket = aws_s3_bucket.lb-logs[0].id
-  policy = data.aws_iam_policy_document.allow-lb[0].json
+  attach_deny_insecure_transport_policy = true
+  attach_require_latest_tls_policy      = true
 }
 
 resource "random_string" "random_s3_alb_logs_postfix" {
@@ -133,38 +108,9 @@ resource "random_string" "random_s3_alb_logs_postfix" {
   min_lower = 4
 }
 
-data "aws_iam_policy_document" "allow-lb" {
-  count = var.enable_alb_logs ? 1 : 0
-  statement {
-    principals {
-      type        = "Service"
-      identifiers = ["logdelivery.elb.amazonaws.com"]
-    }
-
-    actions = [
-      "s3:PutObject"
-    ]
-
-    resources = [
-      "${aws_s3_bucket.lb-logs[0].arn}/*"
-    ]
-  }
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["054676820928"]
-    }
-
-    actions = [
-      "s3:PutObject"
-    ]
-
-    resources = [
-      "${aws_s3_bucket.lb-logs[0].arn}/*"
-    ]
-  }
-}
-
+# ---------------------------------------------------------------------------------------------------------------------
+# Write Loadbalancer config to SSM
+# ---------------------------------------------------------------------------------------------------------------------
 resource "aws_ssm_parameter" "environment_alb_arn" {
   name  = "/${var.solution_name}/alb_arn"
   type  = "String"

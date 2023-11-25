@@ -12,6 +12,20 @@ locals {
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
   domain_name = var.enable_custom_domain ? module.dns_and_certificates[0].internal_domain_name : ""
+
+  created_db_subnet_group_name = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" ? join(", ", aws_db_subnet_group.external_db_subnet_group[*].name) : var.external_db_subnet_group_name
+
+  # Variable definitions of using existing VPC or create VPC
+  vpc_id                  = var.use_an_existing_vpc ? var.external_vpc_id : module.vpc[0].vpc_id
+  public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : module.vpc[0].public_subnets
+  private_subnets         = var.use_an_existing_vpc ? var.external_private_subnets : module.vpc[0].private_subnets
+  private_route_table_ids = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].private_route_table_ids
+  public_route_table_ids  = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].public_route_table_ids
+  db_subnet_group_name    = var.use_an_existing_vpc ? local.created_db_subnet_group_name : module.vpc[0].database_subnet_group_name
+  elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
+
+  # calculate app_components' path
+  app_component_paths = length(var.app_components) == 0 ? ["/api/*"] : [for component in values(var.app_components) : (contains(keys(component), "path_mapping") ? component.path_mapping : "/api/*")]
 }
 
 resource "aws_ssm_parameter" "domain_name" {
@@ -20,16 +34,38 @@ resource "aws_ssm_parameter" "domain_name" {
   value = var.enable_custom_domain ? local.domain_name : "-"
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Added resources for database subnet group while using existing VPC.
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_subnet" "database_subnet" {
+  count = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
 
-locals {
-  # Variable definitions of using existing VPC or create VPC
-  vpc_id                  = var.use_an_existing_vpc ? var.external_vpc_id : module.vpc[0].vpc_id
-  public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : module.vpc[0].public_subnets
-  private_subnets         = var.use_an_existing_vpc ? var.external_private_subnets : module.vpc[0].private_subnets
-  private_route_table_ids = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].private_route_table_ids
-  public_route_table_ids  = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].public_route_table_ids
-  db_subnet_group_name    = var.use_an_existing_vpc ? var.external_db_subnet_group_name : module.vpc[0].database_subnet_group
-  elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
+  vpc_id            = local.vpc_id
+  cidr_block        = var.external_database_cidr[count.index]
+  availability_zone = element(var.azs, count.index)
+
+  tags = merge(
+    {
+      "Name" = format(
+        "${var.solution_name}-%s", element(var.azs, count.index),
+      )
+    }
+  )
+}
+
+resource "aws_route_table_association" "database" {
+  count = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
+
+  subnet_id      = element(aws_subnet.database_subnet[*].id, count.index)
+  route_table_id = element(local.private_route_table_ids[*], count.index)
+}
+
+resource "aws_db_subnet_group" "external_db_subnet_group" {
+  count = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? 1 : 0
+
+  name        = "${var.solution_name}-db-subnet-group"
+  description = "Database subnet group."
+  subnet_ids  = aws_subnet.database_subnet[*].id
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -86,10 +122,18 @@ resource "aws_ssm_parameter" "vpc_id" {
   value = local.vpc_id
 }
 
+resource "aws_ssm_parameter" "private_subnets" {
+  name  = "/${var.solution_name}/private_subnets"
+  type  = "StringList"
+  value = join(",", local.private_subnets)
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Enable S3 gateway endpoint. Best practice to keep S3 traffic internal
 # ---------------------------------------------------------------------------------------------------------------------
 module "vpc_endpoints" {
+  count = var.enable_vpc_s3_endpoint ? 1 : 0
+
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "3.19.0"
 
@@ -136,7 +180,8 @@ module "l7_loadbalancer" {
   public_subnets  = local.public_subnets
   security_groups = [module.security_groups.loadbalancer_sg]
 
-  enable_alb_logs = var.enable_alb_logs
+  enable_alb_logs            = var.enable_alb_logs
+  enable_deletion_protection = var.enable_alb_deletion_protection
 
   enable_custom_domain = var.enable_custom_domain
   default_redirect_url = var.default_redirect_url
@@ -208,6 +253,9 @@ module "cloudfront_cdn" {
   s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
   disable_custom_error_response    = var.disable_custom_error_response
 
+  # when custom_elb_cf_path_patterns is not given by developer, it is being calculated (calculation only works in single state setups)
+  custom_elb_cf_path_patterns = length(var.custom_elb_cf_path_patterns) == 0 ? local.app_component_paths : var.custom_elb_cf_path_patterns
+
   s3_solution_bucket_name        = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
   s3_solution_bucket_arn         = try(module.s3_solution_bucket[0].s3_bucket_arn, "")
   s3_solution_bucket_domain_name = try(module.s3_solution_bucket[0].s3_bucket_domain_name, "")
@@ -215,8 +263,7 @@ module "cloudfront_cdn" {
   # ignored if static web page is deactivated
   add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html
 
-  s3_admin_website_url  = module.global_scale_down.s3_admin_website_url
-  isAdminWebsiteEnabled = var.enable_environment_hibernation_sleep_schedule
+  enable_cloudfront_url_signing_for_solution_bucket = var.enable_cloudfront_url_signing_for_solution_bucket
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -292,12 +339,13 @@ module "bastion_host_ssm" {
   solution_name    = var.solution_name
   environment_name = var.solution_name
   vpc_id           = local.vpc_id
+  private_subnets  = local.private_subnets
 
   depends_on = [module.security_groups]
 }
 
 locals {
-  rds_cluster_engine_version                = var.database == "mysql" ? "8.0.32" : "14.5"
+  rds_cluster_engine_version                = var.database == "mysql" ? "8.0.34" : "14.5"
   rds_cluster_security_group_ids            = var.database == "mysql" ? [module.security_groups.mysql_db_sg] : [module.security_groups.postgres_db_sg]
   rds_cluster_enable_cloudwatch_logs_export = var.database == "mysql" ? ["audit"] : ["postgresql"]
 }
@@ -329,6 +377,12 @@ module "database" {
   rds_cluster_storage_encrypted       = true                                 # true for prod env or non-db.t2x.micro free tier instance
 
   rds_cluster_enable_cloudwatch_logs_export = local.rds_cluster_enable_cloudwatch_logs_export
+
+  ca_cert_identifier                    = var.database_ca_cert_identifier
+  iam_database_authentication_enabled   = var.database_iam_database_authentication_enabled
+  monitoring_interval                   = var.database_enhanced_monitoring
+  performance_insights_enabled          = var.database_performance_insights_enabled
+  performance_insights_retention_period = var.database_performance_insights_retention_period
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -368,10 +422,11 @@ resource "aws_elasticache_subnet_group" "db_elastic_subnetgroup" {
 # ECR repo used for storing container images
 # ---------------------------------------------------------------------------------------------------------------------
 module "ecr" {
-  count = var.create_ecr ? 1 : 0
+  count = length(var.create_ecr_with_names) > 0 ? 1 : 0
 
   source = "./modules/ecr"
 
+  create_ecr_with_names  = var.create_ecr_with_names
   ecr_name               = length(var.ecr_custom_name) > 3 ? var.ecr_custom_name : var.solution_name
   access_for_account_id  = var.ecr_access_for_account_id  # allow production account
   access_for_account_ids = var.ecr_access_for_account_ids # allow production accounts
@@ -383,9 +438,9 @@ module "ecr" {
 module "s3_solution_bucket" {
   count = var.create_s3_solution_bucket ? 1 : 0
 
-  source                    = "./modules/s3_bucket"
-  solution_name             = var.solution_name
-  s3_solution_bucket_policy = var.s3_solution_bucket_policy
+  source                        = "./modules/s3_bucket"
+  solution_name                 = var.solution_name
+  s3_solution_bucket_enable_acl = var.s3_solution_bucket_enable_acl
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -477,15 +532,15 @@ module "app_components" {
 
 locals {
   ecs_service_names = [
-    for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name
+    for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name if ecs_service_names.ecs_service_name != null
   ]
 
   ecs_desire_task_counts = [
-    for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count
+    for ecs_desire_task_counts in module.app_components.app_components : ecs_desire_task_counts.ecs_desire_task_count if ecs_desire_task_counts.ecs_desire_task_count != null
   ]
 
   ecs_service_arn = [
-    for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn
+    for ecs_service_arn in module.app_components.app_components : ecs_service_arn.ecs_service_arn if ecs_service_arn.ecs_service_arn != null
   ]
 
   db_instance_name = var.create_database ? split(",", module.database[0].db_instance_name) : []
@@ -526,7 +581,7 @@ resource "aws_ssm_parameter" "hibernation_state" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   name  = "/${var.solution_name}/global_scale_down/hibernation_state"
-  value = "scaled_up"
+  value = "initial"
   type  = "String"
 }
 
@@ -556,8 +611,7 @@ module "global_scale_down" {
   environment_hibernation_sleep_schedule        = var.environment_hibernation_sleep_schedule
   environment_hibernation_wakeup_schedule       = var.environment_hibernation_wakeup_schedule
 
-  solution_name  = var.solution_name
-  cloudfront_arn = module.cloudfront_cdn.cloudfront_arn
+  solution_name = var.solution_name
 
   ecs_ec2_instances_autoscaling_group_arn = module.cluster.ecs_ec2_instances_autoscaling_group_arn
   nat_instances_autoscaling_group_arn     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_arn)
@@ -568,4 +622,14 @@ module "global_scale_down" {
   redis_cluster_arn                       = local.redis.cluster_arn
   redis_subnet_group_arn                  = local.redis.subnet_group_arn
   redis_security_group_arn                = local.redis.security_group_arn
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# scheduled HTTPS API call
+# ---------------------------------------------------------------------------------------------------------------------
+module "enable_kms" {
+  count = var.enable_kms_key ? 1 : 0
+
+  source = "./modules/kms"
+  name   = var.kms_key_alias
 }
