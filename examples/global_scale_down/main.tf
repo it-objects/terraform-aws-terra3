@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is example to showcase Terra3's capabilities of enabling global scale down/up option.
+# This is example to showcase Terra3's capabilities of enabling global scale down.mjs/up option.
 #
 # Outcome: Environment can be put to hibernation state (sleep/wake up).
 # ---------------------------------------------------------------------------------------------------------------------
