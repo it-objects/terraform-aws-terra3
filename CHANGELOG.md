@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.30.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.29.1...v1.30.0) (2023-11-28)
+
+
+### Features
+
+* added environment hibernation mini admin website ([#37](https://github.com/it-objects/terraform-aws-terra3/issues/37)) ([57da5f3](https://github.com/it-objects/terraform-aws-terra3/commit/57da5f3561e65676ce4042626db5f39dae6b8c26))
+
 ### [1.29.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.29.0...v1.29.1) (2023-11-21)
 
 
