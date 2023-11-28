@@ -2,12 +2,12 @@
 # App Component (AWS)
 # Features (pre-configured)
 # - debug: ECS Connect
-# - costs: scale down.mjs on non-working hours (can save costs for non-prod environments)
+# - costs: scale down on non-working hours (can save costs for non-prod environments)
 # - security: default read-only root filesystem for containers (complies with Basic Sec rules)
 # ---------------------------------------------------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Service definition, auto heals if task shuts down.mjs
+# Service definition, auto heals if task shuts down
 # ---------------------------------------------------------------------------------------------------------------------
 locals {
   launch_type = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? "FARGATE" : "EC2"
@@ -326,7 +326,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_service_memory_utilization_low" {
   }
 }
 # ---------------------------------------------------------------------------------------------------------------------
-# Autoscaling based on CPU and MEMORY Utilisation for scaling up and down.mjs to save costs.
+# Autoscaling based on CPU and MEMORY Utilisation for scaling up and down to save costs.
 # ---------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------
 # Create autoscaling target linked to ECS
@@ -406,7 +406,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_running_task_count" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Autoscaling logic for scaling up and down.mjs to save costs and for resets
+# Autoscaling logic for scaling up and down to save costs and for resets
 # ---------------------------------------------------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -428,7 +428,7 @@ resource "aws_appautoscaling_target" "ServiceAutoScalingTarget" {
   }
 }
 # ---------------------------------------------------------------------------------------------------------------------
-# Scale down.mjs on weekdays logic to save costs
+# Scale down on weekdays logic to save costs
 # Scale up weekdays at beginning of day
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_scheduled_action" "WeekdayScaleUp" {
@@ -447,7 +447,7 @@ resource "aws_appautoscaling_scheduled_action" "WeekdayScaleUp" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Scale down.mjs weekdays at end of day
+# Scale down weekdays at end of day
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_appautoscaling_scheduled_action" "WeekdayScaleDown" {
   count              = local.enable_autoscaling ? 1 : 0
