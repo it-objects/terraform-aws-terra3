@@ -88,3 +88,15 @@ variable "enable_cloudfront_url_signing_for_solution_bucket" {
   type        = bool
   default     = false
 }
+
+variable "s3_admin_website_url" {
+  description = "URL of s3 admin website"
+  type        = string
+  default     = ""
+}
+
+variable "isAdminWebsiteEnabled" {
+  type        = bool
+  description = "Select true to enable sleep environment hibernation."
+  default     = false
+}

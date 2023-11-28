@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is example to showcase Terra3's capabilities of enabling global scale down/up option.
+# This is example to showcase Terra3's capabilities of enabling global scale down.mjs/up option.
 #
 # Outcome: Environment can be put to hibernation state (sleep/wake up).
 # ---------------------------------------------------------------------------------------------------------------------
@@ -15,11 +15,11 @@ module "terra3_examples" {
   enable_account_best_practices = true
 
   # configure your environment here
-  create_load_balancer     = true
-  create_bastion_host      = true
-  create_database          = true
-  database                 = "postgres"
-  create_elasticache_redis = true
+  create_load_balancer = true
+  create_bastion_host  = true
+  #create_database          = true
+  #database                 = "postgres"
+  #create_elasticache_redis = true
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"

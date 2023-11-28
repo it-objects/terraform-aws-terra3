@@ -48,7 +48,15 @@ locals {
     }
   }
 
-  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins)
+  s3_admin_website = var.isAdminWebsiteEnabled != true ? {} : {
+    s3_mini_admin_website_bucket = {
+      domain_name              = var.s3_admin_website_url
+      origin_path              = ""
+      origin_access_control_id = aws_cloudfront_origin_access_control.s3_admin_website[0].id
+    }
+  }
+
+  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins, local.s3_admin_website)
 
   # -------------------------------------------------------------------------------------------------------------------
   # Define behaviours either with or without ALB
@@ -80,6 +88,27 @@ locals {
         trusted_key_groups = var.enable_cloudfront_url_signing_for_solution_bucket ? [aws_cloudfront_key_group.cf_keygroup[0].id] : []
       }
     ],
+    !var.isAdminWebsiteEnabled ? [] : [{
+      path_pattern           = "/admin-terra3/*"
+      target_origin_id       = "s3_mini_admin_website_bucket"
+      viewer_protocol_policy = "redirect-to-https"
+
+      allowed_methods = ["GET", "HEAD", "OPTIONS"]
+      cached_methods  = ["GET", "HEAD"]
+      compress        = true
+
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+
+      function_association = {
+        viewer-request : { function_arn : aws_cloudfront_function.RewriteDefaultIndexRequest.arn }
+      }
+
+      use_forwarded_values     = false
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
+      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+    }],
     var.origin_alb_url == null ? [] : [
       for custom_elb_cf_path_pattern in var.custom_elb_cf_path_patterns :
       {
@@ -171,11 +200,12 @@ resource "aws_cloudfront_distribution" "general_distribution" {
     for_each = local.all_origins
 
     content {
-      domain_name         = origin.value.domain_name
-      origin_id           = lookup(origin.value, "origin_id", origin.key)
-      origin_path         = lookup(origin.value, "origin_path", "")
-      connection_attempts = lookup(origin.value, "connection_attempts", null)
-      connection_timeout  = lookup(origin.value, "connection_timeout", null)
+      domain_name              = origin.value.domain_name
+      origin_id                = lookup(origin.value, "origin_id", origin.key)
+      origin_path              = lookup(origin.value, "origin_path", "")
+      connection_attempts      = lookup(origin.value, "connection_attempts", null)
+      connection_timeout       = lookup(origin.value, "connection_timeout", null)
+      origin_access_control_id = lookup(origin.value, "origin_access_control_id", null)
 
       dynamic "s3_origin_config" {
         for_each = length(keys(lookup(origin.value, "s3_origin_config", {}))) == 0 ? [] : [lookup(origin.value, "s3_origin_config", {})]
@@ -658,4 +688,25 @@ resource "aws_ssm_parameter" "cf_private_key_pair_id" {
   description = "Terra3 generated private key's id for signing Cloudfront URLs."
   type        = "SecureString"
   value       = aws_cloudfront_public_key.cf_key[0].id
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# OCA for s3 admin website
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
+  count = var.isAdminWebsiteEnabled ? 1 : 0
+
+  name                              = "${var.solution_name} OCA for s3 admin website"
+  description                       = "OCA for s3 admin website"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_function" "RewriteDefaultIndexRequest" {
+  name    = "RewriteDefaultIndexRequest"
+  runtime = "cloudfront-js-1.0"
+  comment = "Rewriting default index request for s3 mini admin website"
+  publish = true
+  code    = file("${path.module}/function.js")
 }
