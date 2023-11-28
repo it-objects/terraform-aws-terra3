@@ -136,8 +136,10 @@ export const scaleDownResources = async () => {
 };
 
 export const scaleDownAutoScalingGroups = async (storedData) => {
+  let asg_name = "";
   try {
     for (let i = 0; i < storedData.asg_name.length; i++) {
+      asg_name = storedData.asg_name[i];
       const ecs_ec2_asg_input = {
         AutoScalingGroupName: storedData.asg_name[i],
         MaxSize: 0,
@@ -151,11 +153,11 @@ export const scaleDownAutoScalingGroups = async (storedData) => {
       await ecs_ec2_asg_client.send(ecs_ec2_asg_command);
 
       console.log(
-        `Auto scaling groups "${storedData.asg_name[i]}" updated successfully to 0.`,
+        `Auto scaling groups "${asg_name}" updated successfully to 0.`,
       );
     }
   } catch (error) {
-    throw new Error(`Error scaling down auto-scaling groups: ${error.message}`);
+    throw new Error(`Error scaling down in "${asg_name}": ${error.message}`);
   }
 };
 
