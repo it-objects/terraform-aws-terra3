@@ -102,7 +102,7 @@ locals {
       max_ttl     = 0
 
       function_association = {
-        viewer-request : { function_arn : aws_cloudfront_function.RewriteDefaultIndexRequest.arn }
+        viewer-request : { function_arn : aws_cloudfront_function.RewriteDefaultIndexRequest[0].arn }
       }
 
       use_forwarded_values     = false
@@ -704,6 +704,8 @@ resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
 }
 
 resource "aws_cloudfront_function" "RewriteDefaultIndexRequest" {
+  count = var.isAdminWebsiteEnabled ? 1 : 0
+
   name    = "RewriteDefaultIndexRequest"
   runtime = "cloudfront-js-1.0"
   comment = "Rewriting default index request for s3 mini admin website"
