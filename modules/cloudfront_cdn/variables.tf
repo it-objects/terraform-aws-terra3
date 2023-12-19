@@ -95,7 +95,7 @@ variable "s3_admin_website_url" {
   default     = ""
 }
 
-variable "isAdminWebsiteEnabled" {
+variable "enable_environment_hibernation_admin_website" {
   type        = bool
   description = "Select true to enable sleep environment hibernation."
   default     = false

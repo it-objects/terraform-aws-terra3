@@ -252,11 +252,12 @@ resource "aws_lambda_function_url" "status_lambda_function_url" {
 #tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "bucket" {
   count         = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-  bucket        = "${var.solution_name}-mini-admin-website-s3-bucket-${random_string.random_s3_postfix.result}"
+  bucket        = "${var.solution_name}-mini-admin-website-s3-bucket-${random_string.random_s3_postfix[0].result}"
   force_destroy = true
 }
 
 resource "random_string" "random_s3_postfix" {
+  count     = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   length    = 4
   special   = false
   min_lower = 4
