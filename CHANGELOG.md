@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.30.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.30.0...v1.30.1) (2023-12-19)
+
+
+### Bug Fixes
+
+* unabled default resource creation of environment hibernation feature ([#42](https://github.com/it-objects/terraform-aws-terra3/issues/42)) ([5c8a434](https://github.com/it-objects/terraform-aws-terra3/commit/5c8a4341f94e700964fc47249935ed716bedc367))
+
 ## [1.30.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.29.1...v1.30.0) (2023-11-28)
 
 
