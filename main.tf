@@ -265,8 +265,8 @@ module "cloudfront_cdn" {
 
   enable_cloudfront_url_signing_for_solution_bucket = var.enable_cloudfront_url_signing_for_solution_bucket
 
-  s3_admin_website_url  = module.global_scale_down.s3_admin_website_url
-  isAdminWebsiteEnabled = var.enable_environment_hibernation_sleep_schedule
+  s3_admin_website_url                         = module.global_scale_down.s3_admin_website_url
+  enable_environment_hibernation_admin_website = var.enable_environment_hibernation_sleep_schedule
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

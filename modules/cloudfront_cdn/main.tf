@@ -48,7 +48,7 @@ locals {
     }
   }
 
-  s3_admin_website = var.isAdminWebsiteEnabled != true ? {} : {
+  s3_admin_website = var.enable_environment_hibernation_admin_website != true ? {} : {
     s3_mini_admin_website_bucket = {
       domain_name              = var.s3_admin_website_url
       origin_path              = ""
@@ -88,7 +88,7 @@ locals {
         trusted_key_groups = var.enable_cloudfront_url_signing_for_solution_bucket ? [aws_cloudfront_key_group.cf_keygroup[0].id] : []
       }
     ],
-    !var.isAdminWebsiteEnabled ? [] : [{
+    !var.enable_environment_hibernation_admin_website ? [] : [{
       path_pattern           = "/admin-terra3/*"
       target_origin_id       = "s3_mini_admin_website_bucket"
       viewer_protocol_policy = "redirect-to-https"
@@ -694,7 +694,7 @@ resource "aws_ssm_parameter" "cf_private_key_pair_id" {
 # OCA for s3 admin website
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
-  count = var.isAdminWebsiteEnabled ? 1 : 0
+  count = var.enable_environment_hibernation_admin_website ? 1 : 0
 
   name                              = "${var.solution_name} OCA for s3 admin website"
   description                       = "OCA for s3 admin website"
@@ -704,7 +704,7 @@ resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
 }
 
 resource "aws_cloudfront_function" "RewriteDefaultIndexRequest" {
-  count = var.isAdminWebsiteEnabled ? 1 : 0
+  count = var.enable_environment_hibernation_admin_website ? 1 : 0
 
   name    = "RewriteDefaultIndexRequest"
   runtime = "cloudfront-js-1.0"
