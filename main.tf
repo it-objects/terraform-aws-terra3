@@ -264,6 +264,9 @@ module "cloudfront_cdn" {
   add_default_index_html = var.enable_s3_for_static_website && var.add_default_index_html
 
   enable_cloudfront_url_signing_for_solution_bucket = var.enable_cloudfront_url_signing_for_solution_bucket
+
+  s3_admin_website_url  = module.global_scale_down.s3_admin_website_url
+  isAdminWebsiteEnabled = var.enable_environment_hibernation_sleep_schedule
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
