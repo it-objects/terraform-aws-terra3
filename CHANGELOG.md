@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.30.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.30.1...v1.30.2) (2023-12-20)
+
+
+### Bug Fixes
+
+* updated timeout of lambda functions in environment feature ([a842522](https://github.com/it-objects/terraform-aws-terra3/commit/a8425221c08fdc121b3e1645818a89dc1e9a6f8f))
+
 ### [1.30.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.30.0...v1.30.1) (2023-12-19)
 
 
