@@ -48,7 +48,7 @@ module "lambda_scale_up" {
   handler       = "scale_up.handler"
   runtime       = "nodejs18.x"
   source_path   = "${path.module}/scale_up.mjs"
-  timeout       = 600
+  timeout       = 900
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
@@ -138,7 +138,7 @@ module "lambda_scale_down" {
   handler       = "scale_down.handler"
   runtime       = "nodejs18.x"
   source_path   = "${path.module}/scale_down.mjs"
-  timeout       = 600
+  timeout       = 900
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
@@ -219,7 +219,7 @@ module "global_scale_status" {
   handler       = "status.handler"
   runtime       = "nodejs18.x"
   source_path   = "${path.module}/status.mjs"
-  timeout       = 600
+  timeout       = 900
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
