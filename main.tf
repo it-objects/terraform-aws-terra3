@@ -534,6 +534,13 @@ module "app_components" {
 }
 
 locals {
+  ecs_services_json = jsonencode([
+    for i in range(length(local.ecs_service_names)) : {
+      name         = local.ecs_service_names[i],
+      desiredCount = local.ecs_desire_task_counts[i]
+    }
+  ])
+
   ecs_service_names = [
     for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name if ecs_service_names.ecs_service_name != null
   ]
@@ -568,7 +575,7 @@ resource "aws_ssm_parameter" "ecs_service_name" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   name  = "/${var.solution_name}/global_scale_down/ecs_service_data"
-  value = "1"
+  value = local.ecs_services_json
   type  = "String"
 }
 
