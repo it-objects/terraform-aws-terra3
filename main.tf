@@ -577,6 +577,10 @@ resource "aws_ssm_parameter" "ecs_service_name" {
   name  = "/${var.solution_name}/global_scale_down/ecs_service_data"
   value = local.ecs_services_json
   type  = "String"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 resource "aws_ssm_parameter" "scale_up_parameters" {
