@@ -25,13 +25,15 @@ locals {
   private_subnets_as_string = jsonencode(local.private_subnets)
 
   # configure dependent options in case of cronjob mode
-  enable_autoscaling       = length(var.configure_as_cronjob) >= 1 ? false : var.enable_autoscaling
+  final_enable_autoscaling = length(var.configure_as_cronjob) >= 1 ? false : var.enable_autoscaling
   internal_service         = length(var.configure_as_cronjob) >= 1 ? true : var.internal_service
   cpu_utilization_alert    = length(var.configure_as_cronjob) >= 1 ? false : var.cpu_utilization_alert
   memory_utilization_alert = length(var.configure_as_cronjob) >= 1 ? false : var.memory_utilization_alert
   task_count_alert         = length(var.configure_as_cronjob) >= 1 ? false : var.task_count_alert
 
   timeout_in_seconds = 300 # the time in seconds after the cronjob should be terminated
+
+  enable_autoscaling = local.final_enable_autoscaling && !data.aws_ssm_parameter.enable_environment_hibernation_sleep_schedule.value && !var.enable_environment_hibernation_sleep_schedule
 }
 
 resource "aws_ecs_service" "ecs_service" {
