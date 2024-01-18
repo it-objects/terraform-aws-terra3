@@ -58,7 +58,7 @@ export const handler = async (event, context) => {
     return errorResponse(error.message);
   }
   finally {
-     clearTimeout(timer);
+    clearTimeout(timer);
   }
 };
 
