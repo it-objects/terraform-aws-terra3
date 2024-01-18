@@ -24,6 +24,8 @@ module "terra3_examples" {
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
+  # Please make sure to enable only one feature at a time.
+  # Either enable_environment_hibernation_sleep_schedule OR enable_autoscaling in app_components.
   enable_environment_hibernation_sleep_schedule = true
   environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)" #Down
   environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)" #Up
