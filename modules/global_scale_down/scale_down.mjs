@@ -106,7 +106,8 @@ export const checkParameterValue = async (parameterName) => {
     if (
       parameterValue === "initial" ||
       parameterValue === "error_stage" ||
-      parameterValue === "scaled_up"
+      parameterValue === "scaled_up" ||
+      parameterValue === "lambda_timeout"
     ) {
       return true;
     }

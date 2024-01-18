@@ -105,7 +105,7 @@ export const checkParameterValue = async (parameterName) => {
     const ssmClient = new SSMClient();
     const response = await ssmClient.send(getParameterCommand);
     const parameterValue = response.Parameter.Value;
-    if (parameterValue === "error_stage" || parameterValue === "scaled_down") {
+    if (parameterValue === "error_stage" || parameterValue === "scaled_down" || parameterValue === "lambda_timeout") {
       return true;
     }
     return false;
