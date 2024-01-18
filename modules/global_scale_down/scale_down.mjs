@@ -6,7 +6,11 @@ import { ElastiCacheClient, DeleteCacheClusterCommand, DescribeCacheClustersComm
 
 export const handler = async (event, context) => {
   const parameterName = process.env.hibernation_state;
-  const isAuthenticated = await handleAuthentication(event);
+  const isAuthenticated = await handleAuthentication(event, context);
+    const timer = setTimeout(async () => {
+      await updateParameterValue(parameterName, "lambda_timeout");
+    }, context.getRemainingTimeInMillis() - 1000);
+    console.log(`Remaining time for lambda execution before timeout: ${context.getRemainingTimeInMillis()} ms`);
   try {
     if (isAuthenticated) {
       const isValueValid = await checkParameterValue(parameterName);
@@ -23,6 +27,11 @@ export const handler = async (event, context) => {
         await waitForInstanceStatus("stopped", "deleting");
 
         await updateParameterValue(parameterName, "scaled_down");
+
+        console.log(`Remaining time after scaling down resources: ${context.getRemainingTimeInMillis()} ms`);
+
+        // Clear the timer if tasks complete before timeout
+        clearTimeout(timer);
         console.log(
           "Hibernation state has been successfully changed to scaled down.",
         );
@@ -45,8 +54,13 @@ export const handler = async (event, context) => {
   } catch (error) {
     console.error("Error during Lambda execution:", error);
     await updateParameterValue(parameterName, "error_stage");
+    // Clear the timer if tasks complete before timeout
+    clearTimeout(timer);
     return errorResponse(error.message);
   }
+  finally {
+     clearTimeout(timer);
+   }
 };
 
 export const handleAuthentication = async (event) => {
@@ -418,7 +432,7 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
   try {
     const ssmClientPUT = new SSMClient();
     await ssmClientPUT.send(putParameterCommand);
-    console.log("SSM parameter value updated successfully.");
+    console.log(`SSM parameter value updated successfully to "${parameterValue}"`);
   } catch (error) {
     throw new Error(`Error updating SSM parameter: ${error.message}`);
   }

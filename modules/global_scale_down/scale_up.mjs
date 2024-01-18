@@ -4,10 +4,13 @@ import { RDSClient, StartDBInstanceCommand, DescribeDBInstancesCommand } from "@
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, CreateCacheClusterCommand, DescribeCacheClustersCommand } from "@aws-sdk/client-elasticache";
 
-export const handler = async (event) => {
+export const handler = async (event, context) => {
   const parameterName = process.env.hibernation_state;
-  await handleAuthentication(event);
   const isAuthenticated = await handleAuthentication(event);
+    const timer = setTimeout(async () => {
+      await updateParameterValue(parameterName, "lambda_timeout");
+    }, context.getRemainingTimeInMillis() - 1000);
+    console.log(`Remaining time for lambda execution before timeout: ${context.getRemainingTimeInMillis()} ms`);
   try {
     if (isAuthenticated === true) {
       const isValueValid = await checkParameterValue(parameterName);
@@ -24,6 +27,11 @@ export const handler = async (event) => {
         await waitForInstanceStatus("available", "available");
 
         await updateParameterValue(parameterName, "scaled_up");
+
+        console.log(`Remaining time after after scalingup resources: ${context.getRemainingTimeInMillis()} ms`);
+
+        // Clear the timer if tasks complete before timeout
+        clearTimeout(timer);
         console.log(
           "Hibernation state has been successfully changed to scaled up.",
         );
@@ -45,8 +53,13 @@ export const handler = async (event) => {
   } catch (error) {
     console.error("Error during Lambda execution:", error);
     await updateParameterValue(parameterName, "error_stage");
+    // Clear the timer if tasks complete before timeout
+    clearTimeout(timer);
     return errorResponse(error.message);
   }
+  finally {
+     clearTimeout(timer);
+   }
 };
 
 export const handleAuthentication = async (event) => {
@@ -379,7 +392,7 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
   try {
     const ssmClientPUT = new SSMClient();
     await ssmClientPUT.send(putParameterCommand);
-    console.log("SSM parameter value updated successfully.");
+    console.log(`SSM parameter value updated successfully to "${parameterValue}"`);
   } catch (error) {
     console.error("Error updating SSM parameter:", error);
     throw error;
