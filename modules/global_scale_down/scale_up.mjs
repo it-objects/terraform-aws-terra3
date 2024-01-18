@@ -28,7 +28,7 @@ export const handler = async (event, context) => {
 
         await updateParameterValue(parameterName, "scaled_up");
 
-        console.log(`Remaining time after after scalingup resources: ${context.getRemainingTimeInMillis()} ms`);
+        console.log(`Remaining time after after scaling up resources: ${context.getRemainingTimeInMillis()} ms`);
 
         // Clear the timer if tasks complete before timeout
         clearTimeout(timer);
@@ -59,7 +59,7 @@ export const handler = async (event, context) => {
   }
   finally {
      clearTimeout(timer);
-   }
+  }
 };
 
 export const handleAuthentication = async (event) => {
