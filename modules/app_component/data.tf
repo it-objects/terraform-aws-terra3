@@ -76,10 +76,3 @@ data "aws_kms_key" "solution_key" {
   count  = var.enable_ecs_exec ? 1 : 0
   key_id = data.aws_ssm_parameter.ssm_container_runtime_kms_key_id[0].value
 }
-
-# ---------------------------------------------------------------------------------------------------------------------
-# Determine value of environment hibernation feature (true or false)
-# ---------------------------------------------------------------------------------------------------------------------
-data "aws_ssm_parameter" "enable_environment_hibernation_sleep_schedule" {
-  name = "/${var.solution_name}/enable_environment_hibernation_sleep_schedule"
-}

@@ -599,12 +599,6 @@ resource "aws_ssm_parameter" "hibernation_state" {
   type  = "String"
 }
 
-resource "aws_ssm_parameter" "enable_environment_hibernation_sleep_schedule" {
-  name  = "/${var.solution_name}/enable_environment_hibernation_sleep_schedule"
-  value = var.enable_environment_hibernation_sleep_schedule
-  type  = "String"
-}
-
 locals {
   global_scale_data = jsonencode({
     "asg_name" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_name, module.nat_instances[*].nat_instances_autoscaling_group_names, module.cluster.ecs_ec2_instances_autoscaling_group_name]),
