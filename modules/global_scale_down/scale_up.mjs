@@ -39,14 +39,16 @@ export const handler = async (event, context) => {
           "Hibernation state has been successfully changed to scaled up.",
         );
       } else {
-        console.log(
-          "The stored value is not scaled down. Stopping Lambda execution... Please execute again after some time.",
-        );
-        return errorResponse(
-          "The environment is already scaled up or in process of scaling up.",
-          400,
-        );
-      }
+        const parameterValue = await fetchParameterValue(parameterName);
+        console.log('Fetched Parameter Value:', parameterValue);
+
+        console.log('Stopping Lambda execution. The stored value is', parameterValue);
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            error: `The environment is ${parameterValue}.`
+            }),
+        }}
     } else {
       return errorResponse("Entered token value is incorrect.", 401);
     }
@@ -81,7 +83,11 @@ export const handleAuthentication = async (event) => {
     const userToken = jsonData.user_token;
     const apiToken = jsonData.api_token;
 
-    if (userProvidedToken === userToken || EventBridgeToken === apiToken) {
+    if (userProvidedToken === userToken) {
+      console.log('User provided token was used.');
+      return true;
+    } else if (EventBridgeToken === apiToken) {
+      console.log('API token used.');
       return true;
     } else {
       return false;
@@ -397,6 +403,24 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
     console.error("Error updating SSM parameter:", error);
     throw error;
   }
+};
+
+export const fetchParameterValue = async (parameterName, parameterValue) => {
+  console.log("fetching ssm parameter......");
+
+  const params = new GetParameterCommand({
+    Name: parameterName,
+    WithDecryption: true // Assuming the parameter might be encrypted
+  });
+
+  try {
+    const ssmClient = new SSMClient();
+    const response = await ssmClient.send(params);
+    return response.Parameter.Value; // Return the fetched parameter value
+    } catch (error) {
+      console.error('Error fetching parameter:', error);
+      throw error; // Rethrow the error to handle it in the main handler
+    }
 };
 
 const errorResponse = (message, statusCode = 500) => ({
