@@ -228,7 +228,7 @@ variable "service_sg" {
 }
 
 variable "enable_autoscaling" {
-  description = "Enable automatic scaling and cycle down overnight e.g. for cost savings in QA."
+  description = "Enable automatic scaling and cycle down overnight e.g. for cost savings in QA. This use only this feature or enable_environment_hibernation_sleep_schedule feature at a time in order to avoid conflict."
   type        = bool
   default     = false
 }
