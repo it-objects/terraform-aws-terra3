@@ -4,9 +4,21 @@ import { RDSClient, StopDBInstanceCommand, DescribeDBInstancesCommand } from "@a
 import { AutoScalingClient, UpdateAutoScalingGroupCommand } from "@aws-sdk/client-auto-scaling";
 import { ElastiCacheClient, DeleteCacheClusterCommand, DescribeCacheClustersCommand } from "@aws-sdk/client-elasticache";
 
+function timeout(ms) {
+    return new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Operation timed out')), ms);
+    });
+}
+
 export const handler = async (event, context) => {
   const parameterName = process.env.hibernation_state;
-  const isAuthenticated = await handleAuthentication(event);
+  const isAuthenticated = await handleAuthentication(event, context);
+    const timer = setTimeout(async () => {
+    console.log(`Remaining time for lambda execution before timeout: ${context.getRemainingTimeInMillis()} ms`);
+      await updateParameterValue(parameterName, "lambda_timeout");
+      console.log(`Updating parameter`);
+    }, context.getRemainingTimeInMillis() - 1000);
+    console.log(`Remaining time for lambda execution before timeout: ${context.getRemainingTimeInMillis()} ms`);
   try {
     if (isAuthenticated) {
       const isValueValid = await checkParameterValue(parameterName);
@@ -14,40 +26,55 @@ export const handler = async (event, context) => {
         console.log(
           "The stored value is valid. Continuing with Lambda execution...",
         );
-
-        await updateParameterValue(parameterName, "scaling_down");
-
-        await scaleDownResources();
-        console.log("Scaling down on resources has been performed.");
-
-        await waitForInstanceStatus("stopped", "deleting");
-
-        await updateParameterValue(parameterName, "scaled_down");
-        console.log(
-          "Hibernation state has been successfully changed to scaled down.",
-        );
-
+        // Use Promise.race to apply a timeout to the main operation
+        const remainedTime = context.getRemainingTimeInMillis() - 500; //15 * 60 * 1000; // 15 minutes in milliseconds
+        await Promise.race([
+            mainOperation(parameterName, context, remainedTime),
+            timeout(remainedTime),
+        ]);
         return successResponse(
           "Hibernation state has been successfully changed to scaled down.",
         );
       } else {
-        console.log(
-          "The stored value is not scaled up. Stopping Lambda execution...",
-        );
-        return errorResponse(
-          "The environment is already scaled down or in process of scaling down.",
-          400,
-        );
-      }
+        const parameterValue = await fetchParameterValue(parameterName);
+        console.log('Fetched Parameter Value:', parameterValue);
+
+        console.log('Stopping Lambda execution. The stored value is', parameterValue);
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            error: `The environment is ${parameterValue}.`
+            }),
+        }}
     } else {
       return errorResponse("Entered token value is incorrect.", 401);
     }
   } catch (error) {
     console.error("Error during Lambda execution:", error);
-    await updateParameterValue(parameterName, "error_stage");
-    return errorResponse(error.message);
+
+    // Check if the error is not a timeout error before updating the parameter value
+    if (error.message !== 'Operation timed out') {
+        await updateParameterValue(parameterName, "error_stage");
+    }
+    //await updateParameterValue(parameterName, "error_stage");
+    clearTimeout(timer);
+    //return errorResponse(error.message);
+    console.error('Error:', error.message);
+    return {
+        statusCode: error.message === 'Timeout exceeded' ? 408 : 500,
+        body: JSON.stringify({ error: error.message }),
+    };
   }
 };
+
+async function mainOperation(parameterName, context) {
+    await updateParameterValue(parameterName, "scaling_down");
+    await scaleDownResources();
+    console.log("Scaling down on resources has been performed.");
+    await waitForInstanceStatus("stopped", "deleting");
+    await updateParameterValue(parameterName, "scaled_down");
+    console.log("Hibernation state has been successfully changed to scaled down.");
+}
 
 export const handleAuthentication = async (event) => {
   console.log("checking the token:- ");
@@ -69,7 +96,11 @@ export const handleAuthentication = async (event) => {
     const userToken = jsonData.user_token;
     const apiToken = jsonData.api_token;
 
-    if (userProvidedToken === userToken || EventBridgeToken === apiToken) {
+    if (userProvidedToken === userToken) {
+      console.log('User provided token was used.');
+      return true;
+    } else if (EventBridgeToken === apiToken) {
+      console.log('API token used.');
       return true;
     } else {
       return false;
@@ -92,7 +123,8 @@ export const checkParameterValue = async (parameterName) => {
     if (
       parameterValue === "initial" ||
       parameterValue === "error_stage" ||
-      parameterValue === "scaled_up"
+      parameterValue === "scaled_up" ||
+      parameterValue === "lambda_timeout"
     ) {
       return true;
     }
@@ -418,10 +450,28 @@ export const updateParameterValue = async (parameterName, parameterValue) => {
   try {
     const ssmClientPUT = new SSMClient();
     await ssmClientPUT.send(putParameterCommand);
-    console.log("SSM parameter value updated successfully.");
+    console.log(`SSM parameter value updated successfully to "${parameterValue}"`);
   } catch (error) {
     throw new Error(`Error updating SSM parameter: ${error.message}`);
   }
+};
+
+export const fetchParameterValue = async (parameterName, parameterValue) => {
+  console.log("fetching ssm parameter......");
+
+  const params = new GetParameterCommand({
+    Name: parameterName,
+    WithDecryption: true // Assuming the parameter might be encrypted
+  });
+
+  try {
+    const ssmClient = new SSMClient();
+    const response = await ssmClient.send(params);
+    return response.Parameter.Value; // Return the fetched parameter value
+    } catch (error) {
+      console.error('Error fetching parameter:', error);
+      throw error; // Rethrow the error to handle it in the main handler
+    }
 };
 
 const errorResponse = (message, statusCode = 500) => ({
