@@ -69,7 +69,11 @@ export const handleAuthentication = async (event) => {
     const userToken = jsonData.user_token;
     const apiToken = jsonData.api_token;
 
-    if (userProvidedToken === userToken || EventBridgeToken === apiToken) {
+    if (userProvidedToken === userToken) {
+      console.log('User provided token was used.');
+      return true;
+    } else if (EventBridgeToken === apiToken) {
+      console.log('API token used.');
       return true;
     } else {
       return false;
