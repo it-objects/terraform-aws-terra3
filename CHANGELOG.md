@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.31.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.30.2...v1.31.0) (2024-01-24)
+
+
+### Features
+
+* improvements in global scale down feature (TERRA3-124, TERRA3-126, TERRA3-127, TERRA3-128, TERRA3-129) ([#43](https://github.com/it-objects/terraform-aws-terra3/issues/43)) ([df7909e](https://github.com/it-objects/terraform-aws-terra3/commit/df7909e3418042ca2859a25fb0da5f19ff301a3f))
+
 ### [1.30.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.30.1...v1.30.2) (2023-12-20)
 
 
