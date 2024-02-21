@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.32.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.31.0...v1.32.0) (2024-02-21)
+
+
+### Features
+
+* added option to support SPA without default error redirect by using Lambda@Edge ([#44](https://github.com/it-objects/terraform-aws-terra3/issues/44)) ([cf1d990](https://github.com/it-objects/terraform-aws-terra3/commit/cf1d99068a89226f27f569e9b0a67332f530075e))
+
 ## [1.31.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.30.2...v1.31.0) (2024-01-24)
 
 
