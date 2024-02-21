@@ -148,6 +148,13 @@ locals {
       function_association = var.s3_static_website_bucket_cf_function_arn == "" ? {} : {
         viewer-request : { function_arn : var.s3_static_website_bucket_cf_function_arn }
       }
+
+      lambda_function_association = length(local.selected_lambda_function) > 0 ? [for k, v in local.selected_lambda_function : {
+        event_type   = k
+        lambda_arn   = v
+        include_body = false
+      }] : []
+
     }]
   ])
 
@@ -166,6 +173,17 @@ locals {
       ssl_support_method             = "sni-only"
     }
   ]])
+}
+
+locals {
+  lambda_function_association = {
+    "origin-request"  = var.s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn,
+    "viewer-request"  = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn,
+    "origin-response" = var.s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn,
+    "viewer-response" = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn
+  }
+
+  selected_lambda_function = { for k, v in local.lambda_function_association : k => v if v != "" }
 }
 
 # for testing purposes WAF is disabled. TLS is disabled for the non-custom-domain examples.
@@ -294,9 +312,9 @@ resource "aws_cloudfront_distribution" "general_distribution" {
         iterator = l
 
         content {
-          event_type   = l.key
-          lambda_arn   = l.value.lambda_arn
-          include_body = lookup(l.value, "include_body", null)
+          event_type   = l.value["event_type"]
+          lambda_arn   = l.value["lambda_arn"]
+          include_body = lookup(l.value, "include_body", false)
         }
       }
 

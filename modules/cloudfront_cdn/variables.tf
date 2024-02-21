@@ -53,6 +53,30 @@ variable "s3_static_website_bucket_cf_function_arn" {
   default     = ""
 }
 
+variable "s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn" {
+  type        = string
+  description = "String that defines Viewer Request Function type of Lamnda@Edge for static website bucket."
+  default     = ""
+}
+
+variable "s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn" {
+  type        = string
+  description = "String that defines Origin Request Function type of Lamnda@Edge for static website bucket."
+  default     = ""
+}
+
+variable "s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn" {
+  type        = string
+  description = "String that defines Viewer Response Function type of Lamnda@Edge for static website bucket."
+  default     = ""
+}
+
+variable "s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn" {
+  type        = string
+  description = "String that defines Origin Response Function type of Lamnda@Edge for static website bucket."
+  default     = ""
+}
+
 variable "s3_solution_bucket_cf_behaviours" {
   type        = list(any)
   description = "Option that exposes S3 solution bucket via Cloudfront with different behaviours."
