@@ -19,6 +19,9 @@ module "terra3_examples" {
   # configure your database here
   create_database = true
 
+  database_mysql_engine_version = "8.0.35"
+  #database_postgres_engine_version = "14.5"
+
   database_allocated_storage       = 20
   database_max_allocated_storage   = 25
   database_backup_retention_period = 7              # at least 7 days or more for prod

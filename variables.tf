@@ -299,6 +299,18 @@ variable "database" {
   }
 }
 
+variable "database_mysql_engine_version" {
+  type        = string
+  description = "Enter the version of mysql database engine."
+  default     = "8.0.35"
+}
+
+variable "database_postgres_engine_version" {
+  type        = string
+  description = "Enter the version of postgres database engine."
+  default     = "14.5"
+}
+
 variable "create_s3_solution_bucket" {
   description = "Creates an AWS S3 bucket and gives access to it from ECS containers."
   type        = bool
