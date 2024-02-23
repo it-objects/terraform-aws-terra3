@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.33.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.32.0...v1.33.0) (2024-02-23)
+
+
+### Features
+
+* added parameters to configure rds database engine version ([#45](https://github.com/it-objects/terraform-aws-terra3/issues/45)) ([d2b7304](https://github.com/it-objects/terraform-aws-terra3/commit/d2b7304a6d59e3ad93e67060a4827322ee5bd8bc))
+
 ## [1.32.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.31.0...v1.32.0) (2024-02-21)
 
 
