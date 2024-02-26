@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.33.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.33.0...v1.33.1) (2024-02-26)
+
+
+### Bug Fixes
+
+* updated default rds database engine version ([#46](https://github.com/it-objects/terraform-aws-terra3/issues/46)) ([7be0ee8](https://github.com/it-objects/terraform-aws-terra3/commit/7be0ee84bac04811bc73fa4e4ebd060863b2fe4c))
+
 ## [1.33.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.32.0...v1.33.0) (2024-02-23)
 
 
