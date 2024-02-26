@@ -302,7 +302,7 @@ variable "database" {
 variable "database_mysql_engine_version" {
   type        = string
   description = "Enter the version of mysql database engine."
-  default     = "8.0.35"
+  default     = "8.0.34"
 }
 
 variable "database_postgres_engine_version" {
