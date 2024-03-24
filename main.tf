@@ -77,7 +77,7 @@ module "vpc" {
   count = !var.use_an_existing_vpc ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
-  version = "3.19.0"
+  version = "5.6.0"
 
   name = "${var.solution_name}-vpc"
   cidr = var.cidr
@@ -135,7 +135,7 @@ module "vpc_endpoints" {
   count = var.enable_vpc_s3_endpoint ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "3.19.0"
+  version = "5.6.0"
 
   vpc_id = local.vpc_id
 
