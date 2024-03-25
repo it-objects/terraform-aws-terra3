@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.34.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.33.1...v1.34.0) (2024-03-25)
+
+
+### Features
+
+* **deps:** update internal Terraform module deps ([06ec161](https://github.com/it-objects/terraform-aws-terra3/commit/06ec16140748953852b54985b2af8ee6baf9ada2))
+
 ### [1.33.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.33.0...v1.33.1) (2024-02-26)
 
 
