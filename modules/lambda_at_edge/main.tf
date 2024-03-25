@@ -15,7 +15,7 @@ resource "aws_lambda_function" "lambda_at_edge" {
   role    = aws_iam_role.iam_for_lambda_at_edge.arn
   handler = "${var.file_name}.handler"
   publish = true
-  runtime = "nodejs18.x"
+  runtime = "nodejs20.x"
 
   source_code_hash = data.archive_file.lambda_at_edge.output_base64sha256
 

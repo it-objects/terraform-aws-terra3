@@ -41,12 +41,12 @@ module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "4.18.0"
+  version = "7.2.3"
 
   function_name = "${var.solution_name}-global-scale-up"
   description   = "Performs global scale up"
   handler       = "scale_up.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs20.x"
   source_path   = "${path.module}/scale_up.mjs"
   timeout       = 900
 
@@ -92,7 +92,7 @@ module "eventbridge_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source    = "terraform-aws-modules/eventbridge/aws"
-  version   = "1.17.2"
+  version   = "3.2.3"
   role_name = "${var.solution_name}-eventbridge-global-scale-up"
 
   create_bus = false
@@ -131,12 +131,12 @@ module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "4.18.0"
+  version = "7.2.3"
 
   function_name = "${var.solution_name}-global-scale-down"
   description   = "Performs global scale down"
   handler       = "scale_down.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs20.x"
   source_path   = "${path.module}/scale_down.mjs"
   timeout       = 900
 
@@ -182,7 +182,7 @@ module "eventbridge_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source    = "terraform-aws-modules/eventbridge/aws"
-  version   = "1.17.2"
+  version   = "3.2.3"
   role_name = "${var.solution_name}-eventbridge-global-scale-down"
 
   create_bus = false
@@ -212,12 +212,12 @@ module "global_scale_status" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "4.18.0"
+  version = "7.2.3"
 
   function_name = "${var.solution_name}-global-scale-status"
   description   = "Shows the current status of deployment."
   handler       = "status.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs20.x"
   source_path   = "${path.module}/status.mjs"
   timeout       = 900
 
