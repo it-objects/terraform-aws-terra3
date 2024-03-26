@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.34.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.0...v1.34.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* **deps:** in aws vpc module set map_public_ip_on_launch to true to stay backwards compatible ([0c18227](https://github.com/it-objects/terraform-aws-terra3/commit/0c18227e399abbaec507c560d7e87390b677099c))
+
 ## [1.34.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.33.1...v1.34.0) (2024-03-25)
 
 
