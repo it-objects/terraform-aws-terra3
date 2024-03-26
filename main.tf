@@ -77,7 +77,7 @@ module "vpc" {
   count = !var.use_an_existing_vpc ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
-  version = "5.6.0"
+  version = "5.7.0"
 
   name = "${var.solution_name}-vpc"
   cidr = var.cidr
@@ -85,6 +85,12 @@ module "vpc" {
   azs             = var.azs
   public_subnets  = var.public_subnets_cidr_blocks
   private_subnets = var.private_subnets_cidr_blocks
+
+  # to stay backwards compatible
+  map_public_ip_on_launch       = true
+  manage_default_network_acl    = false
+  manage_default_route_table    = false
+  manage_default_security_group = false
 
   public_subnet_tags = var.set_cluster_name_for_k8s_subnet_tagging == "" ? {
     Tier = "public"
@@ -135,7 +141,7 @@ module "vpc_endpoints" {
   count = var.enable_vpc_s3_endpoint ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "5.6.0"
+  version = "5.7.0"
 
   vpc_id = local.vpc_id
 
