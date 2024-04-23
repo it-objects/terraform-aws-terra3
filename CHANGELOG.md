@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.34.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.1...v1.34.2) (2024-04-23)
+
+
+### Bug Fixes
+
+* **hibernation:** disabled timestamp for lambda packages ([2df465d](https://github.com/it-objects/terraform-aws-terra3/commit/2df465d7e4ef7011dcecce1dac0eadcb902696ad))
+
 ### [1.34.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.0...v1.34.1) (2024-03-26)
 
 
