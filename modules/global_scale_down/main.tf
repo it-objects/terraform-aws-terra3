@@ -50,6 +50,8 @@ module "lambda_scale_up" {
   source_path   = "${path.module}/scale_up.mjs"
   timeout       = 900
 
+  recreate_missing_package = false
+
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
   allowed_triggers = {
@@ -140,6 +142,8 @@ module "lambda_scale_down" {
   source_path   = "${path.module}/scale_down.mjs"
   timeout       = 900
 
+  recreate_missing_package = false
+
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
   allowed_triggers = {
@@ -220,6 +224,8 @@ module "global_scale_status" {
   runtime       = "nodejs20.x"
   source_path   = "${path.module}/status.mjs"
   timeout       = 900
+
+  recreate_missing_package = false
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
