@@ -286,8 +286,13 @@ resource "aws_s3_object" "object" {
   count        = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   bucket       = aws_s3_bucket.bucket[0].id
   key          = "admin-terra3/index.html"
-  source       = local_file.local_index[0].filename
   content_type = "text/html"
+  content = templatefile("${path.module}/index.tpl", {
+    scale_down_api_endpoint = local.scale_down_api_endpoint
+    scale_up_api_endpoint   = local.scale_up_api_endpoint
+    status_api_endpoint     = local.status_api_endpoint
+    solution_name           = var.solution_name
+  })
 }
 
 resource "aws_s3_bucket_ownership_controls" "s3_data_bucket" {
@@ -331,22 +336,6 @@ resource "aws_s3_bucket_policy" "static_website_bucket_policy" {
       },
     ],
   })
-}
-
-locals {
-  vars = templatefile("${path.module}/index.tpl", {
-    scale_down_api_endpoint = local.scale_down_api_endpoint
-    scale_up_api_endpoint   = local.scale_up_api_endpoint
-    status_api_endpoint     = local.status_api_endpoint
-    solution_name           = var.solution_name
-  })
-}
-
-resource "local_file" "local_index" {
-  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
-
-  content  = local.vars
-  filename = "${path.module}/index.html"
 }
 
 resource "random_string" "s3-admin-website-secret-postfix" {
