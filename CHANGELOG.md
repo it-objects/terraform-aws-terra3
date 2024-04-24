@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.34.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.2...v1.34.3) (2024-04-24)
+
+
+### Bug Fixes
+
+* **hibernation:** updated local_file resource to templatefile function ([1495031](https://github.com/it-objects/terraform-aws-terra3/commit/14950315b4ec9c3b24e5bc97720fc1bfe25417c6))
+
 ### [1.34.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.1...v1.34.2) (2024-04-23)
 
 
