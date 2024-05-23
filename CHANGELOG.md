@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.34.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.3...v1.34.4) (2024-05-23)
+
+
+### Bug Fixes
+
+* resolve the conflict of name ([b2ba871](https://github.com/it-objects/terraform-aws-terra3/commit/b2ba871684afac972cd049c64c40d74af3b71bd6))
+
 ### [1.34.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.2...v1.34.3) (2024-04-24)
 
 
