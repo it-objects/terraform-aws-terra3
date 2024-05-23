@@ -724,7 +724,7 @@ resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
 resource "aws_cloudfront_function" "RewriteDefaultIndexRequest" {
   count = var.enable_environment_hibernation_admin_website ? 1 : 0
 
-  name    = "RewriteDefaultIndexRequest"
+  name    = "${var.solution_name}-RewriteDefaultIndexRequest"
   runtime = "cloudfront-js-1.0"
   comment = "Rewriting default index request for s3 mini admin website"
   publish = true

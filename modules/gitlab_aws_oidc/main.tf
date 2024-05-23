@@ -19,13 +19,13 @@ data "aws_iam_policy_document" "assume_role_policy" {
 }
 
 resource "aws_iam_role" "gitlab_ci" {
-  name                = "deployment_role_${var.app_name}_oidc"
+  name                = "deployment_role_${var.app_name}_oidc_${random_string.deployment_role_postfix.result}"
   assume_role_policy  = data.aws_iam_policy_document.assume_role_policy.json
   managed_policy_arns = [aws_iam_policy.deployment_policy.arn]
 }
 
 resource "aws_iam_policy" "deployment_policy" {
-  name        = "deployment_${var.app_name}_policy"
+  name        = "deployment_${var.app_name}_policy_${random_string.deployment_role_postfix.result}"
   path        = "/"
   description = "Policy used to deploy to AWS from GitLab."
 
@@ -35,4 +35,10 @@ resource "aws_iam_policy" "deployment_policy" {
       "Statement" : var.policy_statements
     }
   )
+}
+
+resource "random_string" "deployment_role_postfix" {
+  length    = 4
+  special   = false
+  min_lower = 4
 }
