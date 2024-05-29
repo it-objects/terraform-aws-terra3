@@ -288,7 +288,7 @@ provider "aws" {
 }
 
 module "account" {
-  count = var.enable_account_best_practices ? 1 : 0
+  count = var.enable_account_best_practices && var.enable_account_level_resources ? 1 : 0
 
   source = "./modules/account"
 }

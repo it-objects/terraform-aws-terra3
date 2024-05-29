@@ -20,6 +20,12 @@ variable "enable_account_best_practices" {
   default     = false
 }
 
+variable "enable_account_level_resources" {
+  description = "Should account-wide best practices such as default encryption be applied?"
+  type        = bool
+  default     = true
+}
+
 variable "enable_cloudfront_url_signing_for_solution_bucket" {
   description = "Setups Cloudfront requests signing."
   type        = bool
