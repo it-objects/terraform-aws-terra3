@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.35.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.4...v1.35.0) (2024-05-29)
+
+
+### Features
+
+* added switch for account level resources ([5e0b0ba](https://github.com/it-objects/terraform-aws-terra3/commit/5e0b0ba49019eada4e16e6042c2122c6f63712ce))
+
 ### [1.34.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.3...v1.34.4) (2024-05-23)
 
 
