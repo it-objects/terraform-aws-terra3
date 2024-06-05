@@ -22,6 +22,10 @@ output "port_mappings" {
   value = var.port_mappings
 }
 
+output "mount_points" {
+  value = var.mount_points
+}
+
 output "environment" {
   value = local.environment
 }
