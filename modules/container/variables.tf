@@ -32,6 +32,18 @@ variable "port_mappings" {
   default = []
 }
 
+variable "mount_points" {
+  type = list(object({
+    sourceVolume   = string
+    containerPath  = string
+    readOnly       = bool
+  }))
+
+  description = "The mount points for the data volumes in your container"
+
+  default = []
+}
+
 variable "map_environment" {
   type        = map(string)
   description = "The environment variables to pass to the container. This is a map of string: {key: value}. map_environment overrides environment"
