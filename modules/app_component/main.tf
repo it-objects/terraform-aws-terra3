@@ -63,6 +63,17 @@ resource "aws_ecs_service" "ecs_service" {
     }
   }
 
+  volume_configuration {
+    name = "${var.name}-Service-Volume"
+    managed_ebs_volume {
+      role_arn = aws_iam_role.AmazonECSInfrastructureRoleForVolumes.arn
+      size_in_gb = 1
+      file_system_type = "ext4"
+      volume_type = "gp3"
+      encrypted = true
+    }
+  }
+
   deployment_circuit_breaker {
     enable   = true
     rollback = true
@@ -88,6 +99,11 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   # Fargate cpu/mem must match available options: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
   cpu    = var.total_cpu
   memory = var.total_memory
+
+  volume {
+    name = "${var.name}-Service-Volume"
+    configure_at_launch = true
+  }
 
   container_definitions = local.json_map
 
@@ -521,6 +537,37 @@ data "aws_iam_policy_document" "ssm_parameter_cloudfront_private_key" {
       "ssm:GetParameters"
     ]
   }
+}
+# ---------------------------------------------------------------------------------------------------------------------
+# IAM Role for the EBS Volume attached to Ecs task
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role" "AmazonECSInfrastructureRoleForVolumes" {
+  name = "${var.name}-AmazonECSInfrastructureRoleForEBSVolumes"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ecs.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = {
+    Name = "${var.name}-attach_ebs_volume_by_ecs_service"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Link to AWS-managed policy - AmazonECSTaskExecutionRolePolicy
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role_policy_attachment" "AmazonECSInfrastructureRolePolicyForVolumes" {
+  role       = aws_iam_role.AmazonECSInfrastructureRoleForVolumes.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRolePolicyForVolumes"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
