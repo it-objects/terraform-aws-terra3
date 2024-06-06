@@ -2,7 +2,7 @@ locals {
 
   # loop through all container definitions (and merge with default)
   # later entries overwrite former entries
-  json_map = jsonencode(concat([for single_container in var.container : merge(
+  json_map = jsonencode(concat([for idx, single_container in var.container : merge(
     local.default_container_definition,
     {
       name   = single_container.name
@@ -20,7 +20,36 @@ locals {
 
       essential = single_container.essential
 
-      mountPoints = single_container.mount_points
+      #mountPoints = single_container.mount_points
+
+      mountPoints = single_container.attach_ebs_volume && length(var.container) > idx ? [
+          {
+            sourceVolume  = single_container.ebs_volume_name[idx]
+            containerPath = single_container.container_path
+            readOnly      = single_container.read_only
+          }
+      ] : []
+
+
+#      mountPoints = single_container.attach_ebs_volume ? [
+#        for volume in single_container.ebs_volume_names :
+#        {
+#          sourceVolume  = volume
+#          containerPath = single_container.containerPath
+#          readOnly      = single_container.readOnly
+#        }
+#      ] : []
+#      mountPoints = [
+#        for mount_point in single_container.mount_points :
+#        merge(
+#          {
+#            sourceVolume  = single_container.sourceVolume
+#            containerPath = single_container.containerPath
+#            readOnly      = single_container.readOnly
+#          },
+#          mount_point
+#        )
+#      ]
 
       readonlyRootFilesystem = single_container.readonlyRootFilesystem
 

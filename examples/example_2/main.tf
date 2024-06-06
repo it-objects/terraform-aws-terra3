@@ -30,15 +30,38 @@ module "terra3_examples" {
       total_memory = 512
 
       container = [
-        module.container_my_main,
-        module.container_my_sidecar
+        module.container_my_main
       ]
 
       path_mapping = "/api/*"
       service_port = 80
 
       # for cost savings undeploy outside work hours
-      enable_autoscaling = true
+      enable_autoscaling = false
+
+      attach_ebs_to_ecs_container = true
+      #attach_ebs_volume = true
+    }
+
+    my_app_component_2 = {
+
+      instances = 1
+
+      total_cpu    = 256
+      total_memory = 512
+
+      container = [
+        module.container_my_sidecar
+      ]
+
+      path_mapping = "/apiii/*"
+      service_port = 1090
+
+      # for cost savings undeploy outside work hours
+      enable_autoscaling = false
+
+      attach_ebs_to_ecs_container = true
+      #attach_ebs_volume = true
     }
 
   }
@@ -51,6 +74,8 @@ module "terra3_examples" {
 # ---------------------------------------------------------------------------------------------------------------------
 module "container_my_main" {
   source = "../../modules/container"
+
+  solution_name                 = local.solution_name
 
   name = "my_main_container"
 
@@ -68,6 +93,16 @@ module "container_my_main" {
     "my_var_name2" : "my_var_value2",
   }
 
+  attach_ebs_volume = true
+  ebs_volume_names = [ "my_app_component-Service-Volume" ]
+  container_path = "/data"
+
+  mount_points = [{
+    "sourceVolume" : "my_app_component-Service-Volume", #"${var.name}-Service-Volume"
+    "containerPath" : "/data",
+    "readOnly" : false
+  }]
+
   readonlyRootFilesystem = false # disable because of entrypoint script
 }
 
@@ -76,6 +111,14 @@ module "container_my_sidecar" {
 
   name = "my_sidecar"
 
+  solution_name     = local.solution_name
+  attach_ebs_volume = true
+
+  mount_points = [{
+    "sourceVolume" : "my_app_component_2-Service-Volume", #"${var.name}-Service-Volume"
+    "containerPath" : "/data",
+    "readOnly" : false
+  }]
   container_image  = "mockserver/mockserver"
   container_cpu    = 100
   container_memory = 200
@@ -89,8 +132,6 @@ module "container_my_sidecar" {
     "my_var_name_sidecar" : "my_var_value",
     "MOCKSERVER_SERVER_PORT" : "1090"
   }
-
-  essential = false
 
   readonlyRootFilesystem = true
 }

@@ -233,6 +233,18 @@ variable "enable_autoscaling" {
   default     = false
 }
 
+variable "attach_ebs_to_ecs_container" {
+  description = "Enable this option for ECS Fargate task to use EBS volume as a storage option."
+  type        = bool
+  default     = false
+}
+
+variable "ebs_volume_size" {
+  description = "Enable this option for ECS Fargate task to use EBS volume as a storage option."
+  type        = number
+  default     = 1
+}
+
 variable "autoscale_task_weekday_scale_down" {
   description = "Number of tasks at low periods."
   default     = 0

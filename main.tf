@@ -543,6 +543,22 @@ module "app_components" {
   depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
 }
 
+module "container" {
+  source = "./modules/container"
+
+
+  solution_name = var.solution_name
+
+  depends_on = [module.app_components, aws_ssm_parameter.ebs_volume_names]
+}
+
+resource "aws_ssm_parameter" "ebs_volume_names" {
+
+  name  = "/${var.solution_name}/app_components/ebs_volume_names"
+  type  = "String"
+  value = jsonencode(local.ebs_volume_names)#tostring(local.ebs_volume_names[0])
+}
+
 locals {
   ecs_services_json = jsonencode([
     for i in range(length(local.ecs_service_names)) : {
@@ -550,6 +566,15 @@ locals {
       desiredCount = local.ecs_desire_task_counts[i]
     }
   ])
+
+  ebs_volume_names = [
+    for ebs_volume_names in module.app_components.app_components : ebs_volume_names.ebs_volume_name if ebs_volume_names.ebs_volume_name != null
+  ]
+
+  json_maps = [
+    for json_maps in module.app_components.app_components : json_maps.json_map if json_maps.json_map != null
+  ]
+
 
   ecs_service_names = [
     for ecs_service_names in module.app_components.app_components : ecs_service_names.ecs_service_name if ecs_service_names.ecs_service_name != null

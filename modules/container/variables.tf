@@ -1,18 +1,26 @@
 variable "name" {
   type        = string
   description = "Name of container."
+  default     = ""
 }
-
+variable "solution_name" {
+  type        = string
+  description = "Name"
+  default     = ""
+}
 variable "container_image" {
   type        = string
+  default     = ""
   description = "Reference of container image, e.g. 'nginx:1.23.1'"
 }
 
 variable "container_cpu" {
+  default     = null
   type = number
 }
 
 variable "container_memory" {
+  default   = null
   type = number
 }
 
@@ -34,14 +42,51 @@ variable "port_mappings" {
 
 variable "mount_points" {
   type = list(object({
-    sourceVolume   = string
-    containerPath  = string
-    readOnly       = bool
+    sourceVolume  = string
+    containerPath = string
+    readOnly      = bool
   }))
 
   description = "The mount points for the data volumes in your container"
-
   default = []
+}
+
+#default = [
+#  {
+#    sourceVolume  = "my-volume"
+#    containerPath = "/data"
+#    readOnly      = false
+#  }
+#]
+
+variable "attach_ebs_volume" {
+  type        = bool
+  description = "Reference of container image, e.g. 'nginx:1.23.1'"
+  default     = false
+}
+
+variable "ebs_volume_names" {
+  type        = list(string)
+  description = "Name of app components."
+  default     = ["my_app_component-Service-Volume"]
+}
+
+variable "source_volume" {
+  type        = list(string)
+  description = "Reference of container image, e.g. 'nginx:1.23.1'"
+  default     = []
+}
+
+variable "container_path" {
+  type        = string
+  description = "Reference of container image, e.g. 'nginx:1.23.1'"
+  default = "/abc"
+}
+
+variable "read_only" {
+  type        = bool
+  description = "Reference of container image, e.g. 'nginx:1.23.1'"
+  default = false
 }
 
 variable "map_environment" {
