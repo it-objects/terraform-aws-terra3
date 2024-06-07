@@ -11,7 +11,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      "terra3.io/project" = "terra3-examples"
+      "terra3.io/project" = "ebs-ecs-terra3-examples"
       Environment         = "qa"
       Terraform           = "true"
     }

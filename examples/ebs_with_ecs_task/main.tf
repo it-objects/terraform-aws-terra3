@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "eba_with_ecs_task"
+  solution_name = "ebs_with_ecs_task"
 }
 
 module "terra3_examples" {
@@ -41,7 +41,7 @@ module "terra3_examples" {
       enable_autoscaling = true
 
       # for shelling into containers (enable primarily in non-prod environments)
-      #enable_ecs_exec = true
+      enable_ecs_exec = true
 
       attach_ebs_volume = true
       ebs_volume_size   = 1
