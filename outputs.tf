@@ -82,13 +82,3 @@ output "elasticache_subnet_ids" {
   value       = local.elasticache_subnet_ids
   description = "Return elasticache_subnet_ids of VPC in use."
 }
-
-output "ebs_volume_names" {
-  value       = local.ebs_volume_names
-  description = "app_component_names"
-}
-
-output "json_maps" {
-  value       = local.json_maps
-  description = "container_definitions"
-}
