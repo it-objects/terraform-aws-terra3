@@ -233,7 +233,7 @@ variable "enable_autoscaling" {
   default     = false
 }
 
-variable "attach_ebs_to_ecs_container" {
+variable "attach_ebs_volume" {
   description = "Enable this option for ECS Fargate task to use EBS volume as a storage option."
   type        = bool
   default     = false

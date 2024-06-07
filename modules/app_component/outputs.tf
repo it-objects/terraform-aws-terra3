@@ -13,7 +13,3 @@ output "ecs_desire_task_count" {
 output "ecs_service_arn" {
   value = try(aws_ecs_service.ecs_service[0].id, null)
 }
-
-output "ebs_volume_name" {
-  value = try(local.ebs_volume_name, null)
-}

@@ -79,8 +79,8 @@ module "app_components" {
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
-  ebs_volume_size             = lookup(each.value, "attach_ebs_to_ecs_container", 1)
-  attach_ebs_to_ecs_container = lookup(each.value, "attach_ebs_to_ecs_container", false)
+  ebs_volume_size   = lookup(each.value, "ebs_volume_size", 1)
+  attach_ebs_volume = lookup(each.value, "attach_ebs_volume", false)
 
   # get custom_domain setting from parameter store in case of a two_states_approach
   enable_custom_domain = var.two_states_approach ? data.aws_ssm_parameter.enable_custom_domain.value : var.enable_custom_domain

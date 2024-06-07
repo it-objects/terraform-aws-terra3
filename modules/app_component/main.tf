@@ -32,8 +32,6 @@ locals {
   task_count_alert         = length(var.configure_as_cronjob) >= 1 ? false : var.task_count_alert
 
   timeout_in_seconds = 300 # the time in seconds after the cronjob should be terminated
-
-  ebs_volume_name = "${var.name}-Service-Volume"
 }
 
 resource "aws_ecs_service" "ecs_service" {
@@ -66,9 +64,9 @@ resource "aws_ecs_service" "ecs_service" {
   }
 
   dynamic "volume_configuration" {
-    for_each = var.attach_ebs_to_ecs_container ? [true] : []
+    for_each = var.attach_ebs_volume ? [true] : []
     content {
-      name = local.ebs_volume_name #"${var.name}-Service-Volume"
+      name = "${var.name}-Service-Volume"
       managed_ebs_volume {
         role_arn = aws_iam_role.AmazonECSInfrastructureRoleForVolumes[0].arn
         size_in_gb = var.ebs_volume_size
@@ -106,9 +104,9 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   memory = var.total_memory
 
   dynamic "volume" {
-    for_each = var.attach_ebs_to_ecs_container ? [true] : []
+    for_each = var.attach_ebs_volume ? [true] : []
     content {
-      name = local.ebs_volume_name #"${var.name}-Service-Volume"
+      name = "${var.name}-Service-Volume"
       configure_at_launch = true
     }
   }
@@ -550,7 +548,7 @@ data "aws_iam_policy_document" "ssm_parameter_cloudfront_private_key" {
 # IAM Role for the EBS Volume attached to Ecs task
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role" "AmazonECSInfrastructureRoleForVolumes" {
-  count = var.attach_ebs_to_ecs_container ? 1 : 0
+  count = var.attach_ebs_volume ? 1 : 0
   name = "${var.name}-AmazonECSInfrastructureRoleForEBSVolumes"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -575,7 +573,7 @@ resource "aws_iam_role" "AmazonECSInfrastructureRoleForVolumes" {
 # Link to AWS-managed policy - AmazonECSTaskExecutionRolePolicy
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role_policy_attachment" "AmazonECSInfrastructureRolePolicyForVolumes" {
-  count = var.attach_ebs_to_ecs_container ? 1 : 0
+  count = var.attach_ebs_volume ? 1 : 0
   role       = aws_iam_role.AmazonECSInfrastructureRoleForVolumes[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRolePolicyForVolumes"
 }
