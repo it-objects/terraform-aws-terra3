@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "ebs_with_ecs_task"
+  solution_name = "ebs-volume"
 }
 
 module "terra3_examples" {
@@ -74,7 +74,7 @@ module "container_my_main" {
   }
 
   mount_points = [{
-    "sourceVolume" : "my_app_component-Service-Volume", #"${var.name}-Service-Volume"
+    "sourceVolume" : "my_app_component-volume", #"${var.name}-volume"
     "containerPath" : "/data",
     "readOnly" : false
   }]
@@ -102,7 +102,7 @@ module "container_my_sidecar" {
   }
 
   mount_points = [{
-    "sourceVolume" : "my_app_component-Service-Volume", #"${var.name}-Service-Volume"
+    "sourceVolume" : "my_app_component-volume", #"${var.name}-volume"
     "containerPath" : "/data/side_car",
     "readOnly" : false
   }]
