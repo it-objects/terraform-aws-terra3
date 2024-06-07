@@ -26,26 +26,6 @@ output "mount_points" {
   value = var.mount_points
 }
 
-output "ebs_volume_namess" {
-  value = var.ebs_volume_names
-}
-
-output "attach_ebs_volume" {
-  value = var.attach_ebs_volume
-}
-
-output "source_volume" {
-  value = var.source_volume
-}
-
-output "container_path" {
-  value = var.container_path
-}
-
-output "read_only" {
-  value = var.read_only
-}
-
 output "environment" {
   value = local.environment
 }
