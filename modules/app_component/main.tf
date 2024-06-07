@@ -32,6 +32,8 @@ locals {
   task_count_alert         = length(var.configure_as_cronjob) >= 1 ? false : var.task_count_alert
 
   timeout_in_seconds = 300 # the time in seconds after the cronjob should be terminated
+
+  ebs_volume_name = "${var.name}-volume"
 }
 
 resource "aws_ecs_service" "ecs_service" {
@@ -115,6 +117,15 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
 
   tags = {
     Name = "${var.name}-task-def"
+  }
+}
+
+resource "aws_ebs_volume" "ebs_ecs_service_volume" {
+  availability_zone = data.aws_region.current_region.name
+  size              = 1
+
+  tags = {
+    Name = "HelloWorld"
   }
 }
 
