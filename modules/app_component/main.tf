@@ -68,7 +68,7 @@ resource "aws_ecs_service" "ecs_service" {
   dynamic "volume_configuration" {
     for_each = var.attach_ebs_volume ? [true] : []
     content {
-      name = "${var.name}-Service-Volume"
+      name = local.ebs_volume_name
       managed_ebs_volume {
         role_arn = aws_iam_role.AmazonECSInfrastructureRoleForVolumes[0].arn
         size_in_gb = var.ebs_volume_size
@@ -108,7 +108,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   dynamic "volume" {
     for_each = var.attach_ebs_volume ? [true] : []
     content {
-      name = "${var.name}-Service-Volume"
+      name = local.ebs_volume_name
       configure_at_launch = true
     }
   }
@@ -121,11 +121,11 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
 }
 
 resource "aws_ebs_volume" "ebs_ecs_service_volume" {
-  availability_zone = data.aws_region.current_region.name
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
-    Name = "HelloWorld"
+    Name = local.ebs_volume_name
   }
 }
 

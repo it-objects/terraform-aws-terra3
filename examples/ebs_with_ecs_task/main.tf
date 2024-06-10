@@ -22,7 +22,7 @@ module "terra3_examples" {
 
   app_components = {
 
-    my_app_component = {
+    app_component = {
 
       instances = 1
 
@@ -41,7 +41,7 @@ module "terra3_examples" {
       enable_autoscaling = true
 
       # for shelling into containers (enable primarily in non-prod environments)
-      enable_ecs_exec = true
+      #enable_ecs_exec = true
 
       attach_ebs_volume = true
       ebs_volume_size   = 1
@@ -57,7 +57,7 @@ module "terra3_examples" {
 module "container_my_main" {
   source = "../../modules/container"
 
-  name = "my_main_container"
+  name = "main_container"
 
   container_image  = "nginxdemos/hello"
   container_cpu    = 100
@@ -74,7 +74,7 @@ module "container_my_main" {
   }
 
   mount_points = [{
-    "sourceVolume" : "my_app_component-volume", #"${var.name}-volume"
+    "sourceVolume" : "app_component-volume", #"${var.name}-volume"
     "containerPath" : "/data",
     "readOnly" : false
   }]
@@ -85,7 +85,7 @@ module "container_my_main" {
 module "container_my_sidecar" {
   source = "../../modules/container"
 
-  name = "my_sidecar"
+  name = "sidecar"
 
   container_image  = "mockserver/mockserver"
   container_cpu    = 100
@@ -102,7 +102,7 @@ module "container_my_sidecar" {
   }
 
   mount_points = [{
-    "sourceVolume" : "my_app_component-volume", #"${var.name}-volume"
+    "sourceVolume" : "app_component-volume", #"${var.name}-volume"
     "containerPath" : "/data/side_car",
     "readOnly" : false
   }]
