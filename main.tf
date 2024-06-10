@@ -16,13 +16,13 @@ locals {
   created_db_subnet_group_name = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" ? join(", ", aws_db_subnet_group.external_db_subnet_group[*].name) : var.external_db_subnet_group_name
 
   # Variable definitions of using existing VPC or create VPC
-  vpc_id                  = var.use_an_existing_vpc ? var.external_vpc_id : module.vpc[0].vpc_id
-  public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : module.vpc[0].public_subnets
-  private_subnets         = var.use_an_existing_vpc ? var.external_private_subnets : module.vpc[0].private_subnets
-  private_route_table_ids = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].private_route_table_ids
-  public_route_table_ids  = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : module.vpc[0].public_route_table_ids
-  db_subnet_group_name    = var.use_an_existing_vpc ? local.created_db_subnet_group_name : module.vpc[0].database_subnet_group_name
-  elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : module.vpc[0].elasticache_subnets
+  vpc_id                  = var.use_an_existing_vpc ? var.external_vpc_id : (var.disable_vpc_creation ? "" : module.vpc[0].vpc_id)
+  public_subnets          = var.use_an_existing_vpc ? var.external_public_subnets : (var.disable_vpc_creation ? [] : module.vpc[0].public_subnets)
+  private_subnets         = var.use_an_existing_vpc ? var.external_private_subnets : (var.disable_vpc_creation ? [] : module.vpc[0].private_subnets)
+  private_route_table_ids = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : (var.disable_vpc_creation ? []: module.vpc[0].private_route_table_ids)
+  public_route_table_ids  = var.use_an_existing_vpc ? var.external_vpc_private_route_table_ids : (var.disable_vpc_creation ? [] : module.vpc[0].public_route_table_ids)
+  db_subnet_group_name    = var.use_an_existing_vpc ? local.created_db_subnet_group_name : (var.disable_vpc_creation ? "" : module.vpc[0].database_subnet_group_name)
+  elasticache_subnet_ids  = var.use_an_existing_vpc ? var.external_elasticache_subnet_ids : (var.disable_vpc_creation ? [] : module.vpc[0].elasticache_subnets)
 
   # calculate app_components' path
   app_component_paths = length(var.app_components) == 0 ? ["/api/*"] : [for component in values(var.app_components) : (contains(keys(component), "path_mapping") ? component.path_mapping : "/api/*")]
@@ -38,7 +38,7 @@ resource "aws_ssm_parameter" "domain_name" {
 # Added resources for database subnet group while using existing VPC.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_subnet" "database_subnet" {
-  count = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
+  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
 
   vpc_id            = local.vpc_id
   cidr_block        = var.external_database_cidr[count.index]
@@ -54,14 +54,14 @@ resource "aws_subnet" "database_subnet" {
 }
 
 resource "aws_route_table_association" "database" {
-  count = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
+  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
 
   subnet_id      = element(aws_subnet.database_subnet[*].id, count.index)
   route_table_id = element(local.private_route_table_ids[*], count.index)
 }
 
 resource "aws_db_subnet_group" "external_db_subnet_group" {
-  count = var.create_database && var.use_an_existing_vpc && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? 1 : 0
+  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? 1 : 0
 
   name        = "${var.solution_name}-db-subnet-group"
   description = "Database subnet group."
@@ -74,7 +74,7 @@ resource "aws_db_subnet_group" "external_db_subnet_group" {
 # Public IP assignment is enabled for NAT instance option
 # tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs tfsec:ignore:aws-ec2-no-public-ip-subnet
 module "vpc" {
-  count = !var.use_an_existing_vpc ? 1 : 0
+  count = !var.use_an_existing_vpc && !var.disable_vpc_creation  ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "5.7.0"
@@ -138,7 +138,7 @@ resource "aws_ssm_parameter" "private_subnets" {
 # Enable S3 gateway endpoint. Best practice to keep S3 traffic internal
 # ---------------------------------------------------------------------------------------------------------------------
 module "vpc_endpoints" {
-  count = var.enable_vpc_s3_endpoint ? 1 : 0
+  count = var.enable_vpc_s3_endpoint  && !var.disable_vpc_creation  ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "5.7.0"
@@ -159,7 +159,7 @@ module "vpc_endpoints" {
 # Use of NAT instances instead of NAT gateways to reduce costs
 # ---------------------------------------------------------------------------------------------------------------------
 module "nat_instances" {
-  count = local.create_nat_instances ? 1 : 0
+  count = local.create_nat_instances && !var.disable_vpc_creation ? 1 : 0
 
   source        = "./modules/nat_instances"
   solution_name = var.solution_name
@@ -345,7 +345,7 @@ resource "aws_sns_topic_subscription" "ecs_service_cpu_and_memory_utilization_sn
 }
 
 module "bastion_host_ssm" {
-  count = var.create_bastion_host ? 1 : 0
+  count = var.create_bastion_host && !var.disable_vpc_creation ? 1 : 0
 
   source = "./modules/bastion_host_ssm"
 
