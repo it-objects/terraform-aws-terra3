@@ -2,6 +2,7 @@ data "aws_region" "current_region" {} # Find region, e.g. us-east-1
 
 data "aws_caller_identity" "this" {}
 
+data "aws_availability_zones" "available" {} # Find availability zone, e.g. us-east-1a, us-east-1b ..
 # ---------------------------------------------------------------------------------------------------------------------
 # Determine cluster id from name (${var.solution_name}-cluster)
 # ---------------------------------------------------------------------------------------------------------------------
