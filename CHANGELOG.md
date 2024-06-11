@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.36.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.35.0...v1.36.0) (2024-06-11)
+
+
+### Features
+
+* added disable_vpc_creatio ([#48](https://github.com/it-objects/terraform-aws-terra3/issues/48)) ([77a6fe4](https://github.com/it-objects/terraform-aws-terra3/commit/77a6fe411544a120f4f1ebb388f9b4ce83959c31))
+* added disable_vpc_creation ([#47](https://github.com/it-objects/terraform-aws-terra3/issues/47)) ([ee0a81e](https://github.com/it-objects/terraform-aws-terra3/commit/ee0a81eb80cb3d7ed150c3afb3d4fcf012ab35d1))
+* updated vpc version in the existing vpc ([1a21b30](https://github.com/it-objects/terraform-aws-terra3/commit/1a21b303db80ad9feca4582da8d542c5b9e5ec59))
+
 ## [1.35.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.34.4...v1.35.0) (2024-05-29)
 
 
