@@ -37,8 +37,13 @@ resource "aws_ssm_parameter" "domain_name" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Added resources for database subnet group while using existing VPC.
 # ---------------------------------------------------------------------------------------------------------------------
+locals {
+  should_create_database_subnet = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation == "" && length(var.external_database_cidr) > 0
+}
+
 resource "aws_subnet" "database_subnet" {
-  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
+  #count = local.should_create_database_subnet ? length(var.azs) : 0
+  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
 
   vpc_id            = local.vpc_id
   cidr_block        = var.external_database_cidr[count.index]
@@ -54,14 +59,14 @@ resource "aws_subnet" "database_subnet" {
 }
 
 resource "aws_route_table_association" "database" {
-  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
+  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
 
   subnet_id      = element(aws_subnet.database_subnet[*].id, count.index)
   route_table_id = element(local.private_route_table_ids[*], count.index)
 }
 
 resource "aws_db_subnet_group" "external_db_subnet_group" {
-  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation && var.external_db_subnet_group_name == "" && length(var.external_database_cidr) > 0 ? 1 : 0
+  count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation == "" && length(var.external_database_cidr) > 0 ? 1 : 0
 
   name        = "${var.solution_name}-db-subnet-group"
   description = "Database subnet group."
@@ -363,9 +368,10 @@ module "bastion_host_ssm" {
   depends_on = [module.security_groups]
 }
 
-locals {
+locals { #try(split(",", module.security_groups[0].mysql_db_sg), []) : "")
   rds_cluster_engine_version                = var.database == "mysql" ? var.database_mysql_engine_version : var.database_postgres_engine_version
-  rds_cluster_security_group_ids            = var.database == "mysql" ? try(module.security_groups[0].mysql_db_sg, "") : try(module.security_groups[0].postgres_db_sg, "")
+  #rds_cluster_security_group_ids            = var.database == "mysql" ? try(split(",", module.security_groups[0].mysql_db_sg), "") : try(split(",", module.security_groups[0].postgres_db_sg))
+  rds_cluster_security_group_ids            = var.database == "mysql" ? try(split(",", module.security_groups[0].mysql_db_sg), []) : try(split(",", module.security_groups[0].postgres_db_sg), [])
   rds_cluster_enable_cloudwatch_logs_export = var.database == "mysql" ? ["audit"] : ["postgresql"]
 }
 

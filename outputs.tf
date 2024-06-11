@@ -34,7 +34,7 @@ output "s3_solution_bucket_arn" {
 }
 
 output "db_credentials" {
-  value       = var.create_database ? module.database[0].db_credentials : ""
+  value       = var.create_database ? try(split(",", module.database[0].db_credentials), []) : []
   description = "Return DB credentials as JSON."
 }
 
