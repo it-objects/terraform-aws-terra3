@@ -589,6 +589,12 @@ variable "set_cluster_name_for_k8s_subnet_tagging" {
   default     = ""
 }
 
+variable "disable_vpc_creation" {
+  description = "Enables/disables creation of new VPC."
+  type        = bool
+  default     = false
+}
+
 variable "use_an_existing_vpc" {
   description = "Enables/disables an AWS Application Load Balancer."
   type        = bool

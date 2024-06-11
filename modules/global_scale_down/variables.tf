@@ -57,7 +57,7 @@ variable "cluster_name" {
 
 variable "cluster_arn" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ variable "redis_subnet_group_arn" {
 
 variable "redis_security_group_arn" {
   description = ""
-  type        = string
+  type        = list(string)
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
