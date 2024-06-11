@@ -16,9 +16,5 @@ module "terra3_examples" {
   solution_name                 = local.solution_name
   enable_account_best_practices = true
 
-  # configure your environment here
-  #create_load_balancer = true
-
   disable_vpc_creation = true
-
 }
