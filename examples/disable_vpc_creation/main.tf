@@ -17,9 +17,8 @@ module "terra3_examples" {
   enable_account_best_practices = true
 
   # configure your environment here
-  create_load_balancer = true
-  nat                  = "NAT_INSTANCES" # default value
-  create_database      = true
+  #create_load_balancer = true
 
   disable_vpc_creation = true
+
 }
