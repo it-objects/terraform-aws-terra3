@@ -368,9 +368,8 @@ module "bastion_host_ssm" {
   depends_on = [module.security_groups]
 }
 
-locals { #try(split(",", module.security_groups[0].mysql_db_sg), []) : "")
+locals {
   rds_cluster_engine_version                = var.database == "mysql" ? var.database_mysql_engine_version : var.database_postgres_engine_version
-  #rds_cluster_security_group_ids            = var.database == "mysql" ? try(split(",", module.security_groups[0].mysql_db_sg), "") : try(split(",", module.security_groups[0].postgres_db_sg))
   rds_cluster_security_group_ids            = var.database == "mysql" ? try(split(",", module.security_groups[0].mysql_db_sg), []) : try(split(",", module.security_groups[0].postgres_db_sg), [])
   rds_cluster_enable_cloudwatch_logs_export = var.database == "mysql" ? ["audit"] : ["postgresql"]
 }
