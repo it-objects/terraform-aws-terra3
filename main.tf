@@ -82,7 +82,7 @@ module "vpc" {
   count = !var.use_an_existing_vpc && !var.disable_vpc_creation ? 1 : 0
 
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
-  version = "5.7.0"
+  version = "5.8.1"
 
   name = "${var.solution_name}-vpc"
   cidr = var.cidr
