@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "scale-down"
+  solution_name = "scale"
 }
 
 module "terra3_examples" {
@@ -17,18 +17,17 @@ module "terra3_examples" {
   # configure your environment here
   create_load_balancer = true
   create_bastion_host  = true
-  #create_database          = true
-  #database                 = "postgres"
-  #create_elasticache_redis = true
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 
   # Please make sure to enable only one feature at a time.
   # Either enable_environment_hibernation_sleep_schedule OR enable_autoscaling in app_components.
+  # Example is for 9-17 O'clock and default to the London timezone
   enable_environment_hibernation_sleep_schedule = true
-  environment_hibernation_sleep_schedule        = "cron(00 18 ? * MON-FRI *)" #Down
-  environment_hibernation_wakeup_schedule       = "cron(00 04 ? * MON-FRI *)" #Up
+  environment_hibernation_wakeup_schedule       = "cron(00 09 ? * MON-FRI *)" #Up
+  environment_hibernation_sleep_schedule        = "cron(00 17 ? * MON-FRI *)" #Down
+  environment_hibernation_timezone              = "Europe/Berlin"
 
   app_components = {
 

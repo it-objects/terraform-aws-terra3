@@ -679,6 +679,12 @@ variable "environment_hibernation_wakeup_schedule" {
   default     = ""
 }
 
+variable "environment_hibernation_timezone" {
+  type        = string
+  description = "Timezone in which the scheduling expression is evaluated."
+  default     = "Europe/London"
+}
+
 variable "custom_elb_cf_path_patterns" {
   type        = list(string)
   description = "Option that exposes custom ELB paths via Cloudfront."
