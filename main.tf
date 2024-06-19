@@ -650,6 +650,7 @@ module "global_scale_down" {
   enable_environment_hibernation_sleep_schedule = var.enable_environment_hibernation_sleep_schedule
   environment_hibernation_sleep_schedule        = var.environment_hibernation_sleep_schedule
   environment_hibernation_wakeup_schedule       = var.environment_hibernation_wakeup_schedule
+  environment_hibernation_timezone              = var.environment_hibernation_timezone
 
   solution_name  = var.solution_name
   cloudfront_arn = module.cloudfront_cdn.cloudfront_arn

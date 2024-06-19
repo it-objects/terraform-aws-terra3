@@ -23,6 +23,12 @@ variable "environment_hibernation_wakeup_schedule" {
   default     = ""
 }
 
+variable "environment_hibernation_timezone" {
+  type        = string
+  description = "Timezone in which the scheduling expression is evaluated."
+  default     = "Europe/London"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Variables related to ecs_ec2 instance with name, max_size, min_size, desired_size
 # ---------------------------------------------------------------------------------------------------------------------

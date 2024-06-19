@@ -54,12 +54,6 @@ module "lambda_scale_up" {
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
-  allowed_triggers = {
-    ScanAmiRule = {
-      principal  = "events.amazonaws.com"
-      source_arn = module.eventbridge_scale_up[0].eventbridge_rule_arns["${var.solution_name}-scale_up"]
-    }
-  }
 
   tracing_mode          = "Active"
   attach_tracing_policy = true
@@ -90,35 +84,28 @@ resource "aws_lambda_function_url" "scale_up_lambda_function_url" {
   }
 }
 
-module "eventbridge_scale_up" {
-  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+module "eventbridge_up" {
+  count   = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  source  = "terraform-aws-modules/eventbridge/aws"
+  version = "3.5.0"
 
-  source    = "terraform-aws-modules/eventbridge/aws"
-  version   = "3.2.3"
-  role_name = "${var.solution_name}-eventbridge-global-scale-up"
+  bus_name = "${var.solution_name}-scale-up" # "default" bus already support schedule_expression in rules
 
-  create_bus = false
+  attach_lambda_policy = true
+  lambda_target_arns   = [module.lambda_scale_up[0].lambda_function_arn]
 
-  rules = {
-    "${var.solution_name}-scale_up" = {
-      name                = "${var.solution_name}-global-scale-up"
+  schedules = {
+    "${var.solution_name}-scale-up" = {
       description         = "Trigger for a Lambda to enable global scale up."
       schedule_expression = var.environment_hibernation_wakeup_schedule
+      timezone            = var.environment_hibernation_timezone
+      arn                 = module.lambda_scale_up[0].lambda_function_arn
+      input = jsonencode({
+        "ecs_service_data" : local.ecs_service_data,
+        "scale_up_parameters" : local.scale_up_parameters
+        "api_token" : random_string.api-auth-token[0].result
+      })
     }
-  }
-
-  targets = {
-    "${var.solution_name}-scale_up" = [
-      {
-        name = "${var.solution_name}-global-scale-up"
-        arn  = module.lambda_scale_up[0].lambda_function_arn
-        input = jsonencode({
-          "ecs_service_data" : local.ecs_service_data,
-          "scale_up_parameters" : local.scale_up_parameters
-          "api_token" : random_string.api-auth-token[0].result
-        })
-      }
-    ]
   }
 }
 
@@ -146,12 +133,6 @@ module "lambda_scale_down" {
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
-  allowed_triggers = {
-    ScanAmiRule = {
-      principal  = "events.amazonaws.com"
-      source_arn = module.eventbridge_scale_down[0].eventbridge_rule_arns["${var.solution_name}-scale_down"]
-    }
-  }
 
   tracing_mode          = "Active"
   attach_tracing_policy = true
@@ -182,33 +163,26 @@ resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
   }
 }
 
-module "eventbridge_scale_down" {
-  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+module "eventbridge_down" {
+  count   = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+  source  = "terraform-aws-modules/eventbridge/aws"
+  version = "3.5.0"
 
-  source    = "terraform-aws-modules/eventbridge/aws"
-  version   = "3.2.3"
-  role_name = "${var.solution_name}-eventbridge-global-scale-down"
+  bus_name = "${var.solution_name}-scale-down" # "default" bus already support schedule_expression in rules
 
-  create_bus = false
+  attach_lambda_policy = true
+  lambda_target_arns   = [module.lambda_scale_down[0].lambda_function_arn]
 
-  rules = {
-    "${var.solution_name}-scale_down" = {
-      name                = "${var.solution_name}-global-scale-down"
+  schedules = {
+    "${var.solution_name}-scale-down" = {
       description         = "Trigger for a Lambda to enable global scale down."
       schedule_expression = var.environment_hibernation_sleep_schedule
+      timezone            = var.environment_hibernation_timezone
+      arn                 = module.lambda_scale_down[0].lambda_function_arn
+      input = jsonencode({
+        "api_token" : random_string.api-auth-token[0].result
+      })
     }
-  }
-
-  targets = {
-    "${var.solution_name}-scale_down" = [
-      {
-        name = "${var.solution_name}-global-scale-down"
-        arn  = module.lambda_scale_down[0].lambda_function_arn
-        input = jsonencode({
-          "api_token" : random_string.api-auth-token[0].result
-        })
-      }
-    ]
   }
 }
 
