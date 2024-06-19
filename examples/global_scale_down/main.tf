@@ -23,7 +23,7 @@ module "terra3_examples" {
 
   # Please make sure to enable only one feature at a time.
   # Either enable_environment_hibernation_sleep_schedule OR enable_autoscaling in app_components.
-  # Example is for 9-17 O'clock and default to the London timezone
+  # Example is for 9-17 O'clock and default to the London timezone.
   enable_environment_hibernation_sleep_schedule = true
   environment_hibernation_wakeup_schedule       = "cron(00 09 ? * MON-FRI *)" #Up
   environment_hibernation_sleep_schedule        = "cron(00 17 ? * MON-FRI *)" #Down
