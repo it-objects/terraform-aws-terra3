@@ -33,6 +33,7 @@ resource "aws_security_group_rule" "ingress" {
 # ---------------------------------------------------------------------------------------------------------------------
 # AMI of the latest Amazon Linux 2
 # ---------------------------------------------------------------------------------------------------------------------
+# ami-037d2c237fce10dcb as per 16.06.2024
 data "aws_ami" "this" {
   most_recent = true
   owners      = ["amazon"]
@@ -46,7 +47,7 @@ data "aws_ami" "this" {
   }
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*"]
+    values = ["al2023-ami-2023.4*"]
   }
   filter {
     name   = "virtualization-type"
@@ -54,7 +55,7 @@ data "aws_ami" "this" {
   }
   filter {
     name   = "block-device-mapping.volume-type"
-    values = ["gp2"]
+    values = ["gp3"]
   }
 }
 
@@ -126,7 +127,7 @@ resource "aws_launch_template" "nat_template" {
   # We're only setting the name_prefix here,
   # Terraform will add a random string at the end to keep it unique.
   name_prefix = "nat-instance-template-${var.azs[count.index]}-"
-  image_id    = data.aws_ami.this.id
+  image_id    = data.aws_ami.this.id #"ami-00068b9d3a9643636" #
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.nat_instance.arn

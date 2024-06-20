@@ -37,7 +37,7 @@ variable "public_subnets_cidr_blocks" {
 }
 
 variable "nat_instance_types" {
-  default     = ["t2.micro"]
+  default     = ["t4g.nano"]
   type        = list(string)
   description = "Defaulting to free tier EC2 instance."
 }
