@@ -156,7 +156,7 @@ resource "aws_launch_template" "nat_template" {
     ebs {
       encrypted   = true
       volume_size = "8"
-      volume_type = "gp2"
+      volume_type = "gp3"
     }
   }
 
