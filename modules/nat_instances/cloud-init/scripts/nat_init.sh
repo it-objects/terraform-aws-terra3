@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-export AWS_DEFAULT_REGION="$(/opt/aws/bin/ec2-metadata -z | sed 's/placement: \(.*\).$/\1/')"
-INSTANCE_ID="$(/opt/aws/bin/ec2-metadata -i | cut -d' ' -f2)"
+export TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+export AWS_DEFAULT_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | cut -d \" -f4)
+export INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/instance-id)
 
 disable_source_dest_check() {
   aws ec2 modify-instance-attribute --no-source-dest-check --instance-id "$INSTANCE_ID"
