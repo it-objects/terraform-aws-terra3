@@ -127,7 +127,7 @@ resource "aws_launch_template" "nat_template" {
   # We're only setting the name_prefix here,
   # Terraform will add a random string at the end to keep it unique.
   name_prefix = "${var.solution_name}-nat-instance-template-${var.azs[count.index]}-"
-  image_id    = data.aws_ami.this.id #"ami-00068b9d3a9643636" #
+  image_id    = data.aws_ami.this.id
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.nat_instance.arn
