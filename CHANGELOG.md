@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.37.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.36.0...v1.37.0) (2024-06-20)
+
+
+### Features
+
+* configure timezone for global scaledown feature ([#49](https://github.com/it-objects/terraform-aws-terra3/issues/49)) ([cdf3a05](https://github.com/it-objects/terraform-aws-terra3/commit/cdf3a0588b86c1fb3ad6a14dfef5008340bd28ce))
+* updated nat instance ebs volume type to gp3 ([#50](https://github.com/it-objects/terraform-aws-terra3/issues/50)) ([ce3512e](https://github.com/it-objects/terraform-aws-terra3/commit/ce3512eefb5e583a0cee4b6903fa3bba665e7846))
+
 ## [1.36.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.35.0...v1.36.0) (2024-06-11)
 
 
