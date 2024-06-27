@@ -269,21 +269,57 @@ variable "configure_as_cronjob" {
   description = "Doesn't create an ECS service but a task def only to be triggered by a step function."
 }
 
-variable "lb_healthcheck_url" {
-  type        = string
-  default     = "/"
-  description = "loadbalancer health check url of target container"
+variable "listener_rule_prio" {
+  type        = number
+  description = "no priority number should be the same as any other."
+}
+
+variable "lb_healthcheck_healthy_threshold" {
+  description = "The number of consecutive health checks successes required before considering an unhealthy target healthy."
+  type        = number
+  default     = 3
 }
 
 variable "lb_healthcheck_port" {
   type        = number
   default     = 80
-  description = "loadbalancer health check port of target container"
+  description = "Loadbalancer health check port of target container"
 }
 
-variable "listener_rule_prio" {
+variable "lb_healthcheck_interval" {
+  description = "The approximate amount of time, in seconds, between health checks of an individual target."
   type        = number
-  description = "no priority number should be the same as any other."
+  default     = 30
+}
+
+variable "lb_healthcheck_protocol" {
+  description = "The protocol the load balancer uses when performing health checks on targets."
+  type        = string
+  default     = "HTTP"
+}
+
+variable "lb_healthcheck_matcher" {
+  description = "The HTTP codes to use when checking for a healthy response from a target."
+  type        = string
+  default     = "200"
+}
+
+variable "lb_healthcheck_timeout" {
+  description = "The amount of time, in seconds, during which no response means a failed health check."
+  type        = number
+  default     = 3
+}
+
+variable "lb_healthcheck_url" {
+  type        = string
+  default     = "/"
+  description = "Loadbalancer health check url of target container"
+}
+
+variable "lb_healthcheck_unhealthy_threshold" {
+  description = "The number of consecutive health check failures required before considering the target unhealthy."
+  type        = number
+  default     = 2
 }
 
 variable "path_mapping" {

@@ -63,9 +63,16 @@ module "app_components" {
   path_mapping = lookup(each.value, "path_mapping", null)
   service_port = lookup(each.value, "service_port", null)
 
-  lb_healthcheck_url                = lookup(each.value, "lb_healthcheck_url", null)
   health_check_grace_period_seconds = lookup(each.value, "lb_healthcheck_grace_period", null)
-  lb_healthcheck_port               = lookup(each.value, "lb_healthcheck_port", null)
+
+  lb_healthcheck_healthy_threshold   = lookup(each.value, "lb_healthcheck_healthy_threshold", null)
+  lb_healthcheck_port                = lookup(each.value, "lb_healthcheck_port", null)
+  lb_healthcheck_interval            = lookup(each.value, "lb_healthcheck_interval", null)
+  lb_healthcheck_protocol            = lookup(each.value, "lb_healthcheck_protocol", null)
+  lb_healthcheck_matcher             = lookup(each.value, "lb_healthcheck_matcher", null)
+  lb_healthcheck_timeout             = lookup(each.value, "lb_healthcheck_timeout", null)
+  lb_healthcheck_url                 = lookup(each.value, "lb_healthcheck_url", null)
+  lb_healthcheck_unhealthy_threshold = lookup(each.value, "lb_healthcheck_unhealthy_threshold", null)
 
   enable_ecs_exec = lookup(each.value, "enable_ecs_exec", false)
 

@@ -110,14 +110,14 @@ resource "aws_lb_target_group" "target_group" {
   deregistration_delay = var.deregistration_delay
 
   health_check {
-    healthy_threshold   = "3"
+    healthy_threshold   = var.lb_healthcheck_healthy_threshold
     port                = var.lb_healthcheck_port
-    interval            = "30"
-    protocol            = "HTTP"
-    matcher             = "200"
-    timeout             = "3"
+    interval            = var.lb_healthcheck_interval
+    protocol            = var.lb_healthcheck_protocol
+    matcher             = var.lb_healthcheck_matcher
+    timeout             = var.lb_healthcheck_timeout
     path                = var.lb_healthcheck_url
-    unhealthy_threshold = "2"
+    unhealthy_threshold = var.lb_healthcheck_unhealthy_threshold
   }
 
   lifecycle {
