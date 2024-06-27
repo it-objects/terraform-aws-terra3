@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.38.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.37.0...v1.38.0) (2024-06-27)
+
+
+### Features
+
+* made health check parameters configurable in target group ([1cfd2e9](https://github.com/it-objects/terraform-aws-terra3/commit/1cfd2e9b14f32242405866ed673e8a8de0c94dea))
+
 ## [1.37.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.36.0...v1.37.0) (2024-06-20)
 
 
