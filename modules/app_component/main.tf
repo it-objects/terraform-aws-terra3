@@ -235,7 +235,7 @@ resource "aws_lb_listener_rule" "http_trailing_slash_redirect" {
 resource "aws_cloudwatch_log_group" "CloudWatchLogGroup" {
   name = "${var.name}LogGroup"
 
-  retention_in_days = 7
+  retention_in_days = var.log_group_retention_period_in_days
 
   tags = {
     Name = "${var.name}LogGroup"

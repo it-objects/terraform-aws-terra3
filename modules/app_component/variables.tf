@@ -85,6 +85,17 @@ variable "enable_firelens_container" {
   default     = false
 }
 
+variable "log_group_retention_period_in_days" {
+  type        = number
+  description = "Specifies the number of days you want to retain log events in the specified log group"
+  default     = 7
+
+  validation {
+    condition     = contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, 0], var.log_group_retention_period_in_days)
+    error_message = "Invalid retention period. Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, and 0."
+  }
+}
+
 #  CloudWatch alert based on cpu and memory utilization
 variable "cpu_utilization_alert" {
   description = "Select true to get alert based on CPU Utilisation"

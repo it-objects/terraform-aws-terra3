@@ -50,6 +50,8 @@ module "app_components" {
 
   container = each.value["container"]
 
+  log_group_retention_period_in_days = lookup(each.value, "log_group_retention_period_in_days", 7)
+
   enable_firelens_container = lookup(each.value, "enable_firelens_container", false)
 
   execution_iam_access = lookup(each.value, "execution_iam_access", null)
