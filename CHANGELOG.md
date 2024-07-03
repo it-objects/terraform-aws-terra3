@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.39.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.38.0...v1.39.0) (2024-07-03)
+
+
+### Features
+
+* made retention period of ECS log group configurable ([b69175b](https://github.com/it-objects/terraform-aws-terra3/commit/b69175b38b32a3ec2a631306e9c2672b0630a195))
+
 ## [1.38.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.37.0...v1.38.0) (2024-06-27)
 
 
