@@ -30,6 +30,11 @@ variable "calculated_zone_id" {
   description = "Put in here the zone id of the Hosted Zone to which the subdomain should be added."
 }
 
+variable "create_route53_domain_record" {
+  type    = bool
+  default = false
+}
+
 variable "add_default_index_html" {
   type    = bool
   default = true
