@@ -57,7 +57,7 @@ module "lambda_at_edge_example" {
   }
 }
 
-resource "aws_s3_object" "static_website_resource" {
+resource "aws_s3_object" "static_website_index_file" {
   key                    = "index.html"
   bucket                 = module.terra3_examples.s3_static_website_name
   source                 = "${path.module}/index.html"
