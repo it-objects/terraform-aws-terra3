@@ -1,15 +1,11 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# This is example 2 showcasing Terra3's capabilities.
-#
-# Outcome: Like example 1 + a container runtime and no custom domain
+# This is an example of a Static Website Deployment showcasing Terra3's capabilities.
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "ito-cloud-548"
-  #  domain_name     = "abc.hosting.de"
-  #  route53_zone_id = "123"
-     domain_name     = "abc.hosting.de"
-  #   route53_zone_id = "456"
+  solution_name = "static-website"
+  domain_name     = "<PLEASE ENTER HERE THE FULL DOMAIN NAME>"
+  #route53_zone_id = "<PLEASE ENTER HERE THE HOSTED ZONE ID>"
 }
 
 module "terra3_examples" {
@@ -17,18 +13,19 @@ module "terra3_examples" {
 
   solution_name                 = local.solution_name
   enable_account_best_practices = true
+  enable_account_level_resources = false
 
   # configure your environment here
-  create_load_balancer = true
+  create_load_balancer = false
 
   # dependency: required for downloading container images
-  nat = "NAT_INSTANCES"
+  nat = "NO_NAT"
 
   # if set to true, domain_name or domain of zone is required
-  enable_custom_domain = false
+  enable_custom_domain = true
   create_subdomain     = false
-  #route53_zone_id      = local.route53_zone_id
   domain_name          = local.domain_name
+  #route53_zone_id      = local.route53_zone_id
 
   enable_vpc_s3_endpoint = false
 

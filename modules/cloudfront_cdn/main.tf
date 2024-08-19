@@ -458,13 +458,6 @@ resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_route53_record" "domain" {
   count = var.create_route53_domain_record ? 1 : 0
-  #count = length(var.calculated_zone_id) < 0 ? 0 : 1
-  #for_each = var.calculated_zone_id != "" ? { for k, v in var.calculated_zone_id : k => v } : {}
-  #count = var.calculated_zone_id == "" ? 0 : 1
-  #for_each = var.calculated_zone_id == "" ? {} : { "domain": var.calculated_zone_id }
-  #count = var.calculated_zone_id != "" && var.domain != "" ? 0 : 0
-  #count = var.calculated_zone_id == "" ? 0 : 1
-  #count = (var.calculated_zone_id == "" || var.domain == "")  ? 0 : 1
 
   zone_id = var.calculated_zone_id
   name    = var.domain

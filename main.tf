@@ -260,16 +260,8 @@ module "cloudfront_cdn" {
   alias_domain_name = length(module.dns_and_certificates) == 0 ? null : var.alias_domain_name
   certificate_arn   = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].cloudfront_certificate_arn
 
-  calculated_zone_id = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
-
+  calculated_zone_id           = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
   create_route53_domain_record = var.enable_custom_domain
-  #create_route53_domain_record = var.enable_custom_domain || module.dns_and_certificates[0].hosted_zone_id != ""
-
-  #calculated_zone_id = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id || var.domain_name : ""
-
-  # vpc_id             = var.use_an_existing_vpc ? var.external_vpc_id : (var.disable_vpc_creation ? "" : module.vpc[0].vpc_id)
-  # aliases            = var.domain == null ? null : length(var.domain) == 0 ? null : length(var.alias_domain_name) == 0 ? [var.domain] : compact([var.domain, var.alias_domain_name])
-  # calculated_zone_id = var.enable_custom_domain ? (module.dns_and_certificates[0].hosted_zone_id != "" || var.domain_name != "" ? module.dns_and_certificates[0].hosted_zone_id : "") : ""
 
   enable_s3_for_static_website                                   = var.enable_s3_for_static_website
   s3_static_website_bucket_cf_function_arn                       = var.s3_static_website_bucket_cf_function_arn
