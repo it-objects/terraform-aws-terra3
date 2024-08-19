@@ -623,6 +623,12 @@ resource "aws_ssm_parameter" "hibernation_state" {
   name  = "/${var.solution_name}/global_scale_down/hibernation_state"
   value = "initial"
   type  = "String"
+
+  lifecycle {
+    ignore_changes = [
+      value,
+    ]
+  }
 }
 
 locals {
