@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.40.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.39.1...v1.40.0) (2024-08-19)
+
+
+### Features
+
+* added ignore changes to hibernation_state ssm parameter to avoid drift ([86ccbf6](https://github.com/it-objects/terraform-aws-terra3/commit/86ccbf66d41ca3e47f53a1f732b100188d07ba1c))
+
 ### [1.39.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.39.0...v1.39.1) (2024-08-19)
 
 
