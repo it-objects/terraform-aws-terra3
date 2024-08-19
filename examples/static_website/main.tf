@@ -4,15 +4,15 @@
 
 locals {
   solution_name = "static-website"
-  domain_name     = "<PLEASE ENTER HERE THE FULL DOMAIN NAME>"
+  domain_name   = "<PLEASE ENTER HERE THE FULL DOMAIN NAME>"
   #route53_zone_id = "<PLEASE ENTER HERE THE HOSTED ZONE ID>"
 }
 
 module "terra3_examples" {
   source = "../.."
 
-  solution_name                 = local.solution_name
-  enable_account_best_practices = true
+  solution_name                  = local.solution_name
+  enable_account_best_practices  = true
   enable_account_level_resources = false
 
   # configure your environment here
@@ -66,7 +66,7 @@ resource "aws_s3_object" "static_website_index_file" {
   etag                   = filemd5("${path.module}/index.html")
 }
 
-resource "aws_s3_object" "static_website_image_file" {
+resource "aws_s3_object" "static_website_light_image" {
   key                    = "light.jpg"
   bucket                 = module.terra3_examples.s3_static_website_name
   source                 = "${path.module}/light.jpg"
