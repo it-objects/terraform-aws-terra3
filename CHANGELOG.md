@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.39.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.39.0...v1.39.1) (2024-08-19)
+
+
+### Bug Fixes
+
+* removed dependency while using domain name instead of hosted zone ([#51](https://github.com/it-objects/terraform-aws-terra3/issues/51)) ([a29f766](https://github.com/it-objects/terraform-aws-terra3/commit/a29f7667f1a0756e7f26806c80af269b6a7ff75a))
+
 ## [1.39.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.38.0...v1.39.0) (2024-07-03)
 
 
