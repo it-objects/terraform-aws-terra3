@@ -66,7 +66,7 @@ resource "aws_s3_object" "static_website_index_file" {
   etag                   = filemd5("${path.module}/index.html")
 }
 
-resource "aws_s3_object" "static_website_image" {
+resource "aws_s3_object" "static_website_image_file" {
   key                    = "light.jpg"
   bucket                 = module.terra3_examples.s3_static_website_name
   source                 = "${path.module}/light.jpg"
