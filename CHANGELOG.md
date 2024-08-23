@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.41.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.40.0...v1.41.0) (2024-08-23)
+
+
+### Features
+
+* updated value of cluster_type reference in app_components to reduce dependency ([12fae54](https://github.com/it-objects/terraform-aws-terra3/commit/12fae547013062524ed367db6cc8acf9f23853c5))
+
 ## [1.40.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.39.1...v1.40.0) (2024-08-19)
 
 
