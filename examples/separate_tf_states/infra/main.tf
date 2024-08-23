@@ -12,6 +12,10 @@ module "terra3_examples" {
   solution_name                 = local.solution_name
   enable_account_best_practices = true
 
+  # This is the default value for the cluster_type. But when cluster_type is different E.g. "EC2".
+  # Then cluster_type should also mention in the application state while using it in 2 state approach.
+  cluster_type = "FARGATE"
+
   # configure your environment here
   create_load_balancer = true
 

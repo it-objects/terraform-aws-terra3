@@ -17,6 +17,10 @@ module "terra3_examples" {
   # configure your environment here
   create_load_balancer = true
 
+  # This is the default value for the cluster_type. But when cluster_type is different E.g. "EC2".
+  # Then cluster_type should also mention in the application state while using it in 2 state approach.
+  cluster_type = "FARGATE"
+
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
 

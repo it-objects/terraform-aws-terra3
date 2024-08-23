@@ -112,6 +112,13 @@ resource_usage:
   ##
   # module.terra3_examples.module.environment.module.vpc_endpoints.aws_vpc_endpoint.this["s3"]:
     # monthly_data_processed_gb: 0.0 # Monthly data processed by the VPC endpoint(s) in GB.
+  module.terra3_examples.module.app_components[0].module.app_components["my_app_component"].aws_ecs_service.ecs_service[0]aws_ecs_service.ecs_service[0]:
+    monthly_hrs_of_instance: 720                # The number of hours the ECS service is running
+    desired_count: 1                            # Number of tasks desired
+    task_memory_gb: 512                           # Amount of memory for each task in GB
+    task_cpu_units: 256                         # Amount of CPU units for each task
+    monthly_cpu_usage_hours: 720               # CPU usage in hours per month (e.g., 2 instances * 720 hours)
+    monthly_memory_usage_gb: 512               # Memory usage in GB per month (e.g., 2 instances * 1GB * 720 hours)
   module.terra3_examples.module.environment.module.nat_instances[0].aws_autoscaling_group.this[0]:
     # instances: 1 # Number of instances in the autoscaling group.
     operating_system: linux # Override the operating system of the instance, can be: linux, windows, suse, rhel.

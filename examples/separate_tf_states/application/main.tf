@@ -11,6 +11,10 @@ module "terra3_examples" {
 
   solution_name = local.solution_name
 
+  # This is the default value for the cluster_type. But when cluster_type is different E.g. "EC2".
+  # Then cluster_type should also mention in the application state here while using it in 2 state approach.
+  cluster_type = "FARGATE"
+
   app_components = {
 
     t3-two-states-component = {

@@ -522,6 +522,8 @@ module "app_components" {
 
   enable_custom_domain = var.enable_custom_domain
 
+  cluster_type = var.cluster_type
+
   # CloudWatch alert based on cpu and memory utilization
   cpu_utilization_alert    = var.cpu_utilization_alert
   memory_utilization_alert = var.memory_utilization_alert

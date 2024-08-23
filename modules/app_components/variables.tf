@@ -9,6 +9,17 @@ variable "solution_name" {
   description = "Reference to name of environment."
 }
 
+variable "cluster_type" {
+  description = "Select FARGATE for cluster type as FARGATE, or Select FARGATE_SPOT for cluster type as FARGATE_SPOT or select EC2 for cluster type as EC2."
+  type        = string
+  default     = "FARGATE"
+
+  validation {
+    condition     = contains(["FARGATE", "FARGATE_SPOT", "EC2"], var.cluster_type)
+    error_message = "Only 'FARGATE', 'FARGATE_SPOT' and 'EC2' are allowed."
+  }
+}
+
 variable "cpu_utilization_alert" {
   description = "Select true to get alert based on CPU Utilisation"
   type        = bool

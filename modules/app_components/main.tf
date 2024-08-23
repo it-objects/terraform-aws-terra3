@@ -10,7 +10,7 @@ module "app_components" {
   name              = each.key
   solution_name     = var.solution_name
   container_runtime = data.aws_ecs_cluster.selected.cluster_name
-  cluster_type      = data.aws_ssm_parameter.cluster_type.value
+  cluster_type      = var.cluster_type #data.aws_ssm_parameter.cluster_type.value
 
   instances = each.value["instances"]
 
