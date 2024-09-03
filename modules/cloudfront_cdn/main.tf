@@ -369,6 +369,11 @@ resource "aws_cloudfront_distribution" "general_distribution" {
       response_page_path = "/index.html"
     }
   }
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.block,
+    aws_s3_bucket_acl.s3_bucket_acl
+  ]
 }
 
 resource "random_string" "random_s3_postfix" {
