@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.41.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.0...v1.41.1) (2024-09-03)
+
+
+### Bug Fixes
+
+* **cloudfront:** make dependency explicit to S3 log bucket including cloudfront's access privilege to write to it ([3dae43f](https://github.com/it-objects/terraform-aws-terra3/commit/3dae43f944be9c7f7c53030f8b49738b9aa899d0))
+
 ## [1.41.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.40.0...v1.41.0) (2024-08-23)
 
 
