@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.41.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.1...v1.41.2) (2024-09-06)
+
+
+### Bug Fixes
+
+* updated ami name for the NAT instance ([02bd9b2](https://github.com/it-objects/terraform-aws-terra3/commit/02bd9b24b33a288760bd3eea796faf8732570ef3))
+
 ### [1.41.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.0...v1.41.1) (2024-09-03)
 
 
