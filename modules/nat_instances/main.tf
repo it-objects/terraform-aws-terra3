@@ -47,7 +47,7 @@ data "aws_ami" "this" {
   }
   filter {
     name   = "name"
-    values = ["al2023-ami-2023.4*"]
+    values = ["al2023-ami-2023.5*"]
   }
   filter {
     name   = "virtualization-type"
