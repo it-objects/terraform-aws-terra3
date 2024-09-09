@@ -262,7 +262,7 @@ variable "database_instance_instance_class" {
 variable "database_ca_cert_identifier" {
   type        = string
   description = "CA certificate."
-  default     = "rds-ca-2019"
+  default     = "rds-ca-rsa2048-g1"
 
   validation {
     condition     = contains(["rds-ca-2019", "rds-ca-rsa2048-g1", "rds-ca-rsa4096-g1", "rds-ca-ecc384-g1"], var.database_ca_cert_identifier)
