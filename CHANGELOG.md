@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.41.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.2...v1.41.3) (2024-09-09)
+
+
+### Bug Fixes
+
+* updated default database CA to rds-ca-rsa2048-g1 ([9dc1d41](https://github.com/it-objects/terraform-aws-terra3/commit/9dc1d41536ff7fedad190700b6b6fc39a77492f9))
+
 ### [1.41.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.1...v1.41.2) (2024-09-06)
 
 
