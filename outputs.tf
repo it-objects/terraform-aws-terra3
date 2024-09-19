@@ -33,11 +33,6 @@ output "s3_solution_bucket_arn" {
   description = "Return solution bucket's ARN."
 }
 
-output "db_credentials" {
-  value       = var.create_database ? try(split(",", module.database[0].db_credentials), []) : []
-  description = "Return DB credentials as JSON."
-}
-
 output "redis_endpoint" {
   value       = var.create_elasticache_redis ? aws_elasticache_cluster.redis[0].cache_nodes[0].address : ""
   description = "Return Redis endpoint."
