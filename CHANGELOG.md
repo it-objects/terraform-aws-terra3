@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.41.5](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.4...v1.41.5) (2024-09-19)
+
+
+### Bug Fixes
+
+* **outputs:** remove output that returns sensitive data causing warnings during terraform apply ([7a843e9](https://github.com/it-objects/terraform-aws-terra3/commit/7a843e95c50ddd78f389499aa72b8a0cf6c37642))
+
 ### [1.41.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.3...v1.41.4) (2024-09-09)
 
 
