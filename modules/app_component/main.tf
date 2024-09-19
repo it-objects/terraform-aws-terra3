@@ -45,6 +45,8 @@ resource "aws_ecs_service" "ecs_service" {
 
   health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
+  wait_for_steady_state = true
+
   # for ECS exec
   enable_execute_command = var.enable_ecs_exec
 
