@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.41.7](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.6...v1.41.7) (2024-09-20)
+
+
+### Bug Fixes
+
+* **cicd:** revert waiting for steady state after container deployment ([9a24f42](https://github.com/it-objects/terraform-aws-terra3/commit/9a24f4251452e796236fa6997944e9b193c06f34))
+
 ### [1.41.6](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.5...v1.41.6) (2024-09-19)
 
 
