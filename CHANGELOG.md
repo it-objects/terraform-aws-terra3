@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.41.8](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.7...v1.41.8) (2024-09-24)
+
+
+### Bug Fixes
+
+* added parameter to disable creation of resources ([#52](https://github.com/it-objects/terraform-aws-terra3/issues/52)) ([7ea9dcb](https://github.com/it-objects/terraform-aws-terra3/commit/7ea9dcb836caf85b9705751a01209ceda216fc57))
+
 ### [1.41.7](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.6...v1.41.7) (2024-09-20)
 
 
