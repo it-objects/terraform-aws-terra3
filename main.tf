@@ -29,6 +29,8 @@ locals {
 }
 
 resource "aws_ssm_parameter" "domain_name" {
+  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
+
   name  = "/${var.solution_name}/domain_name"
   type  = "String"
   value = var.enable_custom_domain ? local.domain_name : "-"
@@ -203,7 +205,7 @@ module "l7_loadbalancer" {
 }
 
 resource "aws_ssm_parameter" "environment_alb_arn" {
-  count = !var.create_load_balancer ? 1 : 0
+  count = !var.create_load_balancer && !var.disable_all_account_level_ssm_parameter ? 1 : 0
 
   name  = "/${var.solution_name}/alb_arn"
   type  = "String"
@@ -246,6 +248,8 @@ module "dns_and_certificates" {
 }
 
 resource "aws_ssm_parameter" "enable_custom_domain" {
+  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
+
   name  = "/${var.solution_name}/enable_custom_domain"
   type  = "String"
   value = var.enable_custom_domain
@@ -254,6 +258,8 @@ resource "aws_ssm_parameter" "enable_custom_domain" {
 module "cloudfront_cdn" {
   source        = "./modules/cloudfront_cdn"
   solution_name = var.solution_name
+
+  enable_cloudfront_distribution = var.enable_cloudfront_distribution
 
   origin_alb_url    = length(module.l7_loadbalancer) == 0 ? null : module.l7_loadbalancer[0].lb_dns_name
   domain            = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].internal_domain_name
@@ -327,6 +333,8 @@ module "cluster" {
 }
 
 resource "aws_ssm_parameter" "cluster_type" {
+  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
+
   name  = "/${var.solution_name}/cluster_type"
   type  = "String"
   value = var.cluster_type
@@ -344,6 +352,8 @@ resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
 }
 
 resource "aws_ssm_parameter" "sns_alerts_topic_arn" {
+  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
+
   name  = "/${var.solution_name}/sns_alerts_topic_arn"
   type  = "String"
   value = local.create_sns_topic ? aws_sns_topic.ecs_service_cpu_and_memory_utilization_topic[0].arn : "-"

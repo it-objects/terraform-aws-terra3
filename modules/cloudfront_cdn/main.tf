@@ -189,6 +189,8 @@ locals {
 # for testing purposes WAF is disabled. TLS is disabled for the non-custom-domain examples.
 # tfsec:ignore:aws-cloudfront-enable-waf tfsec:ignore:aws-cloudfront-use-secure-tls-policy
 resource "aws_cloudfront_distribution" "general_distribution" {
+  count = var.enable_cloudfront_distribution ? 1 : 0
+
   enabled         = true
   is_ipv6_enabled = true
 
@@ -210,7 +212,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = aws_s3_bucket.cloudfront_logs.bucket_domain_name
+    bucket          = aws_s3_bucket.cloudfront_logs[0].bucket_domain_name
     prefix          = "cf-logs/"
   }
 
@@ -377,6 +379,8 @@ resource "aws_cloudfront_distribution" "general_distribution" {
 }
 
 resource "random_string" "random_s3_postfix" {
+  count = var.enable_cloudfront_distribution ? 1 : 0
+
   length    = 4
   special   = false
   min_lower = 4
@@ -390,14 +394,18 @@ resource "random_string" "random_s3_postfix" {
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "cloudfront_logs" {
-  bucket = "${var.solution_name}-cloudfront-logs-${random_string.random_s3_postfix.result}"
+  count = var.enable_cloudfront_distribution ? 1 : 0
+
+  bucket = "${var.solution_name}-cloudfront-logs-${random_string.random_s3_postfix[0].result}"
 
   force_destroy = true
 }
 
 #tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
+  count = var.enable_cloudfront_distribution ? 1 : 0
+
+  bucket = aws_s3_bucket.cloudfront_logs[0].id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -411,7 +419,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
 # TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_public_access_block" "block" {
-  bucket = aws_s3_bucket.cloudfront_logs.bucket
+  count = var.enable_cloudfront_distribution ? 1 : 0
+
+  bucket = aws_s3_bucket.cloudfront_logs[0].bucket
 
   block_public_acls       = true
   block_public_policy     = true
@@ -423,7 +433,9 @@ resource "aws_s3_bucket_public_access_block" "block" {
 # Give access to account and log front cloud delivery.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_acl" "s3_bucket_acl" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
+  count = var.enable_cloudfront_distribution ? 1 : 0
+
+  bucket = aws_s3_bucket.cloudfront_logs[0].id
 
   access_control_policy {
     grant {
@@ -451,7 +463,9 @@ resource "aws_s3_bucket_acl" "s3_bucket_acl" {
 # ACLs are disabled per defaults. With the help of Bucket owner preferred, ACLs are enabled.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
+  count = var.enable_cloudfront_distribution ? 1 : 0
+
+  bucket = aws_s3_bucket.cloudfront_logs[0].id
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -469,8 +483,8 @@ resource "aws_route53_record" "domain" {
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.general_distribution.domain_name
-    zone_id                = aws_cloudfront_distribution.general_distribution.hosted_zone_id
+    name                   = aws_cloudfront_distribution.general_distribution[0].domain_name
+    zone_id                = aws_cloudfront_distribution.general_distribution[0].hosted_zone_id
     evaluate_target_health = true
   }
 }
@@ -486,7 +500,7 @@ resource "aws_route53_record" "domain" {
 resource "aws_s3_bucket" "s3_static_website" {
   count = var.enable_s3_for_static_website ? 1 : 0
 
-  bucket = "${var.solution_name}-static-website-s3-bucket-${random_string.random_s3_postfix.result}"
+  bucket = "${var.solution_name}-static-website-s3-bucket-${random_string.random_s3_static_website_postfix[0].result}"
 
   force_destroy = true
 }
@@ -522,7 +536,7 @@ resource "aws_s3_bucket_cors_configuration" "example" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "HEAD"]
-    allowed_origins = [aws_cloudfront_distribution.general_distribution.domain_name]
+    allowed_origins = [aws_cloudfront_distribution.general_distribution[0].domain_name]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
