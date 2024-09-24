@@ -23,7 +23,13 @@ variable "enable_account_best_practices" {
 variable "enable_account_level_resources" {
   description = "Should account-wide best practices such as default encryption be applied?"
   type        = bool
-  default     = true
+  default     = false
+}
+
+variable "disable_all_account_level_ssm_parameter" {
+  description = "Set to true to enable CloudFront distribution"
+  type        = bool
+  default     = false
 }
 
 variable "enable_cloudfront_url_signing_for_solution_bucket" {
@@ -173,6 +179,12 @@ variable "enable_alb_deletion_protection" {
   type        = bool
   description = "Enable or disable deletion protection of ALB."
   default     = false
+}
+
+variable "enable_cloudfront_distribution" {
+  description = "Set to true to enable CloudFront distribution"
+  type        = bool
+  default     = true
 }
 
 variable "enable_custom_domain" {

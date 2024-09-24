@@ -1,9 +1,9 @@
 output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.general_distribution.domain_name
+  value = try(aws_cloudfront_distribution.general_distribution[0].domain_name, "")
 }
 
 output "cloudfront_arn" {
-  value = aws_cloudfront_distribution.general_distribution.arn
+  value = try(aws_cloudfront_distribution.general_distribution[0].arn, "")
 }
 
 output "s3_static_website_arn" {

@@ -2,6 +2,12 @@ variable "solution_name" {
   type = string
 }
 
+variable "enable_cloudfront_distribution" {
+  description = "Set to true to enable CloudFront distribution"
+  type        = bool
+  default     = true
+}
+
 variable "origin_alb_url" {
   type    = string
   default = ""
