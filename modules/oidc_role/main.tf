@@ -261,7 +261,7 @@ resource "aws_iam_policy" "s3_static_website_deployment_policy" {
           "Sid" : "ListObjectsInBucket",
           "Effect" : "Allow",
           "Action" : "s3:ListBucket",
-          "Resource" : ["arn:aws:s3:::${data.aws_caller_identity.current.account_id}:${each.value.s3_bucket_name}"]
+          "Resource" : ["arn:aws:s3:::${each.value.s3_bucket_name}"]
         },
         {
           "Sid" : "AllObjectActions",
@@ -270,7 +270,7 @@ resource "aws_iam_policy" "s3_static_website_deployment_policy" {
             "s3:PutObject",
             "s3:GetObject",
           "s3:DeleteObject"],
-          "Resource" : ["arn:aws:s3:::${data.aws_caller_identity.current.account_id}:${each.value.s3_bucket_name}/*"]
+          "Resource" : ["arn:aws:s3:::${each.value.s3_bucket_name}/*"]
         }
       ]
     }
