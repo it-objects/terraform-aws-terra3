@@ -694,3 +694,24 @@ module "enable_kms" {
   source = "./modules/kms"
   name   = var.kms_key_alias
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# User for CI/CD deployment
+# IAM identity providers (IdPs) allow you to manage your identities outside of AWS.
+# https://openid.net/developers/how-connect-works/
+# ---------------------------------------------------------------------------------------------------------------------
+data "tls_certificate" "oidc_tls_certificate" {
+  for_each = var.create_oidc_provider
+
+  url = each.key
+}
+
+resource "aws_iam_openid_connect_provider" "openid_connect_provider" {
+  for_each = var.create_oidc_provider
+
+  url            = each.key
+  client_id_list = [each.key]
+
+  #This concatenates the SHA1 fingerprint of the TLS certificate fetched by the data source tls_certificate.separate for the given URL and the values related to the each key.
+  thumbprint_list = concat([data.tls_certificate.oidc_tls_certificate[each.key].certificates.0.sha1_fingerprint], each.value)
+}

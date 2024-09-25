@@ -720,3 +720,9 @@ variable "kms_key_alias" {
   description = "Which alias name to pick for the KMS key. Default is kms-key."
   default     = "kms"
 }
+
+variable "create_oidc_provider" {
+  description = "Map of OIDC providers with client IDs as keys and thumbprint lists as values"
+  type        = map(list(string))
+  default     = {}
+}
