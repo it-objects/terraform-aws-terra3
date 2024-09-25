@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.42.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.42.0...v1.42.1) (2024-09-25)
+
+
+### Bug Fixes
+
+* **cloudfront/ssm:** configure to disable creation of CloudFront and SSM parameter resources ([9477c52](https://github.com/it-objects/terraform-aws-terra3/commit/9477c52d61bb9eb52634304f31dc354447396978))
+
 ## [1.42.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.8...v1.42.0) (2024-09-25)
 
 
