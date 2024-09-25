@@ -189,7 +189,7 @@ locals {
 # for testing purposes WAF is disabled. TLS is disabled for the non-custom-domain examples.
 # tfsec:ignore:aws-cloudfront-enable-waf tfsec:ignore:aws-cloudfront-use-secure-tls-policy
 resource "aws_cloudfront_distribution" "general_distribution" {
-  count = var.enable_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution ? 1 : 0
 
   enabled         = true
   is_ipv6_enabled = true
@@ -379,7 +379,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
 }
 
 resource "random_string" "random_s3_postfix" {
-  count = var.enable_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution ? 1 : 0
 
   length    = 4
   special   = false
@@ -394,7 +394,7 @@ resource "random_string" "random_s3_postfix" {
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "cloudfront_logs" {
-  count = var.enable_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution ? 1 : 0
 
   bucket = "${var.solution_name}-cloudfront-logs-${random_string.random_s3_postfix[0].result}"
 
@@ -403,7 +403,7 @@ resource "aws_s3_bucket" "cloudfront_logs" {
 
 #tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
-  count = var.enable_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].id
 
@@ -419,7 +419,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
 # TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_public_access_block" "block" {
-  count = var.enable_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].bucket
 
@@ -433,7 +433,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
 # Give access to account and log front cloud delivery.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_acl" "s3_bucket_acl" {
-  count = var.enable_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].id
 
@@ -463,7 +463,7 @@ resource "aws_s3_bucket_acl" "s3_bucket_acl" {
 # ACLs are disabled per defaults. With the help of Bucket owner preferred, ACLs are enabled.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
-  count = var.enable_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].id
 

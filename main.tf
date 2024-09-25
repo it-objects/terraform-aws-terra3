@@ -28,14 +28,6 @@ locals {
   app_component_paths = length(var.app_components) == 0 ? ["/api/*"] : [for component in values(var.app_components) : (contains(keys(component), "path_mapping") ? component.path_mapping : "/api/*")]
 }
 
-resource "aws_ssm_parameter" "domain_name" {
-  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
-
-  name  = "/${var.solution_name}/domain_name"
-  type  = "String"
-  value = var.enable_custom_domain ? local.domain_name : "-"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # Added resources for database subnet group while using existing VPC.
 # ---------------------------------------------------------------------------------------------------------------------
@@ -205,7 +197,7 @@ module "l7_loadbalancer" {
 }
 
 resource "aws_ssm_parameter" "environment_alb_arn" {
-  count = !var.create_load_balancer && !var.disable_all_account_level_ssm_parameter ? 1 : 0
+  count = !var.create_load_balancer && !var.disable_vpc_creation ? 1 : 0
 
   name  = "/${var.solution_name}/alb_arn"
   type  = "String"
@@ -248,7 +240,7 @@ module "dns_and_certificates" {
 }
 
 resource "aws_ssm_parameter" "enable_custom_domain" {
-  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
+  count = var.enable_custom_domain ? 1 : 0
 
   name  = "/${var.solution_name}/enable_custom_domain"
   type  = "String"
@@ -259,7 +251,8 @@ module "cloudfront_cdn" {
   source        = "./modules/cloudfront_cdn"
   solution_name = var.solution_name
 
-  enable_cloudfront_distribution = var.enable_cloudfront_distribution
+  #This value is set to true if there is at least one item in the 'l7_loadbalancer' module and 'enable_s3_for_static_website' variable is true; otherwise, it is set to false
+  create_cloudfront_distribution = length(module.l7_loadbalancer) != 0 && var.enable_s3_for_static_website ? true : false # ||
 
   origin_alb_url    = length(module.l7_loadbalancer) == 0 ? null : module.l7_loadbalancer[0].lb_dns_name
   domain            = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].internal_domain_name
@@ -332,14 +325,6 @@ module "cluster" {
   enable_ecs_exec           = var.enable_ecs_exec
 }
 
-resource "aws_ssm_parameter" "cluster_type" {
-  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
-
-  name  = "/${var.solution_name}/cluster_type"
-  type  = "String"
-  value = var.cluster_type
-}
-
 locals {
   create_sns_topic = var.cpu_utilization_alert || var.memory_utilization_alert == true ? true : false
 }
@@ -352,7 +337,7 @@ resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
 }
 
 resource "aws_ssm_parameter" "sns_alerts_topic_arn" {
-  count = var.disable_all_account_level_ssm_parameter ? 0 : 1
+  count = local.create_sns_topic ? 1 : 0
 
   name  = "/${var.solution_name}/sns_alerts_topic_arn"
   type  = "String"

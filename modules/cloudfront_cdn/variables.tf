@@ -2,7 +2,7 @@ variable "solution_name" {
   type = string
 }
 
-variable "enable_cloudfront_distribution" {
+variable "create_cloudfront_distribution" {
   description = "Set to true to enable CloudFront distribution"
   type        = bool
   default     = true

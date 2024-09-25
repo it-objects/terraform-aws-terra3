@@ -11,6 +11,14 @@ resource "aws_kms_key" "container_runtime_kms_key" {
   deletion_window_in_days = 7
 }
 
+resource "aws_ssm_parameter" "cluster_type" {
+
+  name  = "/${var.solution_name}/cluster_type"
+  type  = "String"
+  value = var.cluster_type
+}
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Cluster is compute that service will run on
 # ---------------------------------------------------------------------------------------------------------------------
