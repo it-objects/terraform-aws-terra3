@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.43.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.1...v1.43.2) (2024-09-25)
+
+
+### Bug Fixes
+
+* **oidc_role:** updated s3 static website arn ([50915bc](https://github.com/it-objects/terraform-aws-terra3/commit/50915bc4bdd9412e0fcf60bbef223c73d7a9271d))
+
 ### [1.43.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.0...v1.43.1) (2024-09-25)
 
 
