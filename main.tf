@@ -337,7 +337,7 @@ resource "aws_sns_topic" "ecs_service_cpu_and_memory_utilization_topic" {
 }
 
 resource "aws_ssm_parameter" "sns_alerts_topic_arn" {
-  count = local.create_sns_topic ? 1 : 0
+  count = !var.disable_vpc_creation ? 1 : 0
 
   name  = "/${var.solution_name}/sns_alerts_topic_arn"
   type  = "String"
