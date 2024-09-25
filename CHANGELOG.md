@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.43.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.42.1...v1.43.0) (2024-09-25)
+
+
+### Features
+
+* **oidc_role:** added option to configure the deployment  roles for infra, ecr and s3 static website ([8feccfb](https://github.com/it-objects/terraform-aws-terra3/commit/8feccfb86a0c5c080a7a10b63cb0e0a095b08066))
+
 ### [1.42.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.42.0...v1.42.1) (2024-09-25)
 
 
