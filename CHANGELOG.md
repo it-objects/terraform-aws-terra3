@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.42.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.8...v1.42.0) (2024-09-25)
+
+
+### Features
+
+* **oidc:** added option to create OIDC provider ([cc6916a](https://github.com/it-objects/terraform-aws-terra3/commit/cc6916ae537e99068fb19416d5c58f412a888ee3))
+
 ### [1.41.8](https://github.com/it-objects/terraform-aws-terra3/compare/v1.41.7...v1.41.8) (2024-09-24)
 
 
