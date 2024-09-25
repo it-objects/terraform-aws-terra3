@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.43.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.0...v1.43.1) (2024-09-25)
+
+
+### Bug Fixes
+
+* **ssm:** disabled sns alerting smm parameter ([8d5738f](https://github.com/it-objects/terraform-aws-terra3/commit/8d5738f40ca23b30edb73058ec79931083aa02f1))
+
 ## [1.43.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.42.1...v1.43.0) (2024-09-25)
 
 
