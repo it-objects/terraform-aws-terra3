@@ -700,3 +700,15 @@ resource "aws_iam_openid_connect_provider" "openid_connect_provider" {
   #This concatenates the SHA1 fingerprint of the TLS certificate fetched by the data source tls_certificate.separate for the given URL and the values related to the each key.
   thumbprint_list = concat([data.tls_certificate.oidc_tls_certificate[each.key].certificates.0.sha1_fingerprint], each.value)
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# https://gitlab.com/guided-explorations/aws/configure-openid-connect-in-aws
+# ---------------------------------------------------------------------------------------------------------------------
+module "oidc_role" {
+  source = "./modules/oidc_role"
+
+  # Scheduled https api call
+  addOidcUrlToIamInfraRoleMapping           = var.addOidcUrlToIamInfraRoleMapping
+  addOidcUrlToIamECRRoleMapping             = var.addOidcUrlToIamECRRoleMapping
+  addOidcUrlToIamS3StaticWebsiteRoleMapping = var.addOidcUrlToIamS3StaticWebsiteRoleMapping
+}
