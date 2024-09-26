@@ -17,11 +17,6 @@ resource "aws_iam_role" "infra_gitlab_ci" {
   managed_policy_arns = [aws_iam_policy.infra_deployment_policy[each.key].arn]
 }
 
-data "aws_iam_openid_connect_provider" "infra_openid_connect_provider" {
-  for_each = var.addOidcUrlToIamInfraRoleMapping
-  url      = "https://${each.key}"
-}
-
 data "aws_iam_policy_document" "infra_assume_role_policy" {
   for_each = var.addOidcUrlToIamInfraRoleMapping
 
@@ -30,11 +25,11 @@ data "aws_iam_policy_document" "infra_assume_role_policy" {
 
     principals {
       type        = "Federated"
-      identifiers = [data.aws_iam_openid_connect_provider.infra_openid_connect_provider[each.key].arn] #[local.oidc_gitlab_arn]
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${each.key}"] #[data.aws_iam_openid_connect_provider.infra_openid_connect_provider[each.key].arn] #arn:aws:iam::531874807515:oidc-provider/gitlab.it-objects.de
     }
     condition {
       test     = "StringLike"
-      variable = "${data.aws_iam_openid_connect_provider.infra_openid_connect_provider[each.key].url}:sub"
+      variable = "${each.key}:sub"
       values   = ["project_path:${each.value}:ref_type:branch:ref:*"]
     }
   }
@@ -117,13 +112,6 @@ resource "aws_iam_role" "ecr_gitlab_ci" {
   managed_policy_arns = [aws_iam_policy.ecr_deployment_policy[each.key].arn]
 }
 
-data "aws_iam_openid_connect_provider" "ecr_openid_connect_provider" {
-  for_each = { for mapping in local.ecr_mappings : mapping.ecr_identifier => mapping }
-
-  url = "https://${each.value.url}"
-
-}
-
 data "aws_iam_policy_document" "ecr_assume_role_policy" {
   for_each = { for mapping in local.ecr_mappings : mapping.ecr_identifier => mapping }
 
@@ -132,11 +120,11 @@ data "aws_iam_policy_document" "ecr_assume_role_policy" {
 
     principals {
       type        = "Federated"
-      identifiers = [data.aws_iam_openid_connect_provider.ecr_openid_connect_provider[each.key].arn] #[local.oidc_gitlab_arn]
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${each.value.url}"]
     }
     condition {
       test     = "StringLike"
-      variable = "${data.aws_iam_openid_connect_provider.ecr_openid_connect_provider[each.key].url}:sub"
+      variable = "${each.value.url}:sub"
       values   = ["project_path:${each.value.repo_path}:ref_type:branch:ref:*"]
     }
   }
@@ -211,13 +199,6 @@ resource "aws_iam_role" "s3_static_website_gitlab_ci" {
   managed_policy_arns = [aws_iam_policy.s3_static_website_deployment_policy[each.key].arn]
 }
 
-data "aws_iam_openid_connect_provider" "s3_static_website_openid_connect_provider" {
-  for_each = { for mapping in local.s3_static_website_mappings : mapping.s3_static_website_identifier => mapping }
-
-  url = "https://${each.value.url}"
-
-}
-
 data "aws_iam_policy_document" "s3_static_website_assume_role_policy" {
   for_each = { for mapping in local.s3_static_website_mappings : mapping.s3_static_website_identifier => mapping }
 
@@ -226,11 +207,11 @@ data "aws_iam_policy_document" "s3_static_website_assume_role_policy" {
 
     principals {
       type        = "Federated"
-      identifiers = [data.aws_iam_openid_connect_provider.s3_static_website_openid_connect_provider[each.key].arn] #[local.oidc_gitlab_arn]
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${each.value.url}"]
     }
     condition {
       test     = "StringLike"
-      variable = "${data.aws_iam_openid_connect_provider.s3_static_website_openid_connect_provider[each.key].url}:sub"
+      variable = "${each.value.url}:sub"
       values   = ["project_path:${each.value.repo_path}:ref_type:branch:ref:*"]
     }
   }
