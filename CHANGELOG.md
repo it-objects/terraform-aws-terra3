@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.44.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.4...v1.44.0) (2024-10-02)
+
+
+### Features
+
+* **ecs:** added configuration to use ARM based image with fargate ([a366d34](https://github.com/it-objects/terraform-aws-terra3/commit/a366d34e4843e49969b86c950b1f7e2d03afb72a))
+
 ### [1.43.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.3...v1.43.4) (2024-10-02)
 
 
