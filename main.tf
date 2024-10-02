@@ -28,6 +28,14 @@ locals {
   app_component_paths = length(var.app_components) == 0 ? ["/api/*"] : [for component in values(var.app_components) : (contains(keys(component), "path_mapping") ? component.path_mapping : "/api/*")]
 }
 
+resource "aws_ssm_parameter" "domain_name" {
+  count = !var.disable_vpc_creation || var.enable_custom_domain ? 1 : 0
+
+  name  = "/${var.solution_name}/domain_name"
+  type  = "String"
+  value = var.enable_custom_domain ? local.domain_name : "-"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Added resources for database subnet group while using existing VPC.
 # ---------------------------------------------------------------------------------------------------------------------
@@ -240,7 +248,7 @@ module "dns_and_certificates" {
 }
 
 resource "aws_ssm_parameter" "enable_custom_domain" {
-  count = var.enable_custom_domain ? 1 : 0
+  count = !var.disable_vpc_creation ? 1 : 0
 
   name  = "/${var.solution_name}/enable_custom_domain"
   type  = "String"

@@ -4,18 +4,7 @@ locals {
   domain_name  = var.route53_zone_id == "" ? var.domain : data.aws_route53_zone.imported_hostedzone[0].name
 
   loadbalancer_available = var.create_load_balancer
-
-  internal_domain_name = length(var.alias_domain_name) == 0 ? aws_acm_certificate.domain_certificate.domain_name : tolist(aws_acm_certificate.domain_certificate.subject_alternative_names)[0]
-
 }
-
-resource "aws_ssm_parameter" "domain_name" {
-
-  name  = "/${var.solution_name}/domain_name"
-  type  = "String"
-  value = local.internal_domain_name
-}
-
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Hosted Zone; Is only created if var.route53_zone_id is not given by solution
@@ -29,8 +18,6 @@ data "aws_route53_zone" "imported_hostedzone" {
   count   = var.route53_zone_id == "" ? 0 : 1
   zone_id = var.route53_zone_id
 }
-
-
 
 # ---------------------------------------------------------------------------------------------------------------------
 # cert for root domain in Virgina required by CloudFront
