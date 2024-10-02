@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.43.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.3...v1.43.4) (2024-10-02)
+
+
+### Bug Fixes
+
+* **ssm:** added domain name parameter in main file ([f80bfbc](https://github.com/it-objects/terraform-aws-terra3/commit/f80bfbc5b59f12f78fa87bac7bde1d2cd87cd0fa))
+
 ### [1.43.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.2...v1.43.3) (2024-09-26)
 
 
