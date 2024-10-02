@@ -91,6 +91,15 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   cpu    = var.total_cpu
   memory = var.total_memory
 
+  # should be executed only when requires_compatibilities is FARGATE
+  dynamic "runtime_platform" {
+    for_each = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? [true] : []
+    content {
+      operating_system_family = "LINUX"
+      cpu_architecture        = "ARM64"
+    }
+  }
+
   container_definitions = local.json_map
 
   tags = {
