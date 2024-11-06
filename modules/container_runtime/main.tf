@@ -12,10 +12,10 @@ resource "aws_kms_key" "container_runtime_kms_key" {
 }
 
 resource "aws_ssm_parameter" "cluster_type" {
-
-  name  = "/${var.solution_name}/cluster_type"
-  type  = "String"
-  value = var.cluster_type
+  name      = "/${var.solution_name}/cluster_type"
+  type      = "String"
+  value     = var.cluster_type
+  overwrite = true
 }
 
 
