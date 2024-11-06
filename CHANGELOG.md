@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.44.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.44.1...v1.44.2) (2024-11-06)
+
+
+### Bug Fixes
+
+* enable overwrite parameter for cluster_type parameter ([04c79c9](https://github.com/it-objects/terraform-aws-terra3/commit/04c79c99468f12794389fb00a84ecab3817bc9b3))
+
 ### [1.44.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.44.0...v1.44.1) (2024-11-06)
 
 
