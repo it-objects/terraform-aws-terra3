@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.44.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.44.0...v1.44.1) (2024-11-06)
+
+
+### Bug Fixes
+
+* changed random postfix for s3 static website bucket to old one tp avoid recreation of bucket ([bdfaa02](https://github.com/it-objects/terraform-aws-terra3/commit/bdfaa028be8b562c1ce676574a4cadb9b482d490))
+
 ## [1.44.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.43.4...v1.44.0) (2024-10-02)
 
 
