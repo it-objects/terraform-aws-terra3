@@ -500,7 +500,7 @@ resource "aws_route53_record" "domain" {
 resource "aws_s3_bucket" "s3_static_website" {
   count = var.enable_s3_for_static_website ? 1 : 0
 
-  bucket = "${var.solution_name}-static-website-s3-bucket-${random_string.random_s3_static_website_postfix[0].result}"
+  bucket = "${var.solution_name}-static-website-s3-bucket-${random_string.random_s3_postfix[0].result}"
 
   force_destroy = true
 }
