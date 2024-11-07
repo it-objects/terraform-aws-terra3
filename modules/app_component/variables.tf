@@ -30,6 +30,17 @@ variable "cluster_type" {
   }
 }
 
+variable "runtime_cpu_architecture" {
+  description = "Configuration cpu architecture for runtime platform that containers in your task may use. This parameter is required for Amazon ECS tasks hosted on Fargate. "
+  type        = string
+  default     = "X86_64"
+
+  validation {
+    condition     = contains(["X86_64", "ARM64"], var.runtime_cpu_architecture)
+    error_message = "Only 'X86_64' and 'ARM64' are allowed."
+  }
+}
+
 variable "enable_ecs_autoscaling" {
   description = "Enables/disables auto-scaling cpu utilisation and memory utilisation of ECS."
   type        = bool

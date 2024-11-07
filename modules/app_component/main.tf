@@ -96,7 +96,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
     for_each = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? [true] : []
     content {
       operating_system_family = "LINUX"
-      cpu_architecture        = "ARM64"
+      cpu_architecture        = var.runtime_cpu_architecture
     }
   }
 

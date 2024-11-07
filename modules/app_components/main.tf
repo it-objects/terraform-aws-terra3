@@ -12,6 +12,8 @@ module "app_components" {
   container_runtime = data.aws_ecs_cluster.selected.cluster_name
   cluster_type      = var.cluster_type #data.aws_ssm_parameter.cluster_type.value
 
+  runtime_cpu_architecture = var.runtime_cpu_architecture
+
   instances = each.value["instances"]
 
   total_cpu    = each.value["total_cpu"]

@@ -527,6 +527,8 @@ module "app_components" {
 
   cluster_type = var.cluster_type
 
+  runtime_cpu_architecture = var.runtime_cpu_architecture
+
   # CloudWatch alert based on cpu and memory utilization
   cpu_utilization_alert    = var.cpu_utilization_alert
   memory_utilization_alert = var.memory_utilization_alert
