@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.45.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.44.3...v1.45.0) (2024-11-07)
+
+
+### Features
+
+* Make configurable runtime cpu architecture for FARGATE ([7bb3ae0](https://github.com/it-objects/terraform-aws-terra3/commit/7bb3ae06c4b3616925867c69ceed3474e8664e13))
+
 ### [1.44.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.44.2...v1.44.3) (2024-11-06)
 
 
