@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.0...v1.45.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* **oidc:** managed_policy_arns is deprecated causing a warning in newer versions of the terraform cli. It's now being replaced using aws_iam_role_policy_attachment instead. ([147a98c](https://github.com/it-objects/terraform-aws-terra3/commit/147a98c29b91ceeefbb5bde8a35eb0a1fba20fe4))
+
 ## [1.45.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.44.3...v1.45.0) (2024-11-07)
 
 
