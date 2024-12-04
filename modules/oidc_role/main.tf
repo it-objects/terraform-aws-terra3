@@ -107,9 +107,8 @@ resource "random_string" "ecr_deployment_role_postfix" {
 resource "aws_iam_role" "ecr_gitlab_ci" {
   for_each = { for mapping in local.ecr_mappings : mapping.ecr_identifier => mapping }
 
-  name                = "deployment_role_ecr_oidc_${random_string.ecr_deployment_role_postfix[each.key].result}"
-  assume_role_policy  = data.aws_iam_policy_document.ecr_assume_role_policy[each.key].json
-  managed_policy_arns = [aws_iam_policy.ecr_deployment_policy[each.key].arn]
+  name               = "deployment_role_ecr_oidc_${random_string.ecr_deployment_role_postfix[each.key].result}"
+  assume_role_policy = data.aws_iam_policy_document.ecr_assume_role_policy[each.key].json
 }
 
 data "aws_iam_policy_document" "ecr_assume_role_policy" {
@@ -128,6 +127,13 @@ data "aws_iam_policy_document" "ecr_assume_role_policy" {
       values   = ["project_path:${each.value.repo_path}:ref_type:branch:ref:*"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_gitlab_ci_policy_attachment" {
+  for_each = { for mapping in local.ecr_mappings : mapping.ecr_identifier => mapping }
+
+  role       = aws_iam_role.ecr_gitlab_ci[each.key].name
+  policy_arn = aws_iam_policy.ecr_deployment_policy[each.key].arn
 }
 
 resource "aws_iam_policy" "ecr_deployment_policy" {

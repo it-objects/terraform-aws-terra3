@@ -19,9 +19,13 @@ data "aws_iam_policy_document" "assume_role_policy" {
 }
 
 resource "aws_iam_role" "gitlab_ci" {
-  name                = "deployment_role_${var.app_name}_oidc_${random_string.deployment_role_postfix.result}"
-  assume_role_policy  = data.aws_iam_policy_document.assume_role_policy.json
-  managed_policy_arns = [aws_iam_policy.deployment_policy.arn]
+  name               = "deployment_role_${var.app_name}_oidc_${random_string.deployment_role_postfix.result}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "gitlab_ci_policy_attachment" {
+  role       = aws_iam_role.gitlab_ci.name
+  policy_arn = aws_iam_policy.deployment_policy.arn
 }
 
 resource "aws_iam_policy" "deployment_policy" {
