@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.1...v1.45.2) (2024-12-31)
+
+
+### Bug Fixes
+
+* correct CloudFront distribution creation condition ([b78249c](https://github.com/it-objects/terraform-aws-terra3/commit/b78249ca7987a6d5ec7d4b01e80fe27fd74074e6))
+
 ### [1.45.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.0...v1.45.1) (2024-12-04)
 
 
