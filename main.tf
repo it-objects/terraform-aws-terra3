@@ -259,8 +259,8 @@ module "cloudfront_cdn" {
   source        = "./modules/cloudfront_cdn"
   solution_name = var.solution_name
 
-  #This value is set to true if there is at least one item in the 'l7_loadbalancer' module and 'enable_s3_for_static_website' variable is true; otherwise, it is set to false
-  create_cloudfront_distribution = length(module.l7_loadbalancer) != 0 && var.enable_s3_for_static_website ? true : false # ||
+  #This value is set to true if there is at least one item in the 'l7_loadbalancer' module or 'enable_s3_for_static_website' variable is true; otherwise, it is set to false
+  create_cloudfront_distribution = length(module.l7_loadbalancer) != 0 || var.enable_s3_for_static_website ? true : false # ||
 
   origin_alb_url    = length(module.l7_loadbalancer) == 0 ? null : module.l7_loadbalancer[0].lb_dns_name
   domain            = length(module.dns_and_certificates) == 0 ? null : module.dns_and_certificates[0].internal_domain_name
