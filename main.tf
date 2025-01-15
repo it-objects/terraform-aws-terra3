@@ -489,6 +489,7 @@ module "aws_ses" {
 
   source           = "./modules/ses"
   create_ses       = var.create_ses
+  create_ses_user  = var.create_ses_user
   ses_domain_name  = var.ses_domain_name
   mail_from_domain = var.ses_mail_from_domain
 

@@ -582,6 +582,12 @@ variable "create_ses" {
   default     = false
 }
 
+variable "create_ses_user" {
+  type        = bool
+  default     = true
+  description = "Creates IAM user along SES creation. Should be disabled in case of restrictive SCPs that deny access to IAM."
+}
+
 variable "ses_domain_name" {
   type        = string
   description = "Define domain name to be verified."

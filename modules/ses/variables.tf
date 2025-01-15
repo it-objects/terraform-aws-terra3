@@ -20,3 +20,9 @@ variable "create_ses" {
   default     = false
   description = "Enable it to use amazon simple email service"
 }
+
+variable "create_ses_user" {
+  type        = bool
+  default     = true
+  description = "Creates IAM user along SES creation. Should be disabled in case of restrictive SCPs that deny access to IAM."
+}

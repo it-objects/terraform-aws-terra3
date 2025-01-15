@@ -90,30 +90,30 @@ resource "aws_route53_record" "spf_domain" {
 # To access the Amazon SES SMTP interface is to create an IAM user.
 # tfsec:ignore:aws-iam-no-user-attached-policies
 resource "aws_iam_user" "ses" {
-  count = var.create_ses ? 1 : 0
+  count = var.create_ses && var.create_ses_user ? 1 : 0
   name  = "${var.name}-iam-user"
 }
 
 resource "aws_iam_access_key" "smtp_user" {
-  count = var.create_ses ? 1 : 0
+  count = var.create_ses && var.create_ses_user ? 1 : 0
   user  = aws_iam_user.ses[0].name
 }
 
 resource "aws_iam_user_policy_attachment" "send_mail" {
-  count      = var.create_ses ? 1 : 0
+  count      = var.create_ses && var.create_ses_user ? 1 : 0
   policy_arn = aws_iam_policy.send_mail[0].arn
   user       = aws_iam_user.ses[0].name
 }
 
 resource "aws_iam_policy" "send_mail" {
-  count       = var.create_ses ? 1 : 0
+  count       = var.create_ses && var.create_ses_user ? 1 : 0
   name        = "${var.name}-send-mail-policy"
   description = "Allows sending of e-mails via Simple Email Service"
   policy      = data.aws_iam_policy_document.send_mail[0].json
 }
 
 data "aws_iam_policy_document" "send_mail" {
-  count = var.create_ses ? 1 : 0
+  count = var.create_ses && var.create_ses_user ? 1 : 0
   statement {
     actions   = ["ses:SendRawEmail"]
     resources = ["*"]
