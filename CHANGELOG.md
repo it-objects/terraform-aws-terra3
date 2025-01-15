@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.2...v1.45.3) (2025-01-15)
+
+
+### Bug Fixes
+
+* **ses:** allow disabling the creation of SES user as this could stop the SES usage in environments with IAM restrictions ([79db32b](https://github.com/it-objects/terraform-aws-terra3/commit/79db32b340608a82c6f48963e3cec3f16ce047d6))
+
 ### [1.45.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.1...v1.45.2) (2024-12-31)
 
 
