@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.3...v1.45.4) (2025-01-15)
+
+
+### Bug Fixes
+
+* **gh-pages:** update deps ([e8b79ad](https://github.com/it-objects/terraform-aws-terra3/commit/e8b79ad8467388735dc3f38fd75632d7c379d11d))
+
 ### [1.45.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.2...v1.45.3) (2025-01-15)
 
 
