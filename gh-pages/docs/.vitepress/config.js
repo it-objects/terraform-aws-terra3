@@ -21,7 +21,7 @@ export default {
 
         footer: {
             message: 'Released under the Apache2 License.',
-            copyright: 'Copyright © 2023 it-objects GmbH'
+            copyright: ''
         },
 
         nav: [
