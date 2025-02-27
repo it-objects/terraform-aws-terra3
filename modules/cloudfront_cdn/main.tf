@@ -591,7 +591,7 @@ resource "aws_ssm_parameter" "cloudfront_id" {
 
   name  = "/${var.solution_name}/cloudfront/id"
   type  = "String"
-  value = aws_cloudfront_distribution.general_distribution.id
+  value = aws_cloudfront_distribution.general_distribution[0].id
 }
 
 resource "aws_ssm_parameter" "cloudfront_domain_name" {
@@ -599,7 +599,7 @@ resource "aws_ssm_parameter" "cloudfront_domain_name" {
 
   name  = "/${var.solution_name}/cloudfront/domain_name"
   type  = "String"
-  value = aws_cloudfront_distribution.general_distribution.domain_name
+  value = aws_cloudfront_distribution.general_distribution[0].domain_name
 }
 
 resource "aws_ssm_parameter" "cloudfront_aliases" {
@@ -607,7 +607,7 @@ resource "aws_ssm_parameter" "cloudfront_aliases" {
 
   name  = "/${var.solution_name}/cloudfront/aliases"
   type  = "String"
-  value = aws_cloudfront_distribution.general_distribution.aliases
+  value = aws_cloudfront_distribution.general_distribution[0].aliases
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
