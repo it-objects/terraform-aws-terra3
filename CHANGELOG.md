@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.5](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.4...v1.45.5) (2025-02-27)
+
+
+### Bug Fixes
+
+* **cloudfront:** storing more cloudfront data in parameter store ([f95c46e](https://github.com/it-objects/terraform-aws-terra3/commit/f95c46e459f0ec21dc816b25602135d93f58c657))
+
 ### [1.45.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.3...v1.45.4) (2025-01-15)
 
 
