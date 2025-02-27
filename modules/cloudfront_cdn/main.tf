@@ -584,6 +584,33 @@ resource "aws_ssm_parameter" "s3_static_website_bucket_arn" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# store cloudfront distribution details in parameter store to be retrieved later
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_ssm_parameter" "cloudfront_id" {
+  count = var.create_cloudfront_distribution ? 1 : 0
+
+  name  = "/${var.solution_name}/cloudfront/id"
+  type  = "String"
+  value = aws_cloudfront_distribution.general_distribution.id
+}
+
+resource "aws_ssm_parameter" "cloudfront_domain_name" {
+  count = var.create_cloudfront_distribution ? 1 : 0
+
+  name  = "/${var.solution_name}/cloudfront/domain_name"
+  type  = "String"
+  value = aws_cloudfront_distribution.general_distribution.domain_name
+}
+
+resource "aws_ssm_parameter" "cloudfront_aliases" {
+  count = var.create_cloudfront_distribution ? 1 : 0
+
+  name  = "/${var.solution_name}/cloudfront/aliases"
+  type  = "String"
+  value = aws_cloudfront_distribution.general_distribution.aliases
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # OAI for S3 static website
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
