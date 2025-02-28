@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.8](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.7...v1.45.8) (2025-02-28)
+
+
+### Bug Fixes
+
+* **global-scale-down:** Lambda zip were not recreated, when found missing ([b305097](https://github.com/it-objects/terraform-aws-terra3/commit/b3050977a9c94f148930346b29dc442306a41836))
+
 ### [1.45.7](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.6...v1.45.7) (2025-02-28)
 
 
