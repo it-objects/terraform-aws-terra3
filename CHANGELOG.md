@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.7](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.6...v1.45.7) (2025-02-28)
+
+
+### Bug Fixes
+
+* **cloudfront:** cope with empty cloudfront aliases ([12f3db5](https://github.com/it-objects/terraform-aws-terra3/commit/12f3db55f54b5dde082ba68814fccfdc49f512a4))
+
 ### [1.45.6](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.5...v1.45.6) (2025-02-27)
 
 
