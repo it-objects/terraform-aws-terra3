@@ -9,6 +9,9 @@
 # tfvars containing actual creds
 *.auto.tfvars.json
 
+# terraform build
+builds
+
 # Crash log files
 crash.log
 

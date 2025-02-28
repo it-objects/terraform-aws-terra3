@@ -41,16 +41,16 @@ module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.2.3"
+  version = "7.20.1"
 
   function_name = "${var.solution_name}-global-scale-up"
   description   = "Performs global scale up"
   handler       = "scale_up.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs22.x"
   source_path   = "${path.module}/scale_up.mjs"
   timeout       = 900
 
-  recreate_missing_package = false
+  trigger_on_package_timestamp = false
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
@@ -87,7 +87,7 @@ resource "aws_lambda_function_url" "scale_up_lambda_function_url" {
 module "eventbridge_up" {
   count   = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   source  = "terraform-aws-modules/eventbridge/aws"
-  version = "3.5.0"
+  version = "3.14.3"
 
   bus_name = "${var.solution_name}-scale-up" # "default" bus already support schedule_expression in rules
 
@@ -120,16 +120,16 @@ module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.2.3"
+  version = "7.20.1"
 
   function_name = "${var.solution_name}-global-scale-down"
   description   = "Performs global scale down"
   handler       = "scale_down.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs22.x"
   source_path   = "${path.module}/scale_down.mjs"
   timeout       = 900
 
-  recreate_missing_package = false
+  trigger_on_package_timestamp = false
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
@@ -166,7 +166,7 @@ resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
 module "eventbridge_down" {
   count   = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   source  = "terraform-aws-modules/eventbridge/aws"
-  version = "3.5.0"
+  version = "3.14.3"
 
   bus_name = "${var.solution_name}-scale-down" # "default" bus already support schedule_expression in rules
 
@@ -190,16 +190,16 @@ module "global_scale_status" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.2.3"
+  version = "7.20.1"
 
   function_name = "${var.solution_name}-global-scale-status"
   description   = "Shows the current status of deployment."
   handler       = "status.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs22.x"
   source_path   = "${path.module}/status.mjs"
   timeout       = 900
 
-  recreate_missing_package = false
+  trigger_on_package_timestamp = false
 
   create_current_version_allowed_triggers = false
   cloudwatch_logs_retention_in_days       = 30
