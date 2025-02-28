@@ -605,9 +605,21 @@ resource "aws_ssm_parameter" "cloudfront_domain_name" {
 resource "aws_ssm_parameter" "cloudfront_aliases" {
   count = var.create_cloudfront_distribution ? 1 : 0
 
-  name  = "/${var.solution_name}/cloudfront/aliases"
-  type  = "String"
-  value = aws_cloudfront_distribution.general_distribution[0].aliases
+  name = "/${var.solution_name}/cloudfront/aliases"
+  type = "String"
+
+  # We use coalesce to return the aliases if it exists, or an empty list [] if it's null or empty.
+  # We wrap the result in jsonencode to convert the list to a JSON string.
+  # We use try to attempt the operation and return "[]" (an empty JSON array) if any error occurs.
+  value = try(
+    jsonencode(
+      coalesce(
+        aws_cloudfront_distribution.general_distribution[0].aliases,
+        []
+      )
+    ),
+    "[]"
+  )
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
