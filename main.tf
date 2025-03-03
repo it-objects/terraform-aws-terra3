@@ -7,7 +7,8 @@
 locals {
   # "nat" variable defines how nat should be configured
   create_nat_instances          = (var.nat == "NAT_INSTANCES") ? true : false
-  create_nat_gateway            = (var.nat != "NO_NAT" && var.nat != "NAT_INSTANCES") ? true : false
+  create_fck_nat_instances      = (var.nat == "FCK_NAT_INSTANCES") ? true : false
+  create_nat_gateway            = (var.nat != "NO_NAT" && var.nat != "NAT_INSTANCES" && var.nat != "FCK_NAT_INSTANCES") ? true : false
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
@@ -171,6 +172,28 @@ module "nat_instances" {
   count = local.create_nat_instances && !var.disable_vpc_creation ? 1 : 0
 
   source        = "./modules/nat_instances"
+  solution_name = var.solution_name
+
+  public_subnets_cidr_blocks  = var.public_subnets_cidr_blocks
+  private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
+
+  azs                   = var.azs
+  nat_use_spot_instance = false
+  nat_instance_types    = var.nat_instance_types
+
+  private_route_table_ids = local.private_route_table_ids
+  public_subnets          = local.public_subnets
+  private_subnets         = local.private_subnets
+  vpc_id                  = local.vpc_id
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Use of FCK-NAT instances instead of NAT gateways to reduce costs
+# ---------------------------------------------------------------------------------------------------------------------
+module "fck_nat_instances" {
+  count = local.create_fck_nat_instances && !var.disable_vpc_creation ? 1 : 0
+
+  source        = "./modules/fck_nat_instances"
   solution_name = var.solution_name
 
   public_subnets_cidr_blocks  = var.public_subnets_cidr_blocks
