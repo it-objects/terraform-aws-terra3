@@ -35,13 +35,6 @@ resource "aws_eip" "main" {
 
   domain = "vpc"
 }
-#
-# resource "aws_eip_association" "eip_assoc" {
-#   count = (var.enable_fcknat_eip && length(var.azs) > 0) ? length(var.azs) : 0
-#
-#   allocation_id        = aws_eip.main[count.index].id
-#   network_interface_id = data.aws_network_interfaces.public_enis[count.index].ids[0]
-# }
 
 resource "aws_network_interface" "public_subnets" {
   count = (var.enable_fcknat_eip && length(var.azs) > 0) ? length(var.azs) : 0
@@ -53,7 +46,7 @@ resource "aws_network_interface" "public_subnets" {
 
 
   tags = {
-    Name            = "${var.solution_name}-fck-nnetwork-intereface-${var.azs[count.index]}"
+    Name            = "${var.solution_name}-fck-network-intereface-${var.azs[count.index]}"
     Condition_check = "${var.solution_name}-fck-network-intereface"
   }
 }
@@ -74,23 +67,6 @@ data "aws_network_interfaces" "public_enis" {
 
   depends_on = [aws_autoscaling_group.main] # Ensures ASG is created first
 }
-#
-# resource "aws_ssm_parameter" "fck_nat_eni_ids" {
-#   count = length(var.azs)
-#
-#   name  = "/${var.solution_name}/fck_nat_eni_id_${count.index}"
-#   type  = "String"
-#   value = data.aws_network_interfaces.public_enis[count.index].ids[0]
-# }
-#
-# resource "aws_ssm_parameter" "fck_nat_eip_allocation_ids" {
-#   count = length(var.azs)
-#
-#   name  = "/${var.solution_name}/fck_nat_eip_allocation_id_${count.index}"
-#   type  = "String"
-#   value = aws_eip.main[count.index].id
-# }
-#
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AMI of the latest FCK_NAT
@@ -153,22 +129,9 @@ resource "aws_launch_template" "main" {
     instance_metadata_tags      = "enabled"
   }
 
-  #user_data = base64encode("${path.module}/templates/user_data.sh")
-  # user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
-  #   TERRAFORM_ENI_ID = ""
-  #   TERRAFORM_EIP_ID = ""
-  #   ##TERRAFORM_ENI_ID = length(var.azs) > 0 ? local.aws_network_interfaces_public_enis : ""
-  #   #TERRAFORM_ENI_ID = length(var.azs) > 0 ? data.aws_network_interfaces.public_enis[count.index].ids[0] : ""
-  #   ##TERRAFORM_EIP_ID = length(var.azs) != 0 ? aws_eip.main[count.index].allocation_id : ""
-  #   #TERRAFORM_ENI_ID = aws_network_interface.main[count.index].id
-  #   #TERRAFORM_EIP_ID = aws_eip.main[*].allocation_id
-  # }))
-
   user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
     TERRAFORM_ENI_ID = aws_network_interface.public_subnets[count.index].id
     TERRAFORM_EIP_ID = aws_eip.main[count.index].id
-    #TERRAFORM_ENI_ID = "$(aws ssm get-parameter --name /${var.solution_name}/fck_nat_eni_id_${count.index} --query 'Parameter.Value' --output text --region ${data.aws_region.current.name})"
-    #TERRAFORM_EIP_ID = "$(aws ssm get-parameter --name /${var.solution_name}/fck_nat_eip_allocation_id_${count.index} --query 'Parameter.Value' --output text --region ${data.aws_region.current.name})"
   }))
 
   block_device_mappings {
@@ -249,14 +212,14 @@ resource "aws_autoscaling_group" "main" {
 # IAM
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_instance_profile" "main" {
-  name_prefix = "${var.solution_name}-"
+  name_prefix = "${var.solution_name}-fck-nat-instance-"
   role        = aws_iam_role.main.name
 
   tags = var.tags
 }
 
 resource "aws_iam_role" "main" {
-  name_prefix        = "${var.solution_name}-"
+  name_prefix        = "${var.solution_name}-fck-nat-instance-"
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
   tags               = var.tags
 }
@@ -272,21 +235,68 @@ data "aws_iam_policy_document" "instance_assume_role_policy" {
   }
 }
 
-resource "aws_iam_policy" "main" {
-  name   = var.solution_name
-  policy = data.aws_iam_policy_document.main.json
-  tags   = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "main" {
-  role       = aws_iam_role.main.name
-  policy_arn = aws_iam_policy.main.arn
-}
+# resource "aws_iam_policy" "main" {
+#   name   = var.solution_name
+#   policy = data.aws_iam_policy_document.main.json
+#   tags   = var.tags
+# }
+#
+# resource "aws_iam_role_policy_attachment" "main" {
+#   role       = aws_iam_role.main.name
+#   policy_arn = aws_iam_policy.main.arn
+# }
 
 resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   role       = aws_iam_role.main.name
 }
+
+#tfsec:ignore:aws-iam-no-policy-wildcards # could be more restrictive
+resource "aws_iam_role_policy" "create_main" {
+  count       = length(var.azs)
+  role        = aws_iam_role.main.name
+  name_prefix = "${var.solution_name}-fck-nat-policy-${var.azs[count.index]}-"
+  policy      = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Sid": "ManageNetworkInterface",
+            "Action": [
+                "ec2:AttachNetworkInterface",
+                "ec2:ModifyNetworkInterfaceAttribute"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "ec2:ResourceTag/Name": "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Sid": "ManageEIPAllocation",
+            "Action": [
+                "ec2:AssociateAddress",
+                "ec2:DisassociateAddress"
+            ],
+            "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/${aws_eip.main[count.index].allocation_id}"
+        },
+        {
+            "Effect": "Allow",
+            "Sid": "ManageEIPNetworkInterface",
+            "Action": [
+                "ec2:AssociateAddress",
+                "ec2:DisassociateAddress"
+            ],
+            "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/${aws_network_interface.public_subnets[count.index].id}"
+        }
+    ]
+}
+EOF
+}
+
 
 #tfsec:ignore:aws-iam-no-policy-wildcards # could be more restrictive
 data "aws_iam_policy_document" "main" {
@@ -306,23 +316,6 @@ data "aws_iam_policy_document" "main" {
     #   values   = ["${var.solution_name}-fck-nat-instance"]
     # }
   }
-
-  #
-  # dynamic "statement" {
-  #   for_each = (var.enable_fcknat_eip && length(var.azs) > 0) ? ["x"] : []
-  #
-  #   content {
-  #     sid    = "AllowSSMGetParameters"
-  #     effect = "Allow"
-  #     actions = [
-  #       "ssm:GetParameter"
-  #     ]
-  #     resources = [
-  #       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.solution_name}/fck_nat_eni_id_*",
-  #       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.solution_name}/fck_nat_eip_allocation_id_*"
-  #     ]
-  #   }
-  # }
 
   dynamic "statement" {
     for_each = (var.enable_fcknat_eip && length(var.azs) > 0) ? ["x"] : []
