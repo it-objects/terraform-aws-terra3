@@ -537,6 +537,18 @@ variable "nat_instance_types" {
   default     = ["t4g.nano"] # cheapest
 }
 
+variable "fcknat_instance_type" {
+  default     = ["t4g.nano"]
+  type        = list(string)
+  description = "Defaulting to free tier EC2 instance."
+}
+
+variable "enable_fcknat_eip" {
+  type        = bool
+  default     = false
+  description = "Whether to use elastic ip for FCK-NAT"
+}
+
 variable "create_ecr" {
   type    = bool
   default = false

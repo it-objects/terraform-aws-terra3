@@ -23,7 +23,8 @@ module "terra3_examples" {
 
   # dependency: required for downloading container images
   #nat = "NO_NAT"
-  nat = "FCK_NAT_INSTANCES"
+  nat               = "FCK_NAT_INSTANCES"
+  enable_fcknat_eip = true
 
   app_components = {
 

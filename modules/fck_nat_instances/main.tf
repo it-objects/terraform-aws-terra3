@@ -1,7 +1,3 @@
-locals {
-  ami_id = var.ami_id != null ? var.ami_id : data.aws_ami.main[0].id
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # Create FCKNAT instance(s) (as alternative to NAT gateway and NAT instance)
 # ---------------------------------------------------------------------------------------------------------------------
@@ -26,30 +22,8 @@ resource "aws_security_group" "main" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = var.private_subnets_cidr_blocks
+    cidr_blocks = var.private_subnets_cidr_blocks # TODO can we make it only the public subnets?
   }
-}
-
-resource "aws_network_interface" "private_main" {
-  #count = length(var.azs)
-
-  # count defines a loop along all AZ's
-  count = (var.update_route_table && length(var.azs) > 0) ? length(var.azs) : 0
-
-  description       = "${var.solution_name} static private ENI"
-  subnet_id         = var.private_subnets[count.index]
-  security_groups   = [aws_security_group.main.id]
-  source_dest_check = false
-
-  tags = merge({ Name = var.solution_name }, var.tags)
-}
-
-resource "aws_route" "main" {
-  for_each = var.update_route_tables || var.update_route_table ? merge(var.route_tables_ids, var.route_table_id != null ? { RESERVED_FKC_NAT = var.route_table_id } : {}) : {}
-
-  route_table_id         = each.value
-  destination_cidr_block = "0.0.0.0/0"
-  network_interface_id   = aws_network_interface.private_main[*].id
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -57,12 +31,13 @@ resource "aws_route" "main" {
 #---------------------------------------------------------------------------------------------------------------------
 #Create an Elastic IP and associate it with the latest instance
 resource "aws_eip" "main" {
-  count  = length(var.azs)
+  count = (var.enable_fcknat_eip && length(var.azs) > 0) ? length(var.azs) : 0
+
   domain = "vpc"
 }
 
 resource "aws_eip_association" "eip_assoc" {
-  count = length(var.azs)
+  count = (var.enable_fcknat_eip && length(var.azs) > 0) ? length(var.azs) : 0
 
   allocation_id        = aws_eip.main[count.index].id
   network_interface_id = data.aws_network_interfaces.public_enis[count.index].ids[0]
@@ -89,7 +64,6 @@ data "aws_network_interfaces" "public_enis" {
 # AMI of the latest FCK_NAT
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_ami" "main" {
-  count = var.ami_id != null ? 0 : 1
 
   most_recent = true
   owners      = ["568608671756"]
@@ -122,9 +96,8 @@ resource "aws_launch_template" "main" {
   # count defines a loop along all AZ's
   count = length(var.azs)
 
-  #checkov:skip=CKV_AWS_88:NAT instances must have a public IP.
   name_prefix = "${var.solution_name}-fck-nat-instance-template-${var.azs[count.index]}-"
-  image_id    = local.ami_id
+  image_id    = data.aws_ami.main.id
 
   iam_instance_profile {
     name = aws_iam_instance_profile.main.name
@@ -138,7 +111,7 @@ resource "aws_launch_template" "main" {
   }
 
   # for the time of free tier (end of May 2020), use t2.micro for the first AZ, for the rest use the one defined in main.tf
-  instance_type = var.nat_instance_types[0]
+  instance_type = var.fcknat_instance_type[0]
 
   # Enforce IMDSv2
   metadata_options {
@@ -148,14 +121,7 @@ resource "aws_launch_template" "main" {
     instance_metadata_tags      = "enabled"
   }
 
-  user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
-    TERRAFORM_ENI_ID = ""
-    TERRAFORM_EIP_ID = ""
-    ##TERRAFORM_ENI_ID = length(data.aws_network_interfaces.public_enis[count.index].ids[0]) > 0 ? data.aws_network_interfaces.public_enis[count.index].ids[0] : ""
-    ##TERRAFORM_EIP_ID = length(var.eip_allocation_ids) != 0 ? var.eip_allocation_ids[count.index] : ""
-    #TERRAFORM_ENI_ID = aws_network_interface.main[count.index].id
-    #TERRAFORM_EIP_ID = aws_eip.main[*].allocation_id
-  }))
+  user_data = base64encode("${path.module}/templates/user_data.sh")
 
   block_device_mappings {
     device_name = "/dev/xvda"
@@ -164,14 +130,6 @@ resource "aws_launch_template" "main" {
       encrypted   = true
       volume_size = "8"
       volume_type = "gp3"
-    }
-  }
-
-  dynamic "instance_market_options" {
-    for_each = var.use_spot_instances ? ["x"] : []
-
-    content {
-      market_type = "spot"
     }
   }
 
@@ -256,6 +214,11 @@ resource "aws_iam_role_policy_attachment" "main" {
   policy_arn = aws_iam_policy.main.arn
 }
 
+resource "aws_iam_role_policy_attachment" "ssm" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  role       = aws_iam_role.main.name
+}
+
 #tfsec:ignore:aws-iam-no-policy-wildcards # could be more restrictive
 data "aws_iam_policy_document" "main" {
   statement {
@@ -276,7 +239,7 @@ data "aws_iam_policy_document" "main" {
   }
 
   dynamic "statement" {
-    for_each = length(var.eip_allocation_ids) != 0 ? ["x"] : []
+    for_each = (var.enable_fcknat_eip && length(var.azs) > 0) ? ["x"] : []
 
     content {
       sid    = "ManageEIPAllocation"
@@ -285,14 +248,15 @@ data "aws_iam_policy_document" "main" {
         "ec2:AssociateAddress",
         "ec2:DisassociateAddress",
       ]
-      resources = [
-        "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/${var.eip_allocation_ids[0]}",
+      resources = [ # TODO update the below command to allow for all the eip allocation ids
+        "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/*",
+        #"arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/${aws_eip.main.allocation_id}"
       ]
     }
   }
 
   dynamic "statement" {
-    for_each = length(var.eip_allocation_ids) != 0 ? ["x"] : []
+    for_each = length(var.azs) != 0 ? ["x"] : []
 
     content {
       sid    = "ManageEIPNetworkInterface"
@@ -311,9 +275,4 @@ data "aws_iam_policy_document" "main" {
       }
     }
   }
-}
-
-resource "aws_iam_role_policy_attachment" "ssm" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  role       = aws_iam_role.main.name
 }

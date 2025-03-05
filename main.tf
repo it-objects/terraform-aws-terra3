@@ -195,18 +195,15 @@ module "fck_nat_instances" {
 
   source        = "./modules/fck_nat_instances"
   solution_name = var.solution_name
+  azs           = var.azs
 
-  public_subnets_cidr_blocks  = var.public_subnets_cidr_blocks
+  fcknat_instance_type = var.fcknat_instance_type
+  enable_fcknat_eip    = var.enable_fcknat_eip
+
+  vpc_id                      = local.vpc_id
   private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
-
-  azs                   = var.azs
-  nat_use_spot_instance = false
-  nat_instance_types    = var.nat_instance_types
-
-  private_route_table_ids = local.private_route_table_ids
-  public_subnets          = local.public_subnets
-  private_subnets         = local.private_subnets
-  vpc_id                  = local.vpc_id
+  public_subnets              = local.public_subnets
+  private_subnets             = local.private_subnets
 }
 
 module "l7_loadbalancer" {
