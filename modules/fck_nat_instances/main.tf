@@ -35,12 +35,27 @@ resource "aws_eip" "main" {
 
   domain = "vpc"
 }
+#
+# resource "aws_eip_association" "eip_assoc" {
+#   count = (var.enable_fcknat_eip && length(var.azs) > 0) ? length(var.azs) : 0
+#
+#   allocation_id        = aws_eip.main[count.index].id
+#   network_interface_id = data.aws_network_interfaces.public_enis[count.index].ids[0]
+# }
 
-resource "aws_eip_association" "eip_assoc" {
+resource "aws_network_interface" "public_subnets" {
   count = (var.enable_fcknat_eip && length(var.azs) > 0) ? length(var.azs) : 0
 
-  allocation_id        = aws_eip.main[count.index].id
-  network_interface_id = data.aws_network_interfaces.public_enis[count.index].ids[0]
+  description       = "${var.solution_name} static public ENI"
+  subnet_id         = var.public_subnets[count.index]
+  security_groups   = [aws_security_group.main.id]
+  source_dest_check = false
+
+
+  tags = {
+    Name            = "${var.solution_name}-fck-nnetwork-intereface-${var.azs[count.index]}"
+    Condition_check = "${var.solution_name}-fck-network-intereface"
+  }
 }
 
 # Filter Network Interfaces Using the public subnet-is and the description of the network interface
@@ -57,8 +72,25 @@ data "aws_network_interfaces" "public_enis" {
     values = ["${var.solution_name} ephemeral public ENI"]
   }
 
-  depends_on = [aws_autoscaling_group.main, aws_launch_template.main] # Ensures ASG is created first
+  depends_on = [aws_autoscaling_group.main] # Ensures ASG is created first
 }
+#
+# resource "aws_ssm_parameter" "fck_nat_eni_ids" {
+#   count = length(var.azs)
+#
+#   name  = "/${var.solution_name}/fck_nat_eni_id_${count.index}"
+#   type  = "String"
+#   value = data.aws_network_interfaces.public_enis[count.index].ids[0]
+# }
+#
+# resource "aws_ssm_parameter" "fck_nat_eip_allocation_ids" {
+#   count = length(var.azs)
+#
+#   name  = "/${var.solution_name}/fck_nat_eip_allocation_id_${count.index}"
+#   type  = "String"
+#   value = aws_eip.main[count.index].id
+# }
+#
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AMI of the latest FCK_NAT
@@ -121,7 +153,23 @@ resource "aws_launch_template" "main" {
     instance_metadata_tags      = "enabled"
   }
 
-  user_data = base64encode("${path.module}/templates/user_data.sh")
+  #user_data = base64encode("${path.module}/templates/user_data.sh")
+  # user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
+  #   TERRAFORM_ENI_ID = ""
+  #   TERRAFORM_EIP_ID = ""
+  #   ##TERRAFORM_ENI_ID = length(var.azs) > 0 ? local.aws_network_interfaces_public_enis : ""
+  #   #TERRAFORM_ENI_ID = length(var.azs) > 0 ? data.aws_network_interfaces.public_enis[count.index].ids[0] : ""
+  #   ##TERRAFORM_EIP_ID = length(var.azs) != 0 ? aws_eip.main[count.index].allocation_id : ""
+  #   #TERRAFORM_ENI_ID = aws_network_interface.main[count.index].id
+  #   #TERRAFORM_EIP_ID = aws_eip.main[*].allocation_id
+  # }))
+
+  user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
+    TERRAFORM_ENI_ID = aws_network_interface.public_subnets[count.index].id
+    TERRAFORM_EIP_ID = aws_eip.main[count.index].id
+    #TERRAFORM_ENI_ID = "$(aws ssm get-parameter --name /${var.solution_name}/fck_nat_eni_id_${count.index} --query 'Parameter.Value' --output text --region ${data.aws_region.current.name})"
+    #TERRAFORM_EIP_ID = "$(aws ssm get-parameter --name /${var.solution_name}/fck_nat_eip_allocation_id_${count.index} --query 'Parameter.Value' --output text --region ${data.aws_region.current.name})"
+  }))
 
   block_device_mappings {
     device_name = "/dev/xvda"
@@ -135,7 +183,8 @@ resource "aws_launch_template" "main" {
 
   description = "Launch template for NAT instance ${var.solution_name}"
   tags = {
-    Name = "${var.solution_name}-fck-nat-instance"
+    Name            = "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}"
+    Condition_check = "${var.solution_name}-fck-nat-instance"
   }
 
   lifecycle {
@@ -158,15 +207,35 @@ resource "aws_autoscaling_group" "main" {
   health_check_type   = "EC2"
   vpc_zone_identifier = [var.public_subnets[count.index]]
 
-  launch_template {
-    id      = aws_launch_template.main[count.index].id
-    version = "$Latest"
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_base_capacity                  = var.fcknat_use_spot_instance ? 0 : 1
+      on_demand_percentage_above_base_capacity = var.fcknat_use_spot_instance ? 0 : 100
+    }
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.main[count.index].id
+        version            = "$Latest"
+      }
+      dynamic "override" {
+        for_each = var.fcknat_instance_type
+        content {
+          instance_type = override.value
+        }
+      }
+    }
   }
 
   # Tag for name
   tag {
     key                 = "Name"
-    value               = "${var.solution_name}-nat-instance-${var.azs[count.index]}"
+    value               = "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}"
+    propagate_at_launch = true
+  }
+  # Tag for condition check in iam
+  tag {
+    key                 = "Condition_check"
+    value               = "${var.solution_name}-fck-nat-instance"
     propagate_at_launch = true
   }
 
@@ -231,12 +300,29 @@ data "aws_iam_policy_document" "main" {
     resources = [
       "*",
     ]
-    condition {
-      test     = "StringEquals"
-      variable = "ec2:ResourceTag/Name"
-      values   = [var.solution_name]
-    }
+    # condition {
+    #   test     = "StringEquals"
+    #   variable = "ec2:ResourceTag/Condition_check"
+    #   values   = ["${var.solution_name}-fck-nat-instance"]
+    # }
   }
+
+  #
+  # dynamic "statement" {
+  #   for_each = (var.enable_fcknat_eip && length(var.azs) > 0) ? ["x"] : []
+  #
+  #   content {
+  #     sid    = "AllowSSMGetParameters"
+  #     effect = "Allow"
+  #     actions = [
+  #       "ssm:GetParameter"
+  #     ]
+  #     resources = [
+  #       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.solution_name}/fck_nat_eni_id_*",
+  #       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.solution_name}/fck_nat_eip_allocation_id_*"
+  #     ]
+  #   }
+  # }
 
   dynamic "statement" {
     for_each = (var.enable_fcknat_eip && length(var.azs) > 0) ? ["x"] : []
@@ -268,11 +354,11 @@ data "aws_iam_policy_document" "main" {
       resources = [
         "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*"
       ]
-      condition {
-        test     = "StringEquals"
-        variable = "ec2:ResourceTag/Name"
-        values   = [var.solution_name]
-      }
+      # condition {
+      #   test     = "StringEquals"
+      #   variable = "ec2:ResourceTag/Condition_check"
+      #   values   = ["${var.solution_name}-fck-nat-instance"]
+      # }
     }
   }
 }

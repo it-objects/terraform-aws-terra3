@@ -39,6 +39,12 @@ variable "fcknat_instance_type" {
   description = "Defaulting to free tier EC2 instance."
 }
 
+variable "fcknat_use_spot_instance" {
+  type        = bool
+  default     = false
+  description = "Whether to use spot instances for FCK-NAT"
+}
+
 variable "extra_security_groups" {
   default     = []
   type        = list(string)

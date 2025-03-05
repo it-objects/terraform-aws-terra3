@@ -197,8 +197,9 @@ module "fck_nat_instances" {
   solution_name = var.solution_name
   azs           = var.azs
 
-  fcknat_instance_type = var.fcknat_instance_type
-  enable_fcknat_eip    = var.enable_fcknat_eip
+  fcknat_instance_type     = var.fcknat_instance_type
+  fcknat_use_spot_instance = var.fcknat_use_spot_instance
+  enable_fcknat_eip        = var.enable_fcknat_eip
 
   vpc_id                      = local.vpc_id
   private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
