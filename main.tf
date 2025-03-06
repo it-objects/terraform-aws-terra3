@@ -45,7 +45,6 @@ locals {
 }
 
 resource "aws_subnet" "database_subnet" {
-  #count = local.should_create_database_subnet ? length(var.azs) : 0
   count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
 
   vpc_id            = local.vpc_id
