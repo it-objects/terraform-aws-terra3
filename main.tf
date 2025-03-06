@@ -3,7 +3,6 @@
 # Terra3 - Your hyperdrive module for 3-tier applications
 # ---------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------
-
 locals {
   # "nat" variable defines how nat should be configured
   create_nat_instances          = (var.nat == "NAT_INSTANCES") ? true : false

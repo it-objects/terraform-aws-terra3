@@ -36,7 +36,7 @@ variable "private_subnets_cidr_blocks" {
 variable "fcknat_instance_type" {
   default     = ["t4g.nano"]
   type        = list(string)
-  description = "Defaulting to free tier EC2 instance."
+  description = "Enter the instance type."
 }
 
 variable "fcknat_use_spot_instance" {
