@@ -22,7 +22,7 @@ resource "aws_security_group" "main" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = var.private_subnets_cidr_blocks # TODO can we make it only the public subnets?
+    cidr_blocks = var.private_subnets_cidr_blocks # TODO can we make it only the private subnets?
   }
 }
 
@@ -46,31 +46,17 @@ resource "aws_network_interface" "public_subnets" {
 
 
   tags = {
-    Name            = "${var.solution_name}-fck-network-intereface-${var.azs[count.index]}"
-    Condition_check = "${var.solution_name}-fck-network-intereface"
+    Name = "${var.solution_name}-fck-nat"
   }
-}
-
-# Filter Network Interfaces Using the public subnet-is and the description of the network interface
-data "aws_network_interfaces" "public_enis" {
-  count = length(var.azs)
-
-  filter {
-    name   = "subnet-id"
-    values = [var.public_subnets[count.index]]
-  }
-
-  filter {
-    name   = "description"
-    values = ["${var.solution_name} ephemeral public ENI"]
-  }
-
-  depends_on = [aws_autoscaling_group.main] # Ensures ASG is created first
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AMI of the latest FCK_NAT
 # ---------------------------------------------------------------------------------------------------------------------
+locals {
+  is_arm = can(regex("[a-zA-Z]+\\d+g[a-z]*\\..+", var.fcknat_instance_type[0]))
+}
+
 data "aws_ami" "main" {
 
   most_recent = true
@@ -83,7 +69,7 @@ data "aws_ami" "main" {
 
   filter {
     name   = "architecture"
-    values = ["arm64"]
+    values = [local.is_arm ? "arm64" : "x86_64"]
   }
 
   filter {
@@ -118,7 +104,6 @@ resource "aws_launch_template" "main" {
     security_groups             = concat([aws_security_group.main.id], var.extra_security_groups)
   }
 
-  # for the time of free tier (end of May 2020), use t2.micro for the first AZ, for the rest use the one defined in main.tf
   instance_type = var.fcknat_instance_type[0]
 
   # Enforce IMDSv2
@@ -130,8 +115,8 @@ resource "aws_launch_template" "main" {
   }
 
   user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
-    TERRAFORM_ENI_ID = aws_network_interface.public_subnets[count.index].id
-    TERRAFORM_EIP_ID = aws_eip.main[count.index].id
+    TERRAFORM_ENI_ID = (var.enable_fcknat_eip && length(var.azs) > 0) ? aws_network_interface.public_subnets[count.index].id : ""
+    TERRAFORM_EIP_ID = (var.enable_fcknat_eip && length(var.azs) > 0) ? aws_eip.main[count.index].id : ""
   }))
 
   block_device_mappings {
@@ -145,9 +130,19 @@ resource "aws_launch_template" "main" {
   }
 
   description = "Launch template for NAT instance ${var.solution_name}"
+
   tags = {
-    Name            = "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}"
-    Condition_check = "${var.solution_name}-fck-nat-instance"
+    Name = "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}"
+  }
+
+  dynamic "tag_specifications" {
+    for_each = ["instance", "network-interface", "volume"]
+
+    content {
+      resource_type = tag_specifications.value
+
+      tags = merge({ Name = "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}" }, var.tags)
+    }
   }
 
   lifecycle {
@@ -195,12 +190,6 @@ resource "aws_autoscaling_group" "main" {
     value               = "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}"
     propagate_at_launch = true
   }
-  # Tag for condition check in iam
-  tag {
-    key                 = "Condition_check"
-    value               = "${var.solution_name}-fck-nat-instance"
-    propagate_at_launch = true
-  }
 
   # Required to redeploy without an outage.
   lifecycle {
@@ -235,70 +224,27 @@ data "aws_iam_policy_document" "instance_assume_role_policy" {
   }
 }
 
-# resource "aws_iam_policy" "main" {
-#   name   = var.solution_name
-#   policy = data.aws_iam_policy_document.main.json
-#   tags   = var.tags
-# }
-#
-# resource "aws_iam_role_policy_attachment" "main" {
-#   role       = aws_iam_role.main.name
-#   policy_arn = aws_iam_policy.main.arn
-# }
-
 resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   role       = aws_iam_role.main.name
 }
 
-#tfsec:ignore:aws-iam-no-policy-wildcards # could be more restrictive
-resource "aws_iam_role_policy" "create_main" {
-  count       = length(var.azs)
-  role        = aws_iam_role.main.name
-  name_prefix = "${var.solution_name}-fck-nat-policy-${var.azs[count.index]}-"
-  policy      = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Sid": "ManageNetworkInterface",
-            "Action": [
-                "ec2:AttachNetworkInterface",
-                "ec2:ModifyNetworkInterfaceAttribute"
-            ],
-            "Resource": "*",
-            "Condition": {
-                "StringEquals": {
-                    "ec2:ResourceTag/Name": "${var.solution_name}-fck-nat-instance-${var.azs[count.index]}"
-                }
-            }
-        },
-        {
-            "Effect": "Allow",
-            "Sid": "ManageEIPAllocation",
-            "Action": [
-                "ec2:AssociateAddress",
-                "ec2:DisassociateAddress"
-            ],
-            "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/${aws_eip.main[count.index].allocation_id}"
-        },
-        {
-            "Effect": "Allow",
-            "Sid": "ManageEIPNetworkInterface",
-            "Action": [
-                "ec2:AssociateAddress",
-                "ec2:DisassociateAddress"
-            ],
-            "Resource": "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/${aws_network_interface.public_subnets[count.index].id}"
-        }
-    ]
-}
-EOF
+resource "aws_iam_policy" "main" {
+  name   = var.solution_name
+  policy = data.aws_iam_policy_document.main.json
+  tags   = var.tags
 }
 
+resource "aws_iam_role_policy_attachment" "main" {
+  role       = aws_iam_role.main.name
+  policy_arn = aws_iam_policy.main.arn
+}
 
-#tfsec:ignore:aws-iam-no-policy-wildcards # could be more restrictive
+locals {
+  fck_nat_eip_allocation_ids = [for eip in aws_eip.main : "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/${eip.id}"]
+}
+
+#tfsec:ignore:aws-iam-no-policy-wildcards
 data "aws_iam_policy_document" "main" {
   statement {
     sid    = "ManageNetworkInterface"
@@ -310,11 +256,11 @@ data "aws_iam_policy_document" "main" {
     resources = [
       "*",
     ]
-    # condition {
-    #   test     = "StringEquals"
-    #   variable = "ec2:ResourceTag/Condition_check"
-    #   values   = ["${var.solution_name}-fck-nat-instance"]
-    # }
+    condition {
+      test     = "StringLike"
+      variable = "ec2:ResourceTag/Name"
+      values   = ["${var.solution_name}-fck-nat*"]
+    }
   }
 
   dynamic "statement" {
@@ -327,10 +273,8 @@ data "aws_iam_policy_document" "main" {
         "ec2:AssociateAddress",
         "ec2:DisassociateAddress",
       ]
-      resources = [ # TODO update the below command to allow for all the eip allocation ids
-        "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/*",
-        #"arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/${aws_eip.main.allocation_id}"
-      ]
+      resources = local.fck_nat_eip_allocation_ids
+
     }
   }
 
@@ -347,11 +291,11 @@ data "aws_iam_policy_document" "main" {
       resources = [
         "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*"
       ]
-      # condition {
-      #   test     = "StringEquals"
-      #   variable = "ec2:ResourceTag/Condition_check"
-      #   values   = ["${var.solution_name}-fck-nat-instance"]
-      # }
+      condition {
+        test     = "StringLike"
+        variable = "ec2:ResourceTag/Name"
+        values   = ["${var.solution_name}-fck-nat*"]
+      }
     }
   }
 }
