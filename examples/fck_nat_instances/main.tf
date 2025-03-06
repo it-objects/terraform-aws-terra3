@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "qwertz"
+  solution_name = "qwertzuiop"
 }
 
 module "terra3_examples" {
@@ -13,6 +13,8 @@ module "terra3_examples" {
 
   solution_name                 = local.solution_name
   enable_account_best_practices = true
+
+  #azs = ["eu-central-1a"]
 
   # configure your environment here
   create_load_balancer = true
@@ -25,7 +27,8 @@ module "terra3_examples" {
   #nat = "NO_NAT"
   nat                      = "FCK_NAT_INSTANCES"
   enable_fcknat_eip        = true
-  fcknat_use_spot_instance = true
+  fcknat_instance_type     = ["t3.small"]
+  fcknat_use_spot_instance = false
 
   app_components = {
 
@@ -45,7 +48,7 @@ module "terra3_examples" {
       service_port = 80
 
       # for cost savings undeploy outside work hours
-      enable_autoscaling = true
+      enable_autoscaling = false
     }
 
   }
