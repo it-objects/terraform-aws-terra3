@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.9](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.8...v1.45.9) (2025-03-06)
+
+
+### Features
+
+* enable fck nat instance ([#53](https://github.com/it-objects/terraform-aws-terra3/issues/53)) ([9a5dd11](https://github.com/it-objects/terraform-aws-terra3/commit/9a5dd1122952b44f523d2c7cd1a8256828d40dda))
+
+
+### Bug Fixes
+
+* **fck-nat):** update instance type description ([800c603](https://github.com/it-objects/terraform-aws-terra3/commit/800c603614c2a7949d544beee32d8066d0ce1466))
+
 ### [1.45.8](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.7...v1.45.8) (2025-02-28)
 
 
