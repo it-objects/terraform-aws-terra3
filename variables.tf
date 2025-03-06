@@ -33,13 +33,13 @@ variable "enable_cloudfront_url_signing_for_solution_bucket" {
 }
 
 variable "nat" {
-  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
+  description = "Select NO_NAT for no NAT, NAT_INSTANCES for NAT based on EC2 instances, FCK_NAT_INSTANCES for FCK based NAT instances, or NAT_GATEWAY for NAT with AWS NAT Gateways."
   type        = string
   default     = "NO_NAT"
 
   validation {
-    condition     = contains(["NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY_PER_SUBNET", "NAT_GATEWAY_SINGLE", "NAT_GATEWAY_PER_AZ"], var.nat)
-    error_message = "Only 'NO_NAT', 'NAT_INSTANCES', 'NAT_GATEWAY_PER_SUBNET', 'NAT_GATEWAY_SINGLE' and 'NAT_GATEWAY_PER_AZ' are allowed."
+    condition     = contains(["NAT_INSTANCES", "FCK_NAT_INSTANCES", "NO_NAT", "NAT_GATEWAY_PER_SUBNET", "NAT_GATEWAY_SINGLE", "NAT_GATEWAY_PER_AZ"], var.nat)
+    error_message = "Only 'NO_NAT', 'NAT_INSTANCES', 'FCK_NAT_INSTANCES', 'NAT_GATEWAY_PER_SUBNET', 'NAT_GATEWAY_SINGLE' and 'NAT_GATEWAY_PER_AZ' are allowed."
   }
 }
 
@@ -535,6 +535,24 @@ variable "nat_instance_types" {
   type        = list(string)
   description = ""
   default     = ["t4g.nano"] # cheapest
+}
+
+variable "fcknat_instance_type" {
+  default     = ["t4g.nano"]
+  type        = list(string)
+  description = "Defaulting to free tier EC2 instance."
+}
+
+variable "fcknat_use_spot_instance" {
+  type        = bool
+  default     = false
+  description = "Whether to use spot instances for FCK-NAT"
+}
+
+variable "enable_fcknat_eip" {
+  type        = bool
+  default     = false
+  description = "Whether to use elastic ip for FCK-NAT"
 }
 
 variable "create_ecr" {

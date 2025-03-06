@@ -7,7 +7,8 @@
 locals {
   # "nat" variable defines how nat should be configured
   create_nat_instances          = (var.nat == "NAT_INSTANCES") ? true : false
-  create_nat_gateway            = (var.nat != "NO_NAT" && var.nat != "NAT_INSTANCES") ? true : false
+  create_fck_nat_instances      = (var.nat == "FCK_NAT_INSTANCES") ? true : false
+  create_nat_gateway            = (var.nat != "NO_NAT" && var.nat != "NAT_INSTANCES" && var.nat != "FCK_NAT_INSTANCES") ? true : false
   create_single_nat_gateway     = (var.nat == "NAT_GATEWAY_SINGLE") ? true : false
   create_one_nat_gateway_per_az = (var.nat == "NAT_GATEWAY_PER_AZ") ? true : false
 
@@ -44,7 +45,6 @@ locals {
 }
 
 resource "aws_subnet" "database_subnet" {
-  #count = local.should_create_database_subnet ? length(var.azs) : 0
   count = var.create_database && var.use_an_existing_vpc && !var.disable_vpc_creation == "" && length(var.external_database_cidr) > 0 ? length(var.azs) : 0
 
   vpc_id            = local.vpc_id
@@ -184,6 +184,26 @@ module "nat_instances" {
   public_subnets          = local.public_subnets
   private_subnets         = local.private_subnets
   vpc_id                  = local.vpc_id
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Use of FCK-NAT instances instead of NAT gateways to reduce costs
+# ---------------------------------------------------------------------------------------------------------------------
+module "fck_nat_instances" {
+  count = local.create_fck_nat_instances && !var.disable_vpc_creation ? 1 : 0
+
+  source        = "./modules/fck_nat_instances"
+  solution_name = var.solution_name
+  azs           = var.azs
+
+  fcknat_instance_type     = var.fcknat_instance_type
+  fcknat_use_spot_instance = var.fcknat_use_spot_instance
+  enable_fcknat_eip        = var.enable_fcknat_eip
+
+  vpc_id                      = local.vpc_id
+  private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
+  public_subnets              = local.public_subnets
+  private_subnets             = local.private_subnets
 }
 
 module "l7_loadbalancer" {
