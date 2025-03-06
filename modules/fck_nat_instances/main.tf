@@ -22,7 +22,7 @@ resource "aws_security_group" "main" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = var.private_subnets_cidr_blocks # TODO can we make it only the private subnets?
+    cidr_blocks = var.private_subnets_cidr_blocks
   }
 }
 
