@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.8](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.7...v1.45.8) (2025-02-28)
+
+
+### Bug Fixes
+
+* **global-scale-down:** Lambda zip were not recreated, when found missing ([b305097](https://github.com/it-objects/terraform-aws-terra3/commit/b3050977a9c94f148930346b29dc442306a41836))
+
+### [1.45.7](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.6...v1.45.7) (2025-02-28)
+
+
+### Bug Fixes
+
+* **cloudfront:** cope with empty cloudfront aliases ([12f3db5](https://github.com/it-objects/terraform-aws-terra3/commit/12f3db55f54b5dde082ba68814fccfdc49f512a4))
+
+### [1.45.6](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.5...v1.45.6) (2025-02-27)
+
+
+### Bug Fixes
+
+* **cloudfront:** storing more cloudfront data in parameter store ([d7cb6b6](https://github.com/it-objects/terraform-aws-terra3/commit/d7cb6b6c3c424724657a6d4f6cb4548613af3e12))
+
+### [1.45.5](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.4...v1.45.5) (2025-02-27)
+
+
+### Bug Fixes
+
+* **cloudfront:** storing more cloudfront data in parameter store ([f95c46e](https://github.com/it-objects/terraform-aws-terra3/commit/f95c46e459f0ec21dc816b25602135d93f58c657))
+
 ### [1.45.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.3...v1.45.4) (2025-01-15)
 
 

@@ -584,6 +584,45 @@ resource "aws_ssm_parameter" "s3_static_website_bucket_arn" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# store cloudfront distribution details in parameter store to be retrieved later
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_ssm_parameter" "cloudfront_id" {
+  count = var.create_cloudfront_distribution ? 1 : 0
+
+  name  = "/${var.solution_name}/cloudfront/id"
+  type  = "String"
+  value = aws_cloudfront_distribution.general_distribution[0].id
+}
+
+resource "aws_ssm_parameter" "cloudfront_domain_name" {
+  count = var.create_cloudfront_distribution ? 1 : 0
+
+  name  = "/${var.solution_name}/cloudfront/domain_name"
+  type  = "String"
+  value = aws_cloudfront_distribution.general_distribution[0].domain_name
+}
+
+resource "aws_ssm_parameter" "cloudfront_aliases" {
+  count = var.create_cloudfront_distribution ? 1 : 0
+
+  name = "/${var.solution_name}/cloudfront/aliases"
+  type = "String"
+
+  # We use coalesce to return the aliases if it exists, or an empty list [] if it's null or empty.
+  # We wrap the result in jsonencode to convert the list to a JSON string.
+  # We use try to attempt the operation and return "[]" (an empty JSON array) if any error occurs.
+  value = try(
+    jsonencode(
+      coalesce(
+        aws_cloudfront_distribution.general_distribution[0].aliases,
+        []
+      )
+    ),
+    "[]"
+  )
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # OAI for S3 static website
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
