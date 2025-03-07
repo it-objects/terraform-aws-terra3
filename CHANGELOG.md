@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.45.10](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.9...v1.45.10) (2025-03-07)
+
+
+### Bug Fixes
+
+* **fck-nat:** updated the route ([a9c4a82](https://github.com/it-objects/terraform-aws-terra3/commit/a9c4a8282e387323776f8073cf51b1e0ab078b3e))
+
 ### [1.45.9](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.8...v1.45.9) (2025-03-06)
 
 
