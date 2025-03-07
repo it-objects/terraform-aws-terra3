@@ -37,17 +37,33 @@ resource "aws_eip" "main" {
 }
 
 resource "aws_network_interface" "public_subnets" {
-  count = (var.enable_fcknat_eip && length(var.azs) > 0) ? length(var.azs) : 0
+  count = length(var.azs)
 
   description       = "${var.solution_name} static public ENI"
   subnet_id         = var.public_subnets[count.index]
   security_groups   = [aws_security_group.main.id]
   source_dest_check = false
 
-
   tags = {
     Name = "${var.solution_name}-fck-nat"
   }
+}
+
+data "aws_route_tables" "this" {
+  count = length(var.private_subnets)
+
+  filter {
+    name   = "association.subnet-id"
+    values = [var.private_subnets[count.index]]
+  }
+}
+
+resource "aws_route" "main" {
+  count = length(var.azs)
+
+  route_table_id         = data.aws_route_tables.this[count.index].ids[0]
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id   = aws_network_interface.public_subnets[count.index].id
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -115,7 +131,7 @@ resource "aws_launch_template" "main" {
   }
 
   user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
-    TERRAFORM_ENI_ID = (var.enable_fcknat_eip && length(var.azs) > 0) ? aws_network_interface.public_subnets[count.index].id : ""
+    TERRAFORM_ENI_ID = (length(var.azs) > 0) ? aws_network_interface.public_subnets[count.index].id : ""
     TERRAFORM_EIP_ID = (var.enable_fcknat_eip && length(var.azs) > 0) ? aws_eip.main[count.index].id : ""
   }))
 
