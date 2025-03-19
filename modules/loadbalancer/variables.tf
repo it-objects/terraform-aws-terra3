@@ -47,3 +47,9 @@ variable "domain_name" {
   description = ""
   type        = string
 }
+
+variable "alb_logs_expiration" {
+  description = "Lifetime, in days, of the objects that are subject to the rule"
+  type        = number
+  default     = 90
+}
