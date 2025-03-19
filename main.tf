@@ -660,10 +660,10 @@ resource "aws_ssm_parameter" "hibernation_state" {
 
 locals {
   global_scale_data = jsonencode({
-    "asg_name" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_name, module.nat_instances[*].nat_instances_autoscaling_group_names, module.cluster[*].ecs_ec2_instances_autoscaling_group_name]),
-    "asg_max_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity, module.nat_instances[*].nat_instances_autoscaling_group_max_capacity, module.cluster[*].ecs_ec2_instances_autoscaling_group_max_capacity]),
-    "asg_min_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity, module.nat_instances[*].nat_instances_autoscaling_group_min_capacity, module.cluster[*].ecs_ec2_instances_autoscaling_group_min_capacity]),
-    "asg_desired_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity, module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity, module.cluster[*].ecs_ec2_instances_autoscaling_group_desired_capacity]),
+    "asg_name" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_name, module.nat_instances[*].nat_instances_autoscaling_group_names, module.fck_nat_instances[*].fck_nat_instances_autoscaling_group_names, module.cluster[*].ecs_ec2_instances_autoscaling_group_name]),
+    "asg_max_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_max_capacity, module.nat_instances[*].nat_instances_autoscaling_group_max_capacity, module.fck_nat_instances[*].fck_nat_instances_autoscaling_group_max_capacity, module.cluster[*].ecs_ec2_instances_autoscaling_group_max_capacity]),
+    "asg_min_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_min_capacity, module.nat_instances[*].nat_instances_autoscaling_group_min_capacity, module.fck_nat_instances[*].fck_nat_instances_autoscaling_group_min_capacity, module.cluster[*].ecs_ec2_instances_autoscaling_group_min_capacity]),
+    "asg_desired_capacity" : flatten([module.bastion_host_ssm[*].bastion_host_autoscaling_group_desired_capacity, module.nat_instances[*].nat_instances_autoscaling_group_desired_capacity, module.fck_nat_instances[*].fck_nat_instances_autoscaling_group_desired_capacity, module.cluster[*].ecs_ec2_instances_autoscaling_group_desired_capacity]),
     "db_instance_name" : local.db_instance_name,
     "redis_cluster_id" : local.redis.cluster_id,
     "redis_engine" : local.redis.engine,
@@ -691,6 +691,7 @@ module "global_scale_down" {
 
   ecs_ec2_instances_autoscaling_group_arn = local.ecs_ec2_instances_autoscaling_group_arn
   nat_instances_autoscaling_group_arn     = flatten(module.nat_instances[*].nat_instances_autoscaling_group_arn)
+  fck_nat_instances_autoscaling_group_arn = flatten(module.fck_nat_instances[*].fck_nat_instances_autoscaling_group_arn)
   bastion_host_autoscaling_group_arn      = module.bastion_host_ssm[*].bastion_host_autoscaling_group_arn
   cluster_name                            = local.cluster_name
   cluster_arn                             = local.cluster_arn

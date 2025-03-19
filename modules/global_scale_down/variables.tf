@@ -46,6 +46,14 @@ variable "nat_instances_autoscaling_group_arn" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Variables related to FCK_NAT instances with name, max_size, min_size, desired_size
+# ---------------------------------------------------------------------------------------------------------------------
+variable "fck_nat_instances_autoscaling_group_arn" {
+  description = ""
+  type        = list(string)
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Variables related to Bastion host instance with name, max_size, min_size, desired_size
 # ---------------------------------------------------------------------------------------------------------------------
 variable "bastion_host_autoscaling_group_arn" {
