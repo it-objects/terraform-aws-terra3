@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.47.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.47.0...v1.47.1) (2025-03-19)
+
+
+### Bug Fixes
+
+* disabled create_subdomain per default ([3f4cf99](https://github.com/it-objects/terraform-aws-terra3/commit/3f4cf995db47d1f424c992b30ed71f0d3a06a621))
+
 ## [1.47.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.46.0...v1.47.0) (2025-03-19)
 
 
