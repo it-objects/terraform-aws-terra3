@@ -135,3 +135,15 @@ variable "enable_environment_hibernation_admin_website" {
   description = "Select true to enable sleep environment hibernation."
   default     = false
 }
+
+variable "enable_cf_logs" {
+  type        = bool
+  description = "Select to enable storing CloudFront logs in s3 bucket."
+  default     = true
+}
+
+variable "cf_logs_expiration" {
+  description = "Lifetime, in days, of the objects that are subject to the rule"
+  type        = number
+  default     = 90
+}

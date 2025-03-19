@@ -85,7 +85,7 @@ module "log_bucket" {
   count = var.enable_alb_logs ? 1 : 0
 
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "4.1.1"
+  version = "4.6.0"
 
   bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
   acl    = "log-delivery-write"
@@ -97,6 +97,21 @@ module "log_bucket" {
 
   attach_elb_log_delivery_policy = true # Required for ALB logs
   #attach_lb_log_delivery_policy  = true # Required for ALB/NLB logs
+
+  lifecycle_rule = [
+    {
+      id     = "alb-logs-${var.alb_logs_expiration}-expiration"
+      status = "Enabled"
+
+      expiration = {
+        days = var.alb_logs_expiration
+      }
+
+      filter = {
+        prefix = ""
+      }
+    }
+  ]
 
   attach_deny_insecure_transport_policy = true
   attach_require_latest_tls_policy      = true

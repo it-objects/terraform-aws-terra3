@@ -215,6 +215,7 @@ module "l7_loadbalancer" {
   security_groups = [module.security_groups[0].loadbalancer_sg]
 
   enable_alb_logs            = var.enable_alb_logs
+  alb_logs_expiration        = var.alb_logs_expiration
   enable_deletion_protection = var.enable_alb_deletion_protection
 
   enable_custom_domain = var.enable_custom_domain
@@ -288,6 +289,9 @@ module "cloudfront_cdn" {
 
   calculated_zone_id           = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
   create_route53_domain_record = var.enable_custom_domain
+
+  enable_cf_logs     = var.enable_cf_logs
+  cf_logs_expiration = var.cf_logs_expiration
 
   enable_s3_for_static_website                                   = var.enable_s3_for_static_website
   s3_static_website_bucket_cf_function_arn                       = var.s3_static_website_bucket_cf_function_arn

@@ -168,6 +168,11 @@ variable "enable_alb_logs" {
   description = "Select to enable storing alb logs in s3 bucket."
   default     = false
 }
+variable "alb_logs_expiration" {
+  description = "Lifetime, in days, of the objects that are subject to the rule"
+  type        = number
+  default     = 90
+}
 
 variable "enable_alb_deletion_protection" {
   type        = bool
@@ -363,6 +368,18 @@ variable "s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn" {
   type        = string
   description = "String that defines Origin Response Function type of Lamnda@Edge for static website bucket."
   default     = ""
+}
+
+variable "enable_cf_logs" {
+  type        = bool
+  description = "Select to enable storing CloudFront logs in s3 bucket."
+  default     = true
+}
+
+variable "cf_logs_expiration" {
+  description = "Lifetime, in days, of the objects that are subject to the rule"
+  type        = number
+  default     = 90
 }
 
 variable "disable_custom_error_response" {

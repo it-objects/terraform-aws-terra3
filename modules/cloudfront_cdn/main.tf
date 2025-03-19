@@ -210,10 +210,13 @@ resource "aws_cloudfront_distribution" "general_distribution" {
     }
   }
 
-  logging_config {
-    include_cookies = false
-    bucket          = aws_s3_bucket.cloudfront_logs[0].bucket_domain_name
-    prefix          = "cf-logs/"
+  dynamic "logging_config" {
+    for_each = var.enable_cf_logs ? [1] : []
+    content {
+      include_cookies = false
+      bucket          = aws_s3_bucket.cloudfront_logs[0].bucket_domain_name
+      prefix          = "cf-logs/"
+    }
   }
 
   dynamic "origin" {
@@ -394,7 +397,7 @@ resource "random_string" "random_s3_postfix" {
 # ---------------------------------------------------------------------------------------------------------------------
 #tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "cloudfront_logs" {
-  count = var.create_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution && var.enable_cf_logs ? 1 : 0
 
   bucket = "${var.solution_name}-cloudfront-logs-${random_string.random_s3_postfix[0].result}"
 
@@ -403,7 +406,7 @@ resource "aws_s3_bucket" "cloudfront_logs" {
 
 #tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
-  count = var.create_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution && var.enable_cf_logs ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].id
 
@@ -414,12 +417,31 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc_config" {
   }
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "cloud_front_logs_life_cycle" {
+  count = var.create_cloudfront_distribution && var.enable_cf_logs ? 1 : 0
+
+  bucket = aws_s3_bucket.cloudfront_logs[0].id
+
+  rule {
+    id     = "cf-logs-${var.cf_logs_expiration}-expiration"
+    status = "Enabled"
+
+    expiration {
+      days = var.cf_logs_expiration
+    }
+
+    filter {
+      prefix = ""
+    }
+  }
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Block all public access
 # TF: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_public_access_block" "block" {
-  count = var.create_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution && var.enable_cf_logs ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].bucket
 
@@ -433,7 +455,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
 # Give access to account and log front cloud delivery.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_acl" "s3_bucket_acl" {
-  count = var.create_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution && var.enable_cf_logs ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].id
 
@@ -463,7 +485,7 @@ resource "aws_s3_bucket_acl" "s3_bucket_acl" {
 # ACLs are disabled per defaults. With the help of Bucket owner preferred, ACLs are enabled.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
-  count = var.create_cloudfront_distribution ? 1 : 0
+  count = var.create_cloudfront_distribution && var.enable_cf_logs ? 1 : 0
 
   bucket = aws_s3_bucket.cloudfront_logs[0].id
 
