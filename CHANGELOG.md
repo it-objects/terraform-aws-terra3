@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.46.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.10...v1.46.0) (2025-03-19)
+
+
+### Features
+
+* integrated fck-nat asg in global hibernation ([#54](https://github.com/it-objects/terraform-aws-terra3/issues/54)) ([d8f84b1](https://github.com/it-objects/terraform-aws-terra3/commit/d8f84b1d3b926060b3939fb6cc620218113a3861))
+
 ### [1.45.10](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.9...v1.45.10) (2025-03-07)
 
 
