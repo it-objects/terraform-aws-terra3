@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.47.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.46.0...v1.47.0) (2025-03-19)
+
+
+### Features
+
+* **logs:** add configurable expiry for ALB and CloudFront logs and add switch for CloudFront logs ([#55](https://github.com/it-objects/terraform-aws-terra3/issues/55)) ([c4de100](https://github.com/it-objects/terraform-aws-terra3/commit/c4de1003a1b32953d319c8e7c0b76ca38545c0d7))
+
 ## [1.46.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.45.10...v1.46.0) (2025-03-19)
 
 
