@@ -207,7 +207,7 @@ variable "route53_zone_id" {
 variable "create_subdomain" {
   type        = bool
   description = "Creates either a subdomain using the solution_name or uses the hosted zone's domain."
-  default     = true
+  default     = false
 }
 
 variable "single_az_setup" {
