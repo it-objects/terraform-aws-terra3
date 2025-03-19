@@ -1,5 +1,5 @@
 locals {
-  asg_arn   = concat(var.ecs_ec2_instances_autoscaling_group_arn, var.nat_instances_autoscaling_group_arn, var.bastion_host_autoscaling_group_arn)
+  asg_arn   = concat(var.ecs_ec2_instances_autoscaling_group_arn, var.nat_instances_autoscaling_group_arn, var.fck_nat_instances_autoscaling_group_arn, var.bastion_host_autoscaling_group_arn)
   redis_arn = concat(var.redis_cluster_arn, var.redis_subnet_group_arn, [var.redis_security_group_arn], ["arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parametergroup:*"])
 }
 

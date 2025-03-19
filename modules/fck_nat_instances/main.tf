@@ -4,8 +4,8 @@
 #tfsec:ignore:aws-ec2-no-public-egress-sgr
 #tfsec:ignore:aws-ec2-no-public-ingress-sgr
 resource "aws_security_group" "main" {
-  name        = var.solution_name
-  description = "Used in ${var.solution_name} instance of ITO FCK-NAT in subnet"
+  name        = "${var.solution_name}_fck_nat_instance_sg"
+  description = "Security group for FCK-NAT instances"
   vpc_id      = data.aws_vpc.main.id
 
   egress {
