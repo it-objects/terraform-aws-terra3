@@ -322,11 +322,6 @@ module "cloudfront_cdn" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Required in case a certificate is created for Cloudfront which needs to reside in the N. Virgina region (us-east-1)
 # ---------------------------------------------------------------------------------------------------------------------
-provider "aws" {
-  alias  = "useast1"
-  region = "us-east-1"
-}
-
 module "account" {
   count = var.enable_account_best_practices && var.enable_account_level_resources ? 1 : 0
 
