@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.47.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.47.1...v1.47.2) (2025-04-11)
+
+
+### Bug Fixes
+
+* move aws provider declaration for useast1 to central provider.tf ([2637f37](https://github.com/it-objects/terraform-aws-terra3/commit/2637f37a176ac8da5d7b48a9399834835d095565))
+
 ### [1.47.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.47.0...v1.47.1) (2025-03-19)
 
 
