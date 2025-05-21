@@ -295,7 +295,7 @@ module "cloudfront_cdn" {
 
   enable_s3_for_static_website                                   = var.enable_s3_for_static_website
   s3_static_website_bucket_cf_function_arn                       = var.s3_static_website_bucket_cf_function_arn
-  s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn  = var.s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn
+  s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn  = try("${module.lambda_at_edge[0].lambda_at_edge_arn}:${module.lambda_at_edge[0].lambda_at_edge_version}", "")
   s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn  = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn
   s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn = var.s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn
   s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn
@@ -317,6 +317,17 @@ module "cloudfront_cdn" {
 
   s3_admin_website_url                         = try(module.global_scale_down[0].s3_admin_website_url, "")
   enable_environment_hibernation_admin_website = var.enable_environment_hibernation_sleep_schedule
+}
+
+module "lambda_at_edge" {
+  count = var.enable_spa ? 1 : 0
+
+  source        = "./modules/lambda_at_edge"
+  solution_name = var.solution_name
+
+  providers = {
+    aws.useast1 = aws.useast1
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

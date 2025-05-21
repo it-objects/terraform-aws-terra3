@@ -388,6 +388,12 @@ variable "disable_custom_error_response" {
   description = "Needs to be enabled in cases where API responses are masked by a custom error response on 404."
 }
 
+variable "enable_spa" {
+  type        = bool
+  default     = false
+  description = "Enable Viewer Request Function type of Lamnda@Edge for static website bucket."
+}
+
 variable "enable_ecs_exec" {
   description = "Enables ECS Exec which allows SSH into containers for debugging purposes."
   type        = bool
