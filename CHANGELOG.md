@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.48.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.47.2...v1.48.0) (2025-05-21)
+
+
+### Features
+
+* **lambda:** add Lambda@Edge support for SPAs in S3 static website ([#56](https://github.com/it-objects/terraform-aws-terra3/issues/56)) ([250988e](https://github.com/it-objects/terraform-aws-terra3/commit/250988ea960412ea6e169b90017550403c289049))
+
 ### [1.47.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.47.1...v1.47.2) (2025-04-11)
 
 
