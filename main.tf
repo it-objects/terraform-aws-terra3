@@ -275,6 +275,11 @@ resource "aws_ssm_parameter" "enable_custom_domain" {
   value = var.enable_custom_domain
 }
 
+locals {
+  is_enable_spa                                                    = try("${module.lambda_at_edge[0].lambda_at_edge_arn}:${module.lambda_at_edge[0].lambda_at_edge_version}", "")
+  enable_s3_static_website_bucket_cf_lambda_at_edge_origin_request = var.enable_spa ? local.is_enable_spa : var.s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn
+}
+
 module "cloudfront_cdn" {
   source        = "./modules/cloudfront_cdn"
   solution_name = var.solution_name
@@ -295,7 +300,7 @@ module "cloudfront_cdn" {
 
   enable_s3_for_static_website                                   = var.enable_s3_for_static_website
   s3_static_website_bucket_cf_function_arn                       = var.s3_static_website_bucket_cf_function_arn
-  s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn  = try("${module.lambda_at_edge[0].lambda_at_edge_arn}:${module.lambda_at_edge[0].lambda_at_edge_version}", "")
+  s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn  = local.enable_s3_static_website_bucket_cf_lambda_at_edge_origin_request
   s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn  = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn
   s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn = var.s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn
   s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn
@@ -324,6 +329,7 @@ module "lambda_at_edge" {
 
   source        = "./modules/lambda_at_edge"
   solution_name = var.solution_name
+  enable_spa    = var.enable_spa
 
   providers = {
     aws.useast1 = aws.useast1
