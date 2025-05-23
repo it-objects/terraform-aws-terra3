@@ -276,8 +276,8 @@ resource "aws_ssm_parameter" "enable_custom_domain" {
 }
 
 locals {
-  is_enable_spa                                                    = try("${module.lambda_at_edge[0].lambda_at_edge_arn}:${module.lambda_at_edge[0].lambda_at_edge_version}", "")
-  enable_s3_static_website_bucket_cf_lambda_at_edge_origin_request = var.enable_spa ? local.is_enable_spa : var.s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn
+  is_spa_enable                                                    = try("${module.lambda_at_edge[0].lambda_at_edge_arn}:${module.lambda_at_edge[0].lambda_at_edge_version}", "")
+  enable_s3_static_website_bucket_cf_lambda_at_edge_origin_request = var.enable_spa ? local.is_spa_enable : var.s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn
 }
 
 module "cloudfront_cdn" {
