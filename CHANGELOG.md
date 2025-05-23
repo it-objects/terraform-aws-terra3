@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.49.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.48.0...v1.49.0) (2025-05-23)
+
+
+### Features
+
+* **S3:** add parameter to enable Lambda@Edge for S3 static website ([#57](https://github.com/it-objects/terraform-aws-terra3/issues/57)) ([dd5e172](https://github.com/it-objects/terraform-aws-terra3/commit/dd5e1721d6fb269267687b6e195f2dae442c10cf))
+
 ## [1.48.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.47.2...v1.48.0) (2025-05-21)
 
 
