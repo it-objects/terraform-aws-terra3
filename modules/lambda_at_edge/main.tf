@@ -1,14 +1,18 @@
+locals {
+  source_file_path = var.enable_spa ? "${path.module}/lambda_at_edge_functions/" : var.source_path
+}
+
 data "archive_file" "lambda_at_edge" {
   type        = "zip"
-  source_file = "${path.module}/lambda_at_edge_functions/origin_request.mjs"
-  output_path = "${path.module}/lambda_at_edge_functions/origin_request.zip"
+  source_file = "${local.source_file_path}${var.file_name}.mjs"
+  output_path = "${path.module}/lambda_at_edge_functions/${var.file_name}.zip"
 }
 
 #tfsec:ignore:aws-lambda-enable-tracing
 resource "aws_lambda_function" "lambda_at_edge" {
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
-  filename      = "${path.module}/lambda_at_edge_functions/origin_request.zip"
+  filename      = "${local.source_file_path}${var.file_name}.zip"
   function_name = "${var.solution_name}-${var.file_name}-cf-modify-response-header"
   description   = "lambda@edge function for the default error behaviour"
 
