@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.49.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.0...v1.49.1) (2025-05-26)
+
+
+### Bug Fixes
+
+* update variables' default values and get rid of obsolete variables ([f569520](https://github.com/it-objects/terraform-aws-terra3/commit/f569520829d136cee835d03d891d1893f5204d8b))
+
 ## [1.49.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.48.0...v1.49.0) (2025-05-23)
 
 
