@@ -210,12 +210,6 @@ variable "create_subdomain" {
   default     = false
 }
 
-variable "single_az_setup" {
-  description = "Multi-AZ is default."
-  type        = bool
-  default     = false
-}
-
 variable "create_bastion_host" {
   description = "Creates a private bastion host reachable via SSM."
   type        = bool
@@ -261,7 +255,7 @@ variable "database_multi_az" {
 variable "database_instance_instance_class" {
   description = "Database instance type"
   type        = string
-  default     = "db.t3.small"
+  default     = "db.t4g.small"
 }
 
 variable "database_ca_cert_identifier" {
@@ -313,13 +307,13 @@ variable "database" {
 variable "database_mysql_engine_version" {
   type        = string
   description = "Enter the version of mysql database engine."
-  default     = "8.0.34"
+  default     = "8.0.41"
 }
 
 variable "database_postgres_engine_version" {
   type        = string
   description = "Enter the version of postgres database engine."
-  default     = "14.5"
+  default     = "16.8-R1"
 }
 
 variable "create_s3_solution_bucket" {
@@ -576,11 +570,6 @@ variable "enable_fcknat_eip" {
   type        = bool
   default     = false
   description = "Whether to use elastic ip for FCK-NAT"
-}
-
-variable "create_ecr" {
-  type    = bool
-  default = false
 }
 
 variable "create_ecr_with_names" {
