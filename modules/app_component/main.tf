@@ -45,7 +45,7 @@ resource "aws_ecs_service" "ecs_service" {
 
   health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
-  wait_for_steady_state = false # TODO make it configurable
+  wait_for_steady_state = false
 
   # for ECS exec
   enable_execute_command = var.enable_ecs_exec
@@ -835,46 +835,56 @@ resource "aws_iam_role" "state_machine_role" {
       },
     ],
   })
+}
 
-  inline_policy {
-    name = "StateMachine"
+resource "aws_iam_policy" "state_machine_policy" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
 
-    policy = jsonencode({
-      Version = "2012-10-17",
-      Statement = [
-        {
-          Action   = "iam:PassRole",
-          Effect   = "Allow",
-          Resource = [aws_iam_role.ExecutionRole.arn, aws_iam_role.task.arn],
-        },
-        {
-          Action   = "ecs:RunTask",
-          Effect   = "Allow",
-          Resource = aws_ecs_task_definition.ecs_task_definition.arn,
-          Condition = {
-            ArnEquals = {
-              "ecs:cluster" = data.aws_ecs_cluster.selected.arn,
-            },
+  name        = "${var.name}-state-machine-policy"
+  description = "Policy for ECS cronjob state machine"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action   = "iam:PassRole",
+        Effect   = "Allow",
+        Resource = [aws_iam_role.ExecutionRole.arn, aws_iam_role.task.arn],
+      },
+      {
+        Action   = "ecs:RunTask",
+        Effect   = "Allow",
+        Resource = aws_ecs_task_definition.ecs_task_definition.arn,
+        Condition = {
+          ArnEquals = {
+            "ecs:cluster" = data.aws_ecs_cluster.selected.arn,
           },
         },
-        {
-          Action   = ["ecs:StopTask", "ecs:DescribeTasks"],
-          Effect   = "Allow",
-          Resource = "*",
-          Condition = {
-            ArnEquals = {
-              "ecs:cluster" = data.aws_ecs_cluster.selected.arn,
-            },
+      },
+      {
+        Action   = ["ecs:StopTask", "ecs:DescribeTasks"],
+        Effect   = "Allow",
+        Resource = "*",
+        Condition = {
+          ArnEquals = {
+            "ecs:cluster" = data.aws_ecs_cluster.selected.arn,
           },
         },
-        {
-          Action   = ["events:PutTargets", "events:PutRule", "events:DescribeRule"],
-          Effect   = "Allow",
-          Resource = "arn:aws:events:${data.aws_region.current_region.id}:${data.aws_caller_identity.this.account_id}:rule/StepFunctionsGetEventsForECSTaskRule",
-        },
-      ],
-    })
-  }
+      },
+      {
+        Action   = ["events:PutTargets", "events:PutRule", "events:DescribeRule"],
+        Effect   = "Allow",
+        Resource = "arn:aws:events:${data.aws_region.current_region.id}:${data.aws_caller_identity.this.account_id}:rule/StepFunctionsGetEventsForECSTaskRule",
+      },
+    ],
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "state_machine_policy_attachment" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  role       = aws_iam_role.state_machine_role[count.index].name
+  policy_arn = aws_iam_policy.state_machine_policy[count.index].arn
 }
 
 resource "aws_cloudwatch_event_rule" "rule" {
@@ -910,22 +920,33 @@ resource "aws_iam_role" "rule_role" {
       },
     ],
   })
-
-  inline_policy {
-    name = "EventRulePolicy"
-
-    policy = jsonencode({
-      Version = "2012-10-17",
-      Statement = [
-        {
-          Action   = "states:StartExecution",
-          Effect   = "Allow",
-          Resource = aws_sfn_state_machine.state_machine[0].arn,
-        },
-      ],
-    })
-  }
 }
+
+resource "aws_iam_policy" "event_rule_policy" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  name        = "${var.name}-event-rule-policy"
+  description = "Policy for CloudWatch Event Rule to trigger state machine"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action   = "states:StartExecution",
+        Effect   = "Allow",
+        Resource = aws_sfn_state_machine.state_machine[0].arn,
+      },
+    ],
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "event_rule_policy_attachment" {
+  count = length(var.configure_as_cronjob) > 0 ? 1 : 0
+
+  role       = aws_iam_role.rule_role[count.index].name
+  policy_arn = aws_iam_policy.event_rule_policy[count.index].arn
+}
+
 
 resource "aws_sfn_state_machine" "state_machine" {
   count = length(var.configure_as_cronjob) > 0 ? 1 : 0
