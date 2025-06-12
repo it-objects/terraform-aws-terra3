@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.49.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.1...v1.49.2) (2025-06-12)
+
+
+### Bug Fixes
+
+* **provider:** remove empty environment tag ([0ea86e5](https://github.com/it-objects/terraform-aws-terra3/commit/0ea86e593064427dc4ac4dae5259491af11e2387))
+
 ### [1.49.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.0...v1.49.1) (2025-05-26)
 
 
