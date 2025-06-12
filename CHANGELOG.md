@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.49.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.2...v1.49.3) (2025-06-12)
+
+
+### Bug Fixes
+
+* **cronjob:** fix deprecations ([994a423](https://github.com/it-objects/terraform-aws-terra3/commit/994a42368bb2549dd176ee02a8acc2cacc03faa0))
+
 ### [1.49.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.1...v1.49.2) (2025-06-12)
 
 
