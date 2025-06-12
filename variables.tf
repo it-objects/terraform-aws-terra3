@@ -385,7 +385,7 @@ variable "disable_custom_error_response" {
 variable "enable_spa" {
   type        = bool
   default     = false
-  description = "Enable Viewer Request Function type of Lamnda@Edge for static website bucket."
+  description = "Enable Viewer Request Function type of Lambda@Edge for single page applications (SPA)."
 }
 
 variable "enable_ecs_exec" {

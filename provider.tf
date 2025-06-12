@@ -9,9 +9,8 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Framework   = "terra3"
-      Environment = ""
-      Terraform   = "true"
+      Framework = "terra3"
+      Terraform = "true"
     }
   }
 }
@@ -27,9 +26,8 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Framework   = "terra3"
-      Environment = ""
-      Terraform   = "true"
+      Framework = "terra3"
+      Terraform = "true"
     }
   }
 
