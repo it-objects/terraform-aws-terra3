@@ -71,7 +71,8 @@ resource "aws_iam_policy" "infra_deployment_policy" {
             "acm:*",
             "kms:*",
             "lambda:*",
-            "scheduler:*"
+            "scheduler:*",
+            "ses:*"
           ],
           "Resource" : "*"
         }
