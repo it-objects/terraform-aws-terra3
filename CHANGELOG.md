@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.50.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.3...v1.50.0) (2025-07-23)
+
+
+### Features
+
+* added ses access to infra oidc role ([082f37d](https://github.com/it-objects/terraform-aws-terra3/commit/082f37d9e08203f889a4bdea1f0440c52e567803))
+
 ### [1.49.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.2...v1.49.3) (2025-06-12)
 
 
