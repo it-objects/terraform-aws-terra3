@@ -12,8 +12,8 @@ resource "random_string" "infra_deployment_role_postfix" {
 resource "aws_iam_role" "infra_gitlab_ci" {
   for_each = var.addOidcUrlToIamInfraRoleMapping
 
-  name                = "deployment_role_infra_oidc_${random_string.infra_deployment_role_postfix[each.key].result}"
-  assume_role_policy  = data.aws_iam_policy_document.infra_assume_role_policy[each.key].json
+  name               = "deployment_role_infra_oidc_${random_string.infra_deployment_role_postfix[each.key].result}"
+  assume_role_policy = data.aws_iam_policy_document.infra_assume_role_policy[each.key].json
 }
 
 data "aws_iam_policy_document" "infra_assume_role_policy" {
@@ -207,8 +207,8 @@ resource "random_string" "s3_static_website_deployment_role_postfix" {
 resource "aws_iam_role" "s3_static_website_gitlab_ci" {
   for_each = { for mapping in local.s3_static_website_mappings : mapping.s3_static_website_identifier => mapping }
 
-  name                = "deployment_role_s3_static_website_oidc_${random_string.s3_static_website_deployment_role_postfix[each.key].result}"
-  assume_role_policy  = data.aws_iam_policy_document.s3_static_website_assume_role_policy[each.key].json
+  name               = "deployment_role_s3_static_website_oidc_${random_string.s3_static_website_deployment_role_postfix[each.key].result}"
+  assume_role_policy = data.aws_iam_policy_document.s3_static_website_assume_role_policy[each.key].json
 }
 
 data "aws_iam_policy_document" "s3_static_website_assume_role_policy" {
