@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.50.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.50.0...v1.50.1) (2025-08-31)
+
+
+### Bug Fixes
+
+* **oidc_role:** removed deprecated managed_policy_arns ([8ec1b00](https://github.com/it-objects/terraform-aws-terra3/commit/8ec1b00d5e6dba9ae0e51050bc46ae1f4764ef73))
+
 ## [1.50.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.49.3...v1.50.0) (2025-07-23)
 
 
