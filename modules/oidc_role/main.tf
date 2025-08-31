@@ -14,7 +14,6 @@ resource "aws_iam_role" "infra_gitlab_ci" {
 
   name                = "deployment_role_infra_oidc_${random_string.infra_deployment_role_postfix[each.key].result}"
   assume_role_policy  = data.aws_iam_policy_document.infra_assume_role_policy[each.key].json
-  managed_policy_arns = [aws_iam_policy.infra_deployment_policy[each.key].arn]
 }
 
 data "aws_iam_policy_document" "infra_assume_role_policy" {
@@ -33,6 +32,13 @@ data "aws_iam_policy_document" "infra_assume_role_policy" {
       values   = ["project_path:${each.value}:ref_type:branch:ref:*"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "infra_gitlab_ci_policy_attachment" {
+  for_each = var.addOidcUrlToIamInfraRoleMapping
+
+  role       = aws_iam_role.infra_gitlab_ci[each.key].name
+  policy_arn = aws_iam_policy.infra_deployment_policy[each.key].arn
 }
 
 resource "aws_iam_policy" "infra_deployment_policy" {
@@ -203,7 +209,6 @@ resource "aws_iam_role" "s3_static_website_gitlab_ci" {
 
   name                = "deployment_role_s3_static_website_oidc_${random_string.s3_static_website_deployment_role_postfix[each.key].result}"
   assume_role_policy  = data.aws_iam_policy_document.s3_static_website_assume_role_policy[each.key].json
-  managed_policy_arns = [aws_iam_policy.s3_static_website_deployment_policy[each.key].arn]
 }
 
 data "aws_iam_policy_document" "s3_static_website_assume_role_policy" {
@@ -222,6 +227,13 @@ data "aws_iam_policy_document" "s3_static_website_assume_role_policy" {
       values   = ["project_path:${each.value.repo_path}:ref_type:branch:ref:*"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "s3_static_website_gitlab_ci_policy_attachment" {
+  for_each = { for mapping in local.s3_static_website_mappings : mapping.s3_static_website_identifier => mapping }
+
+  role       = aws_iam_role.s3_static_website_gitlab_ci[each.key].name
+  policy_arn = aws_iam_policy.s3_static_website_deployment_policy[each.key].arn
 }
 
 resource "aws_iam_policy" "s3_static_website_deployment_policy" {
