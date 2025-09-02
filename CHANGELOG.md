@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.51.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.50.1...v1.51.0) (2025-09-02)
+
+
+### Features
+
+* configure bastion host AMI ([8fa6629](https://github.com/it-objects/terraform-aws-terra3/commit/8fa6629593bc6bafd552a581e9b80f0049203834))
+
 ### [1.50.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.50.0...v1.50.1) (2025-08-31)
 
 
