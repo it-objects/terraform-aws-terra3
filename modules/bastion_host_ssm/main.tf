@@ -1,9 +1,38 @@
 # ---------------------------------------------------------------------------------------------------------------------
+# AMI of the latest Amazon Linux 2023
+# ---------------------------------------------------------------------------------------------------------------------
+# ami-0c76eed7d4d298d55 as per 02.09.2025
+data "aws_ami" "this" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  filter {
+    name   = "block-device-mapping.volume-type"
+    values = ["gp3"]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # EC2 Launch Template used by Autoscaling Group
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_launch_template" "my_asg_launch_template" {
   name_prefix   = "${var.solution_name}_"
-  image_id      = "ami-06e14f82ec5afe2af" # updated Oct 31st 2023
+  image_id      = data.aws_ami.this.id
   instance_type = "t4g.nano"
   metadata_options {
     http_endpoint               = "enabled"
@@ -37,6 +66,13 @@ resource "aws_launch_template" "my_asg_launch_template" {
       LaunchTemplate = "${var.solution_name}_launch_template"
       Name           = "${var.solution_name}-bastion-host-ssm"
     }
+  }
+
+  lifecycle {
+    # Required to redeploy without an outage.
+    create_before_destroy = true
+    # avoid triggering redeploy just because of new image being available
+    ignore_changes = [image_id]
   }
 }
 
