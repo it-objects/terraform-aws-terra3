@@ -423,10 +423,11 @@ module "database" {
 
   db_subnet_group_name = local.db_subnet_group_name
 
-  rds_cluster_database_name  = "${replace(var.solution_name, "-", "")}db" # alphanumeric and lower case
-  rds_cluster_identifier     = "${lower(var.solution_name)}_db"
-  rds_cluster_engine         = var.database
-  rds_cluster_engine_version = local.rds_cluster_engine_version
+  rds_cluster_database_name              = "${replace(var.solution_name, "-", "")}db" # alphanumeric and lower case
+  rds_cluster_identifier                 = "${lower(var.solution_name)}_db"
+  rds_cluster_engine                     = var.database
+  rds_cluster_engine_version             = local.rds_cluster_engine_version
+  rds_cluster_auto_minor_version_upgrade = var.database_auto_minor_version_upgrade
 
   rds_cluster_security_group_ids = local.rds_cluster_security_group_ids
 

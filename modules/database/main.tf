@@ -65,8 +65,8 @@ resource "aws_db_instance" "db" {
   db_subnet_group_name            = var.db_subnet_group_name
   vpc_security_group_ids          = var.rds_cluster_security_group_ids
   parameter_group_name            = var.database == "mysql" ? aws_db_parameter_group.mysql_logbin_parameter_group[0].name : null
+  auto_minor_version_upgrade      = var.rds_cluster_auto_minor_version_upgrade
 
-  # default: rds-ca-2019 (expires Aug 2024); newer options are: rds-ca-rsa2048-g1, rds-ca-rsa4096-g1 or rds-ca-ecc384-g1
   ca_cert_identifier = var.ca_cert_identifier
 
   iam_database_authentication_enabled = var.iam_database_authentication_enabled #tfsec:ignore:AVD-AWS-0176
@@ -77,7 +77,7 @@ resource "aws_db_instance" "db" {
 
   performance_insights_enabled          = var.performance_insights_enabled
   performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
-  #performance_insights_kms_key_id = "" # => leave emtpy to pick default aws/rds
+  #performance_insights_kms_key_id = "" # => leave empty to pick default aws/rds
 
   lifecycle {
     ignore_changes = [

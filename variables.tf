@@ -304,10 +304,16 @@ variable "database" {
   }
 }
 
+variable "database_auto_minor_version_upgrade" {
+  description = "Enable auto minor version upgrades."
+  type        = bool
+  default     = true
+}
+
 variable "database_mysql_engine_version" {
   type        = string
   description = "Enter the version of mysql database engine."
-  default     = "8.0.41"
+  default     = "8.0"
 }
 
 variable "database_postgres_engine_version" {

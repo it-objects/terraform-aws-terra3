@@ -50,6 +50,12 @@ variable "rds_cluster_engine_version" {
   default     = ""
 }
 
+variable "rds_cluster_auto_minor_version_upgrade" {
+  description = "Enable auto minor version upgrades."
+  type        = bool
+  default     = true
+}
+
 variable "rds_cluster_engine" {
   description = "Engine to use for the cluster"
   type        = string
