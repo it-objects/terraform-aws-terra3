@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.52.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.51.0...v1.52.0) (2025-09-03)
+
+
+### Features
+
+* **database:** make auto_minor_version_upgrade configurable ([1ac0d7d](https://github.com/it-objects/terraform-aws-terra3/commit/1ac0d7db2689417c783c01aa13a2e3e5feb22588))
+
 ## [1.51.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.50.1...v1.51.0) (2025-09-02)
 
 
