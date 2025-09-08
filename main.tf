@@ -305,7 +305,6 @@ module "cloudfront_cdn" {
   s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn = var.s3_static_website_bucket_cf_lambda_at_edge_origin_response_arn
   s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn
 
-  waf_web_acl_arn                  = var.waf_web_acl_arn
   s3_solution_bucket_cf_behaviours = var.s3_solution_bucket_cf_behaviours
   disable_custom_error_response    = var.disable_custom_error_response
 

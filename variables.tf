@@ -370,13 +370,6 @@ variable "s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn" {
   default     = ""
 }
 
-variable "waf_web_acl_arn" {
-  type        = string
-  nullable    = true
-  default     = null
-  description = "Optional WAF WebACL ARN to attach to this CloudFront distribution."
-}
-
 variable "enable_cf_logs" {
   type        = bool
   description = "Select to enable storing CloudFront logs in s3 bucket."
