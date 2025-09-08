@@ -377,6 +377,13 @@ variable "web_acl_id" {
   description = "Optional WAF WebACL ARN to attach to this CloudFront distribution."
 }
 
+variable "response_headers_policy_id" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = "Optional CloudFront Distribution Response Header ID to attach to this CloudFront distribution."
+}
+
 variable "enable_cf_logs" {
   type        = bool
   description = "Select to enable storing CloudFront logs in s3 bucket."

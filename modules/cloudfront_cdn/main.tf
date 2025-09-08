@@ -141,6 +141,8 @@ locals {
       default_ttl = 0
       max_ttl     = 0
 
+      response_headers_policy_id = var.response_headers_policy_id
+
       use_forwarded_values     = false
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
       cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id

@@ -154,3 +154,10 @@ variable "web_acl_id" {
   default     = null
   description = "Optional WAF WebACL ARN to attach to this CloudFront distribution."
 }
+
+variable "response_headers_policy_id" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = "Optional CloudFront Distribution Response Header ID to attach to this CloudFront distribution."
+}
