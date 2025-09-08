@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "terra3-example2"
+  solution_name = "waf-acl"
 }
 
 module "terra3_examples" {
@@ -20,6 +20,8 @@ module "terra3_examples" {
   # This is the default value for the cluster_type. But when cluster_type is different E.g. "EC2".
   # Then cluster_type should also mention in the application state while using it in 2 state approach.
   cluster_type = "FARGATE"
+
+  #waf_web_acl_arn = "arn:aws:wafv2:us-east-1:531874807515:global/webacl/cf-static-site-waf/be72cd04-7182-414d-b3d2-0c19102ea691"
 
   # dependency: required for downloading container images
   nat = "NAT_INSTANCES"
