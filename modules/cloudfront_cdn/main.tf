@@ -204,6 +204,8 @@ resource "aws_cloudfront_distribution" "general_distribution" {
 
   default_root_object = var.enable_s3_for_static_website ? "index.html" : ""
 
+  web_acl_id = var.web_acl_id
+
   restrictions {
     geo_restriction {
       restriction_type = "none"

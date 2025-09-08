@@ -147,3 +147,10 @@ variable "cf_logs_expiration" {
   type        = number
   default     = 90
 }
+
+variable "web_acl_id" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = "Optional WAF WebACL ARN to attach to this CloudFront distribution."
+}
