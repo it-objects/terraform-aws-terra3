@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.53.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.52.0...v1.53.0) (2025-09-08)
+
+
+### Features
+
+* add parameter to link WAF ACl to CloudFront ([#59](https://github.com/it-objects/terraform-aws-terra3/issues/59)) ([0942fe3](https://github.com/it-objects/terraform-aws-terra3/commit/0942fe367d31746d3f44f67c7f387fb64745c56d))
+
 ## [1.52.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.51.0...v1.52.0) (2025-09-03)
 
 
