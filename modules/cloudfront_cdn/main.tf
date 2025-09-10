@@ -141,7 +141,7 @@ locals {
       default_ttl = 0
       max_ttl     = 0
 
-      response_headers_policy_id = var.response_headers_policy_id
+      response_headers_policy_id = var.cf_response_headers_policy_id
 
       use_forwarded_values     = false
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
@@ -206,7 +206,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
 
   default_root_object = var.enable_s3_for_static_website ? "index.html" : ""
 
-  web_acl_id = var.web_acl_id
+  web_acl_id = var.cf_web_acl_id
 
   restrictions {
     geo_restriction {

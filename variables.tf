@@ -370,14 +370,14 @@ variable "s3_static_website_bucket_cf_lambda_at_edge_viewer_response_arn" {
   default     = ""
 }
 
-variable "web_acl_id" {
+variable "cf_web_acl_id" {
   type        = string
   nullable    = true
   default     = null
   description = "Optional WAF WebACL ARN to attach to this CloudFront distribution."
 }
 
-variable "response_headers_policy_id" {
+variable "cf_response_headers_policy_id" {
   type        = string
   nullable    = true
   default     = null
