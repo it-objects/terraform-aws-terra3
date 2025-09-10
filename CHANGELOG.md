@@ -13,6 +13,20 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+* remove trailing whitespace in cloudfront function resource ([d6fe7b7](https://github.com/it-objects/terraform-aws-terra3/commit/d6fe7b70fc4704674fc54ab7faec4b08b152a6a4))
+* rename CloudFront variables for consistency ([9d66793](https://github.com/it-objects/terraform-aws-terra3/commit/9d6679324e9e48f638a48f0e8227697b8bde02cf))
+
+## [1.53.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.52.0...v1.53.0) (2025-09-10)
+
+
+### Features
+
+* add parameter to link WAF ACl to CloudFront ([#59](https://github.com/it-objects/terraform-aws-terra3/issues/59)) ([0942fe3](https://github.com/it-objects/terraform-aws-terra3/commit/0942fe367d31746d3f44f67c7f387fb64745c56d))
+* add response_headers_policy_id parameter to CloudFront distribution for S3 website behaviour ([#60](https://github.com/it-objects/terraform-aws-terra3/issues/60)) ([43932e3](https://github.com/it-objects/terraform-aws-terra3/commit/43932e3c8612ead2518f7504e2a40e45e80a6c46))
+
+
+### Bug Fixes
+
 * rename CloudFront variables for consistency ([9d66793](https://github.com/it-objects/terraform-aws-terra3/commit/9d6679324e9e48f638a48f0e8227697b8bde02cf))
 
 ## [1.53.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.52.0...v1.53.0) (2025-09-08)
