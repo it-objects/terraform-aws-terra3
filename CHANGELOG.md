@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.53.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.53.1...v1.53.2) (2025-09-10)
+
+
+### Bug Fixes
+
+* remove trailing whitespace in cloudfront function resource ([b0466fd](https://github.com/it-objects/terraform-aws-terra3/commit/b0466fdf5c98d55f15b5195a473fac4ad158803b))
+
 ## [1.53.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.52.0...v1.53.0) (2025-09-10)
 
 
