@@ -82,8 +82,6 @@ locals {
 
     user = "0" # avoids tf state drift, as this is added by default
 
-    memoryReservation = 50
-
     "firelensConfiguration" : {
       "type" : "fluentbit",
       "options" : {
