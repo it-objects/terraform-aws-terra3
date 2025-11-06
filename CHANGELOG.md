@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.53.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.53.2...v1.53.3) (2025-11-06)
+
+
+### Bug Fixes
+
+* **firelens:** remove memory reservation ([18fd590](https://github.com/it-objects/terraform-aws-terra3/commit/18fd5904277f618aab4cdf8e761f862afc297d96))
+
 ### [1.53.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.53.1...v1.53.2) (2025-09-10)
 
 
