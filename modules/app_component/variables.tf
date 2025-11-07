@@ -108,12 +108,6 @@ variable "firelens_container_memory" {
   default     = 50
 }
 
-variable "firelens_container_memory_reservation" {
-  description = "Soft memory reservation (MiB) for the FireLens container."
-  type        = number
-  default     = 50
-}
-
 variable "log_group_retention_period_in_days" {
   type        = number
   description = "Specifies the number of days you want to retain log events in the specified log group"

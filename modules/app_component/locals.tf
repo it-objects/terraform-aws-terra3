@@ -69,8 +69,6 @@ locals {
     cpu    = var.firelens_container_cpu
     memory = var.firelens_container_memory
 
-    memoryReservation = var.firelens_container_memory_reservation
-
     portMappings = []
 
     environment = []
