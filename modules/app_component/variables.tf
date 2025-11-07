@@ -96,6 +96,24 @@ variable "enable_firelens_container" {
   default     = false
 }
 
+variable "firelens_container_cpu" {
+  description = "CPU units for the FireLens (Fluent Bit) log-router container"
+  type        = number
+  default     = 20
+}
+
+variable "firelens_container_memory" {
+  description = "Hard memory limit (MiB) for the FireLens container."
+  type        = number
+  default     = 50
+}
+
+variable "firelens_container_memory_reservation" {
+  description = "Soft memory reservation (MiB) for the FireLens container."
+  type        = number
+  default     = 50
+}
+
 variable "log_group_retention_period_in_days" {
   type        = number
   description = "Specifies the number of days you want to retain log events in the specified log group"

@@ -55,6 +55,9 @@ module "app_components" {
   log_group_retention_period_in_days = lookup(each.value, "log_group_retention_period_in_days", 7)
 
   enable_firelens_container = lookup(each.value, "enable_firelens_container", false)
+  firelens_container_cpu = lookup(each.value, "firelens_container_cpu", 20)
+  firelens_container_memory = lookup(each.value, "firelens_container_memory", 50)
+  firelens_container_memory_reservation = lookup(each.value, "firelens_container_memory_reservation", 50)
 
   execution_iam_access = lookup(each.value, "execution_iam_access", null)
 
