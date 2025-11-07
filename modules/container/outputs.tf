@@ -45,3 +45,7 @@ output "readonlyRootFilesystem" {
 output "log_configuration" {
   value = var.log_configuration
 }
+
+output "firelens_configuration" {
+  value = var.firelens_configuration
+}

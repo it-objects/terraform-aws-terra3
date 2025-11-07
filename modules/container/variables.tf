@@ -92,3 +92,10 @@ variable "enable_firelens_container" {
   type        = bool
   default     = false
 }
+
+# https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_FirelensConfiguration.html
+variable "firelens_configuration" {
+  type        = any
+  description = "Firelens  configuration options to send to a custom log driver for the container."
+  default     = null
+}
