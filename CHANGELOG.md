@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.54.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.53.3...v1.54.0) (2025-11-07)
+
+
+### Features
+
+* add firelens configuration support in container ([1b17a9e](https://github.com/it-objects/terraform-aws-terra3/commit/1b17a9ebaaea148c26378f3082db1065e46cb9dd))
+
 ### [1.53.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.53.2...v1.53.3) (2025-11-06)
 
 
