@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.55.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.55.0...v1.55.1) (2025-11-07)
+
+
+### Bug Fixes
+
+* remove firelens container memory reservation configurable ([358f332](https://github.com/it-objects/terraform-aws-terra3/commit/358f3326f4762a03f997bb21b1e9f9c1facba85f))
+
 ## [1.55.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.54.0...v1.55.0) (2025-11-07)
 
 
