@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.55.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.54.0...v1.55.0) (2025-11-07)
+
+
+### Features
+
+* make firelens container cpu and memory configurable ([c83d78f](https://github.com/it-objects/terraform-aws-terra3/commit/c83d78f122b693b5770cea7b9ac035f3ad2cad16))
+
 ## [1.54.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.53.3...v1.54.0) (2025-11-07)
 
 
