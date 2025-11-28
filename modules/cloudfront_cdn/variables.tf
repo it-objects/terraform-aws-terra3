@@ -161,3 +161,14 @@ variable "cf_response_headers_policy_id" {
   default     = null
   description = "Optional CloudFront Distribution Response Header ID to attach to this CloudFront distribution."
 }
+
+variable "cf_origin_access_mode" {
+  description = "How CloudFront accesses the origin. One of: \"OAI\", \"OAC\"."
+  type        = string
+  default     = "OAI"
+
+  validation {
+    condition     = contains(["OAI", "OAC"], var.cf_origin_access_mode)
+    error_message = "Cloud_front_origin_access_mode must be one of: OAI, OAC."
+  }
+}

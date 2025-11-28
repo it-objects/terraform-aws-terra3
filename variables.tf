@@ -322,6 +322,17 @@ variable "database_postgres_engine_version" {
   default     = "16.8-R1"
 }
 
+variable "cf_origin_access_mode" {
+  description = "How CloudFront accesses the origin. One of: \"OAI\", \"OAC\"."
+  type        = string
+  default     = "OAI"
+
+  validation {
+    condition     = contains(["OAI", "OAC"], var.cf_origin_access_mode)
+    error_message = "Cloud_front_origin_access_mode must be one of: OAI, OAC."
+  }
+}
+
 variable "create_s3_solution_bucket" {
   description = "Creates an AWS S3 bucket and gives access to it from ECS containers."
   type        = bool
