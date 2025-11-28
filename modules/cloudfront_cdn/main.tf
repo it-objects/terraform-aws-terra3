@@ -27,7 +27,7 @@ locals {
   }
 
   s3_static_website_origins = var.enable_s3_for_static_website && var.cf_origin_access_mode == "OAI" ? {
-    s3_static_website_oai = {
+    s3_static_website = {
       domain_name = aws_s3_bucket.s3_static_website[0].bucket_regional_domain_name
       origin_path = ""
 
@@ -38,7 +38,7 @@ locals {
   } : {}
 
   s3_static_website_origins_with_oac = var.enable_s3_for_static_website && var.cf_origin_access_mode == "OAC" ? {
-    s3_static_website_oac = {
+    s3_static_website = {
       domain_name = aws_s3_bucket.s3_static_website[0].bucket_regional_domain_name
       origin_path = ""
       origin_access_control_id = try(aws_cloudfront_origin_access_control.oac_s3_static_website_bucket[0].id, "")
@@ -46,7 +46,7 @@ locals {
   } : {}
 
   s3_solution_bucket_origins = length(var.s3_solution_bucket_cf_behaviours) != 0 && var.cf_origin_access_mode == "OAI" ? {
-    s3_solution_bucket_oai = {
+    s3_solution_bucket = {
       domain_name = var.s3_solution_bucket_domain_name
       origin_path = ""
 
@@ -57,7 +57,7 @@ locals {
   } : {}
 
   s3_solution_bucket_origins_with_oac = length(var.s3_solution_bucket_cf_behaviours) != 0 && var.cf_origin_access_mode == "OAC" ? {
-    s3_solution_bucket_oac = {
+    s3_solution_bucket = {
       domain_name = var.s3_solution_bucket_domain_name
       origin_path = ""
       origin_access_control_id = try(aws_cloudfront_origin_access_control.oac_s3_solution_bucket[0].id, "")
