@@ -13,7 +13,7 @@ locals {
         origin_ssl_protocols   = ["TLSv1.2"]
       }
     }
-    } : {
+  } : {
     # HTTPS
     elb = {
       domain_name = "lb.${var.domain}"
@@ -37,16 +37,32 @@ locals {
     }
   }
 
-  s3_solution_bucket_origins = length(var.s3_solution_bucket_cf_behaviours) == 0 ? {} : {
+  # s3_static_website_origins_with_oac = !var.enable_s3_for_static_website && var.cf_origin_access_mode == "oai" ? {} : {
+  #   s3_static_website = {
+  #     domain_name = aws_s3_bucket.s3_static_website[0].bucket_regional_domain_name
+  #     origin_path = ""
+  #     origin_access_control_id = try(aws_cloudfront_origin_access_control.oac_s3_static_website_bucket[0].id, "")
+  #   }
+  # }
+
+  s3_solution_bucket_origins = length(var.s3_solution_bucket_cf_behaviours) == 0 && var.cf_origin_access_mode == "oac"? {} : {
     s3_solution_bucket = {
       domain_name = var.s3_solution_bucket_domain_name
       origin_path = ""
 
       s3_origin_config = {
-        origin_access_identity = aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].cloudfront_access_identity_path
+        origin_access_identity = try(aws_cloudfront_origin_access_identity.oai_s3_solution_bucket[0].cloudfront_access_identity_path, "")
       }
     }
   }
+
+  # s3_solution_bucket_origins_with_oac = length(var.s3_solution_bucket_cf_behaviours) == 0 && var.cf_origin_access_mode == "oai"? {} : {
+  #   s3_solution_bucket = {
+  #     domain_name = var.s3_solution_bucket_domain_name
+  #     origin_path = ""
+  #     origin_access_control_id = aws_cloudfront_origin_access_control.oac_s3_solution_bucket[0].id
+  #   }
+  # }
 
   s3_admin_website = var.enable_environment_hibernation_admin_website != true ? {} : {
     s3_mini_admin_website_bucket = {
@@ -56,13 +72,13 @@ locals {
     }
   }
 
-  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins, local.s3_admin_website)
-
+  all_origins = merge(local.alb_origins, local.s3_static_website_origins,  local.s3_solution_bucket_origins, local.s3_admin_website)
+#, local.s3_static_website_origins_with_oac, local.s3_solution_bucket_origins_with_oac,
   # -------------------------------------------------------------------------------------------------------------------
   # Define behaviours either with or without ALB
   # -------------------------------------------------------------------------------------------------------------------
   all_behaviors = flatten([
-    length(var.s3_solution_bucket_cf_behaviours) == 0 ? [] : [
+      length(var.s3_solution_bucket_cf_behaviours) == 0 ? [] : [
       for behaviour in var.s3_solution_bucket_cf_behaviours :
       {
         path_pattern           = behaviour.s3_solution_bucket_cloudfront_path
@@ -88,7 +104,7 @@ locals {
         trusted_key_groups = var.enable_cloudfront_url_signing_for_solution_bucket ? [aws_cloudfront_key_group.cf_keygroup[0].id] : []
       }
     ],
-    !var.enable_environment_hibernation_admin_website ? [] : [{
+      !var.enable_environment_hibernation_admin_website ? [] : [{
       path_pattern           = "/admin-terra3/*"
       target_origin_id       = "s3_mini_admin_website_bucket"
       viewer_protocol_policy = "redirect-to-https"
@@ -109,7 +125,7 @@ locals {
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id
       cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
     }],
-    var.origin_alb_url == null ? [] : [
+      var.origin_alb_url == null ? [] : [
       for custom_elb_cf_path_pattern in var.custom_elb_cf_path_patterns :
       {
         path_pattern           = custom_elb_cf_path_pattern
@@ -127,8 +143,8 @@ locals {
         use_forwarded_values     = false
         origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
         cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
-    }],
-    !var.enable_s3_for_static_website ? [] : [{
+      }],
+      !var.enable_s3_for_static_website ? [] : [{
       path_pattern           = "/*"
       target_origin_id       = "s3_static_website"
       viewer_protocol_policy = "redirect-to-https"
@@ -167,7 +183,7 @@ locals {
       minimum_protocol_version       = null
       ssl_support_method             = null
     }
-    ] : [
+  ] : [
     {
       cloudfront_default_certificate = false
       acm_certificate_arn            = var.certificate_arn
@@ -227,7 +243,8 @@ resource "aws_cloudfront_distribution" "general_distribution" {
     for_each = local.all_origins
 
     content {
-      domain_name              = origin.value.domain_name
+      domain_name              = lookup(origin.value, "domain_name", var.s3_solution_bucket_domain_name)
+      #domain_name              = origin.value.domain_name
       origin_id                = lookup(origin.value, "origin_id", origin.key)
       origin_path              = lookup(origin.value, "origin_path", "")
       connection_attempts      = lookup(origin.value, "connection_attempts", null)
@@ -649,16 +666,31 @@ resource "aws_ssm_parameter" "cloudfront_aliases" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# OCA for S3 Static Website bucket
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudfront_origin_access_control" "oac_s3_static_website_bucket" {
+  count = var.enable_s3_for_static_website  && var.cf_origin_access_mode == "oac" ? 1 : 0
+
+  name                              = "${var.solution_name} OCA for S3 Static Website Bucket"
+  description                       = "OCA for S3 Static Website Bucket"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # OAI for S3 static website
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  count = var.enable_s3_for_static_website ? 1 : 0
+  count = var.enable_s3_for_static_website  ? 1 : 0
+  #count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "oai" ? 1 : 0
 
   comment = "OAI for static website."
 }
 
 data "aws_iam_policy_document" "s3_static_website_policy_document" {
-  count = var.enable_s3_for_static_website ? 1 : 0
+  count = var.enable_s3_for_static_website  ? 1 : 0
+  #count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "oai" ? 1 : 0
 
   statement {
     actions   = ["s3:GetObject"]
@@ -682,10 +714,24 @@ data "aws_iam_policy_document" "s3_static_website_policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "s3_static_website_policy" {
-  count = var.enable_s3_for_static_website ? 1 : 0
+  count = var.enable_s3_for_static_website  ? 1 : 0
+  #count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "oai"  ? 1 : 0
 
   bucket = aws_s3_bucket.s3_static_website[0].id
   policy = data.aws_iam_policy_document.s3_static_website_policy_document[0].json
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# OCA for S3 solution bucket
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudfront_origin_access_control" "oac_s3_solution_bucket" {
+  count = length(var.s3_solution_bucket_cf_behaviours) == 0 && var.cf_origin_access_mode == "oai" ? 0 : 0
+
+  name                              = "${var.solution_name} OCA for S3 Solution Bucket"
+  description                       = "OCA for S3 Solution Bucket"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -693,12 +739,14 @@ resource "aws_s3_bucket_policy" "s3_static_website_policy" {
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_identity" "oai_s3_solution_bucket" {
   count = length(var.s3_solution_bucket_cf_behaviours) == 0 ? 0 : 1
+  #count = length(var.s3_solution_bucket_cf_behaviours) == 0 && var.cf_origin_access_mode != "oai" ? 0 : 1
 
   comment = "OAI for S3 solution bucket."
 }
 
 data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
   count = length(var.s3_solution_bucket_cf_behaviours) == 0 ? 0 : 1
+  #count = length(var.s3_solution_bucket_cf_behaviours) == 0 && var.cf_origin_access_mode != "oai" ? 0 : 1
 
   statement {
     actions   = ["s3:GetObject"]
@@ -723,6 +771,7 @@ data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
 
 resource "aws_s3_bucket_policy" "s3_solution_bucket_policy" {
   count = length(var.s3_solution_bucket_cf_behaviours) == 0 ? 0 : 1
+  #count = length(var.s3_solution_bucket_cf_behaviours) == 0 && var.cf_origin_access_mode != "oai" ? 0 : 1
 
   bucket = var.s3_solution_bucket_name
   policy = data.aws_iam_policy_document.s3_solution_bucket_policy_document[0].json
