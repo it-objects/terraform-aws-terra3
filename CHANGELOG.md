@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.56.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.55.1...v1.56.0) (2025-11-28)
+
+
+### Features
+
+* add CloudFront origin access mode configuration supporting both OAI and OAC ([#61](https://github.com/it-objects/terraform-aws-terra3/issues/61)) ([fc3c0d0](https://github.com/it-objects/terraform-aws-terra3/commit/fc3c0d056a1426488f72f1bc26db96cbb014c54c))
+
 ### [1.55.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.55.0...v1.55.1) (2025-11-07)
 
 
