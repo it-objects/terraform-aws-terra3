@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.57.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.56.0...v1.57.0) (2025-12-01)
+
+
+### Features
+
+* allow creation of S3 policy for OAC ([d67568a](https://github.com/it-objects/terraform-aws-terra3/commit/d67568a6aa1e842d544055f1e15d1bcfbd6a5af1))
+
 ## [1.56.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.55.1...v1.56.0) (2025-11-28)
 
 
