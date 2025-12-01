@@ -687,7 +687,7 @@ resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
 }
 
 data "aws_iam_policy_document" "s3_static_website_policy_document" {
-  count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "OAI" ? 1 : 0
+  count = var.enable_s3_for_static_website ? 1 : 0
 
   statement {
     actions   = ["s3:GetObject"]
@@ -711,7 +711,7 @@ data "aws_iam_policy_document" "s3_static_website_policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "s3_static_website_policy" {
-  count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "OAI" ? 1 : 0
+  count = var.enable_s3_for_static_website ? 1 : 0
 
   bucket = aws_s3_bucket.s3_static_website[0].id
   policy = data.aws_iam_policy_document.s3_static_website_policy_document[0].json
@@ -740,7 +740,7 @@ resource "aws_cloudfront_origin_access_identity" "oai_s3_solution_bucket" {
 }
 
 data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
-  count = length(var.s3_solution_bucket_cf_behaviours) != 0 && var.cf_origin_access_mode == "OAI" ? 1 : 0
+  count = length(var.s3_solution_bucket_cf_behaviours) != 0 ? 1 : 0
 
   statement {
     actions   = ["s3:GetObject"]
@@ -764,7 +764,7 @@ data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "s3_solution_bucket_policy" {
-  count = length(var.s3_solution_bucket_cf_behaviours) != 0 && var.cf_origin_access_mode == "OAI" ? 1 : 0
+  count = length(var.s3_solution_bucket_cf_behaviours) != 0 ? 1 : 0
 
   bucket = var.s3_solution_bucket_name
   policy = data.aws_iam_policy_document.s3_solution_bucket_policy_document[0].json
