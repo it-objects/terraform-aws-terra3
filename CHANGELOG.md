@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.58.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.58.0...v1.58.1) (2025-12-02)
+
+
+### Bug Fixes
+
+* S3 bucket policy resource reference for OAC ([ac32337](https://github.com/it-objects/terraform-aws-terra3/commit/ac323371128c912c97ac7debc02bd94badca6826))
+
 ## [1.58.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.57.0...v1.58.0) (2025-12-02)
 
 
