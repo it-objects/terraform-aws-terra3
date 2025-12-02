@@ -703,7 +703,7 @@ resource "aws_s3_bucket_policy" "oac_s3_static_website_policy" {
           "Service" : "cloudfront.amazonaws.com"
         },
         Action   = "s3:ListBucket",
-        Resource = "${aws_s3_bucket.s3_static_website[0].arn}/*",
+        Resource = aws_s3_bucket.s3_static_website[0].arn,
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.general_distribution[0].arn
