@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.58.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.57.0...v1.58.0) (2025-12-02)
+
+
+### Features
+
+* create S3 bucket policies for OAC mode for static website and solution buckets ([9999327](https://github.com/it-objects/terraform-aws-terra3/commit/999932708a09e1cb58f02e7a8e46cfeb3edb9e7a))
+
 ## [1.57.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.56.0...v1.57.0) (2025-12-01)
 
 
