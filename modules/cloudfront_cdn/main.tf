@@ -677,6 +677,43 @@ resource "aws_cloudfront_origin_access_control" "oac_s3_static_website_bucket" {
   signing_protocol                  = "sigv4"
 }
 
+resource "aws_s3_bucket_policy" "oac_s3_static_website_policy" {
+  count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "OAC" ? 1 : 0
+
+  bucket = aws_s3_bucket.s3_static_website[0].id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          "Service" : "cloudfront.amazonaws.com"
+        },
+        Action   = "s3:GetObject",
+        Resource = "${aws_s3_bucket.s3_static_website[0].arn}/*",
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.general_distribution[0].arn
+          }
+        }
+      },
+      {
+        Effect = "Allow",
+        Principal = {
+          "Service" : "cloudfront.amazonaws.com"
+        },
+        Action   = "s3:ListBucket",
+        Resource = "${aws_s3_bucket.s3_static_website[0].arn}/*",
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.general_distribution[0].arn
+          }
+        }
+      },
+    ],
+  })
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # OAI for S3 static website
 # ---------------------------------------------------------------------------------------------------------------------
@@ -687,7 +724,7 @@ resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
 }
 
 data "aws_iam_policy_document" "s3_static_website_policy_document" {
-  count = var.enable_s3_for_static_website ? 1 : 0
+  count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "OAI" ? 1 : 0
 
   statement {
     actions   = ["s3:GetObject"]
@@ -711,7 +748,7 @@ data "aws_iam_policy_document" "s3_static_website_policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "s3_static_website_policy" {
-  count = var.enable_s3_for_static_website ? 1 : 0
+  count = var.enable_s3_for_static_website && var.cf_origin_access_mode == "OAI" ? 1 : 0
 
   bucket = aws_s3_bucket.s3_static_website[0].id
   policy = data.aws_iam_policy_document.s3_static_website_policy_document[0].json
@@ -730,6 +767,43 @@ resource "aws_cloudfront_origin_access_control" "oac_s3_solution_bucket" {
   signing_protocol                  = "sigv4"
 }
 
+resource "aws_s3_bucket_policy" "oac_s3_solution_website_policy" {
+  count = length(var.s3_solution_bucket_cf_behaviours) != 0 && var.cf_origin_access_mode == "OAC" ? 1 : 0
+
+  bucket = var.s3_solution_bucket_name
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          "Service" : "cloudfront.amazonaws.com"
+        },
+        Action   = "s3:GetObject",
+        Resource = "${var.s3_solution_bucket_arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.general_distribution[0].arn
+          }
+        }
+      },
+      {
+        Effect = "Allow",
+        Principal = {
+          "Service" : "cloudfront.amazonaws.com"
+        },
+        Action   = "s3:ListBucket",
+        Resource = var.s3_solution_bucket_arn
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.general_distribution[0].arn
+          }
+        }
+      },
+    ],
+  })
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # OAI for S3 solution bucket
 # ---------------------------------------------------------------------------------------------------------------------
@@ -740,7 +814,7 @@ resource "aws_cloudfront_origin_access_identity" "oai_s3_solution_bucket" {
 }
 
 data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
-  count = length(var.s3_solution_bucket_cf_behaviours) != 0 ? 1 : 0
+  count = length(var.s3_solution_bucket_cf_behaviours) != 0 && var.cf_origin_access_mode == "OAI" ? 1 : 0
 
   statement {
     actions   = ["s3:GetObject"]
@@ -764,7 +838,7 @@ data "aws_iam_policy_document" "s3_solution_bucket_policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "s3_solution_bucket_policy" {
-  count = length(var.s3_solution_bucket_cf_behaviours) != 0 ? 1 : 0
+  count = length(var.s3_solution_bucket_cf_behaviours) != 0 && var.cf_origin_access_mode == "OAI" ? 1 : 0
 
   bucket = var.s3_solution_bucket_name
   policy = data.aws_iam_policy_document.s3_solution_bucket_policy_document[0].json
