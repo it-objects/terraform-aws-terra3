@@ -407,6 +407,17 @@ variable "cf_logs_expiration" {
   default     = 90
 }
 
+variable "cf_logs_v2_destination" {
+  description = "Where CloudFront v2 should deliver logs. Allowed values: \"none\" or \"s3\" or \"cloudwatch\"."
+  type        = string
+  default     = "none"
+
+  validation {
+    condition     = contains(["none", "s3", "cloudwatch"], var.cf_logs_v2_destination)
+    error_message = "cf_v2_logging_destination must be either \"none\" or \"s3\" or \"cloudwatch\"."
+  }
+}
+
 variable "disable_custom_error_response" {
   type        = bool
   default     = false

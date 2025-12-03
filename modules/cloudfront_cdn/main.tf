@@ -502,6 +502,80 @@ resource "aws_s3_bucket_acl" "s3_bucket_acl" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Enables CloudFront V2 logging
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudwatch_log_delivery_source" "cf_logs_v2_delivery_source" {
+  count    = var.create_cloudfront_distribution && !var.enable_cf_logs && var.cf_logs_v2_destination != "none" ? 1 : 0
+  provider = aws.use1
+
+  name         = "${var.solution_name}-cf-logs-v2-delivery-source"
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.general_distribution[0].arn
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Enables CloudFront V2 logging to CloudWatch Logs
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_cloudwatch_log_group" "cf_logs_v2_log_group" {
+  count    = var.create_cloudfront_distribution && !var.enable_cf_logs && var.cf_logs_v2_destination == "cloudwatch" ? 1 : 0
+  provider = aws.use1
+
+  name = "${var.solution_name}-cf-logs-v2-log-group"
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "cf_logs_v2_delivery_destination" {
+  count    = var.create_cloudfront_distribution && !var.enable_cf_logs && var.cf_logs_v2_destination == "cloudwatch" ? 1 : 0
+  provider = aws.use1
+
+  name = "${var.solution_name}-cf-logs-v2-delivery-destination"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.cf_logs_v2_log_group[0].arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "cf_logs_v2_log_delivery" {
+  count    = var.create_cloudfront_distribution && !var.enable_cf_logs && var.cf_logs_v2_destination == "cloudwatch" ? 1 : 0
+  provider = aws.use1
+
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.cf_logs_v2_delivery_source[0].name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.cf_logs_v2_delivery_destination[0].arn
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Enables CloudFront V2 logging to S3
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_s3_bucket" "cf_logs_v2_s3_bucket" {
+  count         = var.create_cloudfront_distribution && !var.enable_cf_logs && var.cf_logs_v2_destination == "s3" ? 1 : 0
+  bucket        = "${var.solution_name}-cf-logs-v2-${random_string.random_s3_postfix[0].result}"
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "cf_logs_v2_s3_log_delivery_destination" {
+  count    = var.create_cloudfront_distribution && !var.enable_cf_logs && var.cf_logs_v2_destination == "s3" ? 1 : 0
+  provider = aws.use1
+
+  name          = "${var.solution_name}-cf-logs-v2-s3-destination"
+  output_format = "json"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.cf_logs_v2_s3_bucket[0].arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "cf_logs_v2_s3_log_delivery_delivery" {
+  count    = var.create_cloudfront_distribution && !var.enable_cf_logs && var.cf_logs_v2_destination == "s3" ? 1 : 0
+  provider = aws.use1
+
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.cf_logs_v2_delivery_source[0].name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.cf_logs_v2_s3_log_delivery_destination[0].arn
+
+  s3_delivery_configuration {
+    suffix_path = "/AWSLogs/${aws_cloudfront_distribution.general_distribution[0].id}/{yyyy}/{MM}/{dd}/{HH}"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # ACLs are disabled per defaults. With the help of Bucket owner preferred, ACLs are enabled.
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket" {
