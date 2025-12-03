@@ -295,9 +295,10 @@ module "cloudfront_cdn" {
   calculated_zone_id           = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
   create_route53_domain_record = var.enable_custom_domain
 
-  enable_cf_logs        = var.enable_cf_logs
-  cf_logs_expiration    = var.cf_logs_expiration
-  cf_origin_access_mode = var.cf_origin_access_mode
+  enable_cf_logs         = var.enable_cf_logs
+  cf_logs_expiration     = var.cf_logs_expiration
+  cf_logs_v2_destination = var.cf_logs_v2_destination
+  cf_origin_access_mode  = var.cf_origin_access_mode
 
   enable_s3_for_static_website                                   = var.enable_s3_for_static_website
   s3_static_website_bucket_cf_function_arn                       = var.s3_static_website_bucket_cf_function_arn
