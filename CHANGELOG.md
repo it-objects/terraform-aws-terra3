@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.59.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.58.1...v1.59.0) (2025-12-03)
+
+
+### Features
+
+* add CloudFront V2 logging support with S3 and CloudWatch destinations ([#62](https://github.com/it-objects/terraform-aws-terra3/issues/62)) ([dace5e4](https://github.com/it-objects/terraform-aws-terra3/commit/dace5e40b821f48cdbc99b800beecb721f4da92c))
+
 ### [1.58.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.58.0...v1.58.1) (2025-12-02)
 
 
