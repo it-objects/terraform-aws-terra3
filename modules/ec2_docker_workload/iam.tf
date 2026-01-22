@@ -1,0 +1,115 @@
+# -----------------------------------------------
+# EC2 Docker Workload Module - IAM
+# -----------------------------------------------
+
+# -----------------------------------------------
+# IAM Role for EC2 Instance
+# -----------------------------------------------
+
+resource "aws_iam_role" "docker_workload_role" {
+  name_prefix = "${var.solution_name}-${var.instance_name}-"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.solution_name}-${var.instance_name}-role"
+    }
+  )
+}
+
+# -----------------------------------------------
+# Instance Profile
+# -----------------------------------------------
+
+resource "aws_iam_instance_profile" "docker_workload_profile" {
+  name_prefix = "${var.solution_name}-${var.instance_name}-"
+  role        = aws_iam_role.docker_workload_role.name
+}
+
+# -----------------------------------------------
+# Base Policy: Systems Manager Access for debugging
+# -----------------------------------------------
+
+resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
+  role       = aws_iam_role.docker_workload_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# -----------------------------------------------
+# CloudWatch Logs Policy (always enabled)
+# -----------------------------------------------
+
+resource "aws_iam_role_policy" "cloudwatch_logs" {
+  name_prefix = "cloudwatch-logs-"
+  role        = aws_iam_role.docker_workload_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      }
+    ]
+  })
+}
+
+# -----------------------------------------------
+# ECR Access Policy (conditional)
+# -----------------------------------------------
+
+resource "aws_iam_role_policy" "ecr_access" {
+  count       = var.enable_ecr_access ? 1 : 0
+  name_prefix = "ecr-access-"
+  role        = aws_iam_role.docker_workload_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+
+# -----------------------------------------------
+# Additional Policy Attachments (user-provided)
+# -----------------------------------------------
+
+resource "aws_iam_role_policy_attachment" "additional_policies" {
+  count      = length(var.additional_iam_policy_arns)
+  role       = aws_iam_role.docker_workload_role.name
+  policy_arn = var.additional_iam_policy_arns[count.index]
+}
