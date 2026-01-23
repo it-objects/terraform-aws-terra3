@@ -278,3 +278,159 @@ resource "aws_ssm_parameter" "asg_name" {
 
   tags = local.common_tags
 }
+
+# -----------------------------------------------
+# AWS Backup Configuration (conditional)
+# -----------------------------------------------
+
+# Backup Vault for storing snapshots
+resource "aws_backup_vault" "docker_workload" {
+  count         = var.enable_backup ? 1 : 0
+  name          = "${var.solution_name}-${var.instance_name}-vault"
+  kms_key_arn   = aws_kms_key.backup[0].arn
+  force_destroy = false
+
+  tags = merge(
+    local.common_tags,
+    {
+      Purpose = "ECS Docker Workload Backup"
+    }
+  )
+}
+
+# KMS Key for encrypting backups
+resource "aws_kms_key" "backup" {
+  count                   = var.enable_backup ? 1 : 0
+  description             = "KMS key for ${var.solution_name} ${var.instance_name} backup vault"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  tags = merge(
+    local.common_tags,
+    {
+      Purpose = "Backup Encryption"
+    }
+  )
+}
+
+resource "aws_kms_alias" "backup" {
+  count         = var.enable_backup ? 1 : 0
+  name          = "alias/${var.solution_name}-${var.instance_name}-backup"
+  target_key_id = aws_kms_key.backup[0].key_id
+}
+
+# IAM Role for AWS Backup Service
+resource "aws_iam_role" "backup_service_role" {
+  count       = var.enable_backup ? 1 : 0
+  name_prefix = "${var.solution_name}-${var.instance_name}-backup-"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "backup.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+# Attach AWS managed policy for backup service
+resource "aws_iam_role_policy_attachment" "backup_service_policy" {
+  count      = var.enable_backup ? 1 : 0
+  role       = aws_iam_role.backup_service_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+}
+
+# Additional policy for EBS snapshot permissions
+resource "aws_iam_role_policy" "backup_ebs_policy" {
+  count       = var.enable_backup ? 1 : 0
+  name_prefix = "backup-ebs-"
+  role        = aws_iam_role.backup_service_role[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateSnapshot",
+          "ec2:DescribeSnapshots",
+          "ec2:CopySnapshot",
+          "ec2:CreateTags",
+          "ec2:DescribeVolumes",
+          "ec2:DescribeInstances"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:CreateGrant",
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = aws_kms_key.backup[0].arn
+      }
+    ]
+  })
+}
+
+# Backup Plan
+resource "aws_backup_plan" "docker_workload" {
+  count = var.enable_backup ? 1 : 0
+  name  = "${var.solution_name}-${var.instance_name}-backup-plan"
+
+  rule {
+    rule_name                = "${var.instance_name}-scheduled-backup"
+    target_vault_name        = aws_backup_vault.docker_workload[0].name
+    schedule                 = var.backup_schedule
+    enable_continuous_backup = false
+    recovery_point_tags = merge(
+      local.common_tags,
+      {
+        BackupPlan = "${var.instance_name}-backup-plan"
+      }
+    )
+
+    lifecycle {
+      delete_after = var.backup_retention_days
+    }
+  }
+
+  tags = local.common_tags
+}
+
+# Backup Selection for persistent EBS volumes
+# Only volumes with delete_on_termination = false are included
+resource "aws_backup_selection" "docker_workload" {
+  count        = var.enable_backup && length([for vol in var.ebs_volumes : vol if vol.delete_on_termination == false]) > 0 ? 1 : 0
+  name         = "${var.solution_name}-${var.instance_name}-volumes"
+  plan_id      = aws_backup_plan.docker_workload[0].id
+  iam_role_arn = aws_iam_role.backup_service_role[0].arn
+
+  resources = []
+
+  selection_tag {
+    key   = "Solution"
+    value = var.solution_name
+    type  = "STRINGEQUALS"
+  }
+
+  selection_tag {
+    key   = "WorkloadInstance"
+    value = var.instance_name
+    type  = "STRINGEQUALS"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.backup_service_policy,
+    aws_iam_role_policy.backup_ebs_policy
+  ]
+}

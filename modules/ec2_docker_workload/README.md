@@ -96,6 +96,9 @@ module "postgres_docker" {
 | `enable_s3_access` | bool | `false` | Allow S3 bucket access |
 | `enable_secrets_manager` | bool | `false` | Allow Secrets Manager access |
 | `log_retention_days` | number | `7` | CloudWatch log retention |
+| `enable_backup` | bool | `false` | Enable automated backups via AWS Backup |
+| `backup_retention_days` | number | `7` | Days to retain backups (1-3650) |
+| `backup_schedule` | string | `"cron(0 2 ? * * *)"` | Backup cron schedule (UTC) |
 | `tags` | map(string) | `{}` | Additional resource tags |
 
 ## Outputs
@@ -113,6 +116,9 @@ module "postgres_docker" {
 | `ssm_security_group_parameter` | SSM parameter path for security group ID |
 | `ssm_log_group_parameter` | SSM parameter path for log group name |
 | `docker_image_uri` | Docker image being run |
+| `backup_vault_arn` | ARN of AWS Backup vault (if backups enabled) |
+| `backup_plan_arn` | ARN of AWS Backup plan (if backups enabled) |
+| `backup_enabled` | Whether automated backups are enabled |
 
 ## Port Mappings
 
@@ -156,6 +162,116 @@ environment_variables = {
   "DATABASE_PORT"   = "5432"
   "LOG_LEVEL"       = "debug"
   "API_KEY"         = "secret-key-here"  # Consider using Secrets Manager
+}
+```
+
+## AWS Backup Configuration
+
+Enable automated, scheduled backups for persistent EBS volumes using AWS Backup service:
+
+```hcl
+module "postgres_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  # ... other configuration ...
+
+  # Backup Configuration
+  enable_backup         = true                    # Enable AWS Backup
+  backup_retention_days = 7                       # Keep backups for 7 days
+  backup_schedule       = "cron(0 2 ? * * *)"     # Daily at 2 AM UTC
+}
+```
+
+### Backup Features
+
+- **Automated Snapshots:** Scheduled EBS snapshots via AWS Backup
+- **Configurable Retention:** Keep snapshots for 1-3650 days
+- **KMS Encryption:** Backups encrypted with dedicated KMS key
+- **Persistent Volumes Only:** Only volumes with `delete_on_termination = false` are backed up
+- **Cost Optimized:** Incremental snapshots stored in S3 (cheaper than native EBS snapshots)
+
+### Backup Variables
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `enable_backup` | bool | `false` | Enable AWS Backup service for EBS volumes |
+| `backup_retention_days` | number | `7` | Number of days to retain backups (1-3650) |
+| `backup_schedule` | string | `"cron(0 2 ? * * *)"` | Cron expression in UTC for backup timing |
+
+### Backup Examples
+
+#### Daily Backups with 30-Day Retention
+
+```hcl
+enable_backup         = true
+backup_retention_days = 30
+backup_schedule       = "cron(0 2 ? * * *)"      # Daily at 2 AM UTC
+```
+
+#### Weekly Backups with 90-Day Retention
+
+```hcl
+enable_backup         = true
+backup_retention_days = 90
+backup_schedule       = "cron(0 2 ? * SUN *)"    # Every Sunday at 2 AM UTC
+```
+
+### Accessing Backups
+
+View recovery points in AWS Backup console:
+
+```bash
+# List all recovery points for this backup plan
+aws backup list-recovery-points-by-backup-vault \
+  --backup-vault-name ${solution_name}-${instance_name}-vault
+```
+
+### Cost Implications
+
+- **Backup Storage:** ~$0.05-$0.10 per GB/month (stored in S3)
+- **Snapshot Copy:** ~$0.01 per GB for cross-region (if configured)
+- **Example Cost:** 50GB PostgreSQL with 7-day retention ≈ $0.13-$0.26/month
+
+### Recovery Procedure
+
+To restore from a backup:
+
+1. **Create Volume from Snapshot:**
+   ```bash
+   aws ec2 create-volume \
+     --availability-zone us-east-1a \
+     --snapshot-id snap-xxxxx \
+     --volume-type gp3
+   ```
+
+2. **Attach to New Instance:**
+   ```bash
+   aws ec2 attach-volume \
+     --volume-id vol-xxxxx \
+     --instance-id i-xxxxx \
+     --device /dev/sdf
+   ```
+
+3. **Update Terraform:**
+   - Delete old instance/ASG resources
+   - Update volumes list to reference recovered volumes
+   - Re-apply configuration
+
+### Backup Vault Outputs
+
+The module exports backup resources:
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `backup_vault_arn` | string | ARN of the AWS Backup vault |
+| `backup_plan_arn` | string | ARN of the AWS Backup plan |
+| `backup_enabled` | bool | Whether backups are enabled |
+
+Example usage:
+
+```hcl
+output "postgres_backup_vault" {
+  value = module.postgres_docker.backup_vault_arn
 }
 ```
 

@@ -176,3 +176,30 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# -----------------------------------------------
+# Backup Configuration
+# -----------------------------------------------
+
+variable "enable_backup" {
+  description = "Enable automated backups for EBS volumes using AWS Backup service"
+  type        = bool
+  default     = false
+}
+
+variable "backup_retention_days" {
+  description = "Number of days to retain EBS snapshots in AWS Backup vault"
+  type        = number
+  default     = 7
+
+  validation {
+    condition     = var.backup_retention_days >= 1 && var.backup_retention_days <= 3650
+    error_message = "Backup retention must be between 1 and 3650 days."
+  }
+}
+
+variable "backup_schedule" {
+  description = "Backup schedule in AWS EventBridge cron format (UTC). Default: daily at 2 AM UTC"
+  type        = string
+  default     = "cron(0 2 ? * * *)"
+}

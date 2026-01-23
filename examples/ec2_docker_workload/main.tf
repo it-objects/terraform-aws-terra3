@@ -144,6 +144,11 @@ module "postgres_docker" {
   # CloudWatch Logs
   log_retention_days = 7
 
+  # Backup Configuration
+  enable_backup         = true
+  backup_retention_days = 7
+  backup_schedule       = "cron(0 2 ? * * *)" # Daily at 2 AM UTC
+
   # Explicit dependency to ensure VPC and subnets are created first
   depends_on = [module.terra3_examples]
 }

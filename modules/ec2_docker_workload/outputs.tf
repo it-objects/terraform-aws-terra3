@@ -71,3 +71,18 @@ output "solution_name" {
   description = "Solution name"
   value       = var.solution_name
 }
+
+output "backup_vault_arn" {
+  description = "ARN of the AWS Backup vault (if backups enabled)"
+  value       = try(aws_backup_vault.docker_workload[0].arn, null)
+}
+
+output "backup_plan_arn" {
+  description = "ARN of the AWS Backup plan (if backups enabled)"
+  value       = try(aws_backup_plan.docker_workload[0].arn, null)
+}
+
+output "backup_enabled" {
+  description = "Whether automated backups are enabled"
+  value       = var.enable_backup
+}
