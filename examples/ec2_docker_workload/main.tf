@@ -45,9 +45,10 @@ module "terra3_examples" {
   enable_s3_for_static_website = false
 
   create_database = false
-  nat             = "NAT_INSTANCES" # Required for container image pulls  
+  nat             = "NAT_INSTANCES" # Required for container image pulls
 
   create_bastion_host = true
+  enable_ecs_exec     = true # Required for app_components with enable_ecs_exec
 
   # App component for testing PostgreSQL connectivity
   app_components = {
@@ -56,22 +57,7 @@ module "terra3_examples" {
       total_cpu    = 256
       total_memory = 512
 
-      # enable_ecs_exec = true
-
-      container = [
-        module.container_psql_test
-      ]
-
-      internal_service                 = true # No external routing    
-      enable_target_group_health_check = false
-    }
-
-    nginx_test = {
-      instances    = 1
-      total_cpu    = 256
-      total_memory = 512
-
-      # enable_ecs_exec = true
+      enable_ecs_exec = true
 
       container = [
         module.container_psql_test
@@ -98,7 +84,7 @@ module "container_psql_test" {
 
   # just keep running 
   # connection to ec2 docker hosted postgres db can be tested via ecs exec
-  command = ["sh", "-c", "apk add --no-cache postgresql-client && sleep infinity"] 
+  command = ["sh", "-c", "apk add --no-cache postgresql-client && sleep infinity"]
 
   port_mappings = []
 
@@ -148,9 +134,9 @@ module "postgres_docker" {
   # EBS Volume Configuration
   # Mount a persistent volume for database data
   ebs_volumes = [
-    {      
-      size                  = 50      
-      mount_path            = "/var/lib/postgresql/data"
+    {
+      size       = 50
+      mount_path = "/var/lib/postgresql/data"
       #delete_on_termination = false # Keep data on instance termination
     }
   ]
