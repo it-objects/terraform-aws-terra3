@@ -41,6 +41,24 @@ variable "security_group_ids" {
   default     = []
 }
 
+variable "enable_internal_dns" {
+  description = "Create Route53 private hosted zone with DNS records for service discovery via internal hostname."
+  type        = bool
+  default     = true
+}
+
+variable "internal_dns_zone_name" {
+  description = "Route53 private hosted zone name for internal DNS. If not provided, defaults to 'internal.{solution_name}.local'"
+  type        = string
+  default     = ""
+}
+
+variable "internal_dns_record_name" {
+  description = "DNS record name for this workload. If not provided, defaults to '{instance_name}.internal.{solution_name}.local'"
+  type        = string
+  default     = ""
+}
+
 # -----------------------------------------------
 # Container Configuration
 # -----------------------------------------------

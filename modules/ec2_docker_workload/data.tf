@@ -77,3 +77,22 @@ data "aws_ssm_parameter" "private_subnets" {
 data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
+
+# -----------------------------------------------
+# Get Running Instance from ASG (for IP address)
+# -----------------------------------------------
+# This data source queries running instances in the ASG
+# It will be re-queried on every plan/apply to detect IP changes
+data "aws_instances" "docker_workload" {
+  filter {
+    name   = "tag:aws:autoscaling:groupName"
+    values = [aws_autoscaling_group.docker_workload.name]
+  }
+
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
+
+  depends_on = [aws_autoscaling_group.docker_workload]
+}

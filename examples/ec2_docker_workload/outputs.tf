@@ -36,7 +36,17 @@ output "ecs_psql_test_service" {
   value       = "The psql_test service runs in the ECS cluster created by Terra3"
 }
 
-output "postgres_endpoint_ssm_parameter" {
-  description = "SSM parameter path for PostgreSQL endpoint discovery"
-  value       = aws_ssm_parameter.postgres_endpoint.name
+output "postgres_internal_dns_fqdn" {
+  description = "Internal DNS FQDN for PostgreSQL service discovery"
+  value       = module.postgres_docker.internal_dns_fqdn
+}
+
+output "postgres_internal_dns_hostname" {
+  description = "Internal DNS hostname for PostgreSQL (short name)"
+  value       = module.postgres_docker.internal_dns_hostname
+}
+
+output "postgres_internal_dns_zone" {
+  description = "Route53 private hosted zone name for internal service discovery"
+  value       = module.postgres_docker.internal_dns_zone_name
 }

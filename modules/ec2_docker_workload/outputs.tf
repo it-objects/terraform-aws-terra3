@@ -86,3 +86,33 @@ output "backup_enabled" {
   description = "Whether automated backups are enabled"
   value       = var.enable_backup
 }
+
+output "internal_dns_zone_id" {
+  description = "Route53 private hosted zone ID for internal service discovery"
+  value       = try(aws_route53_zone.internal[0].zone_id, null)
+}
+
+output "internal_dns_zone_name" {
+  description = "Route53 private hosted zone name"
+  value       = try(aws_route53_zone.internal[0].name, null)
+}
+
+output "internal_dns_fqdn" {
+  description = "Fully qualified domain name for accessing this workload internally"
+  value       = try(aws_route53_record.workload[0].fqdn, null)
+}
+
+output "internal_dns_hostname" {
+  description = "Internal hostname for this workload (without FQDN)"
+  value       = try(aws_route53_record.workload[0].name, null)
+}
+
+output "route53_updater_lambda_arn" {
+  description = "ARN of the Lambda function that updates Route53 DNS records on instance launch (if internal DNS enabled)"
+  value       = try(aws_lambda_function.route53_updater[0].arn, null)
+}
+
+output "route53_updater_lambda_name" {
+  description = "Name of the Lambda function that updates Route53 DNS records (if internal DNS enabled)"
+  value       = try(aws_lambda_function.route53_updater[0].function_name, null)
+}

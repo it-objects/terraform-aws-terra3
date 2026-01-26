@@ -52,6 +52,7 @@ resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
 # CloudWatch Logs Policy (always enabled)
 # -----------------------------------------------
 
+#tfsec:ignore:aws-iam-no-policy-wildcards # CloudWatch log group ARN requires :* for log stream operations
 resource "aws_iam_role_policy" "cloudwatch_logs" {
   name_prefix = "cloudwatch-logs-"
   role        = aws_iam_role.docker_workload_role.id
@@ -66,7 +67,10 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = aws_cloudwatch_log_group.docker_logs.arn
+        Resource = [
+          aws_cloudwatch_log_group.docker_logs.arn,
+          "${aws_cloudwatch_log_group.docker_logs.arn}:*"
+        ]
       }
     ]
   })
@@ -105,6 +109,39 @@ resource "aws_iam_role_policy" "ecr_access" {
   })
 }
 
+# -----------------------------------------------
+# EBS Volume Attachment Policy (for persistent volumes)
+# -----------------------------------------------
+
+resource "aws_iam_role_policy" "ebs_volume_attachment" {
+  name_prefix = "ebs-attachment-"
+  role        = aws_iam_role.docker_workload_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeVolumes",
+          "ec2:DescribeInstances"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:AttachVolume",
+          "ec2:DetachVolume"
+        ]
+        Resource = [
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*",
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*"
+        ]
+      }
+    ]
+  })
+}
 
 # -----------------------------------------------
 # Additional Policy Attachments (user-provided)

@@ -39,4 +39,8 @@ locals {
 
   # Parameter paths for SSM discovery
   ssm_param_prefix = "/${var.solution_name}/ec2_docker_workload/${var.instance_name}"
+
+  # Internal DNS configuration
+  internal_dns_zone_name   = var.internal_dns_zone_name != "" ? var.internal_dns_zone_name : "internal.${var.solution_name}.local"
+  internal_dns_record_name = var.internal_dns_record_name != "" ? var.internal_dns_record_name : "${var.instance_name}.internal.${var.solution_name}.local"
 }

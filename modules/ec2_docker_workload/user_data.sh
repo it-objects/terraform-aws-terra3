@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # EC2 Docker Workload - User Data Script
 # This script initializes the EC2 instance with Docker and runs the specified container
@@ -15,8 +14,13 @@ echo "Log Group: $LOG_GROUP_NAME"
 exec > >(tee -a /var/log/docker-workload-init.log)
 exec 2>&1
 
+# Set error handling - don't exit immediately, log errors and continue
+set +e
+trap 'echo "[$(date)] ERROR: Script encountered an error at line $LINENO"' ERR
+
 # Get AWS region from instance metadata
 AWS_REGION=$(ec2-metadata --availability-zone 2>/dev/null | cut -d' ' -f2 | sed 's/[a-z]$//' || echo "us-east-1")
+echo "[$(date)] AWS Region: $AWS_REGION"
 
 # -----------------------------------------------
 # 1. Update system packages
@@ -52,8 +56,17 @@ DOCKER_CONFIG
 # 3. Start Docker service
 # -----------------------------------------------
 echo "[$(date)] Starting Docker service..."
-systemctl start docker
-systemctl enable docker
+if systemctl start docker; then
+  echo "[$(date)] Docker service started"
+else
+  echo "[$(date)] WARNING: Failed to start Docker service"
+fi
+
+if systemctl enable docker; then
+  echo "[$(date)] Docker service enabled"
+else
+  echo "[$(date)] WARNING: Failed to enable Docker service"
+fi
 
 # Allow ec2-user to run Docker commands
 usermod -a -G docker ec2-user 2>/dev/null || true
@@ -70,18 +83,46 @@ echo "[$(date)] Setting up EBS volume mount points..."
 sleep 10
 
 # Format and mount additional EBS volumes (check for common device names)
-for DEVICE in sdf sdg sdh sdi sdj; do
+# Also check NVMe device names (nvme1n1, nvme2n1, etc.)
+for DEVICE in sdf sdg sdh sdi sdj nvme1n1 nvme2n1 nvme3n1 nvme4n1 nvme5n1; do
+  DEVICE_PATH=""
+
+  # Resolve device path (handle symlinks like /dev/sdf -> nvme1n1)
   if [ -b "/dev/$DEVICE" ]; then
-    echo "[$(date)] Formatting and mounting /dev/$DEVICE..."
-    if ! blkid "/dev/$DEVICE" 2>/dev/null; then
-      mkfs.ext4 -F "/dev/$DEVICE"
+    DEVICE_PATH="/dev/$DEVICE"
+  elif [ -L "/dev/$DEVICE" ]; then
+    # It's a symlink, resolve it
+    REAL_DEVICE=$(readlink -f "/dev/$DEVICE")
+    if [ -b "$REAL_DEVICE" ]; then
+      DEVICE_PATH="$REAL_DEVICE"
     fi
-    MOUNT_POINT="/mnt/$DEVICE"
+  fi
+
+  if [ -n "$DEVICE_PATH" ]; then
+    echo "[$(date)] Processing device: $DEVICE_PATH"
+
+    # Check if device already has a filesystem
+    if blkid "$DEVICE_PATH" 2>/dev/null; then
+      echo "[$(date)] Device $DEVICE_PATH already has filesystem, skipping format"
+    else
+      echo "[$(date)] Formatting $DEVICE_PATH..."
+      mkfs.ext4 -F "$DEVICE_PATH" || echo "[$(date)] WARNING: Failed to format $DEVICE_PATH"
+    fi
+
+    # Create mount point (strip n1 suffix from NVMe devices)
+    DEVICE_SHORT="$${DEVICE%%n1}"
+    MOUNT_POINT="/mnt/$${DEVICE_SHORT}"
     mkdir -p "$MOUNT_POINT"
-    if ! grep -q "/dev/$DEVICE" /etc/fstab; then
-      echo "/dev/$DEVICE $MOUNT_POINT ext4 defaults,nofail 0 2" >> /etc/fstab
+
+    if ! grep -q "$DEVICE_PATH" /etc/fstab; then
+      echo "$DEVICE_PATH $MOUNT_POINT ext4 defaults,nofail 0 2" >> /etc/fstab
     fi
-    mount "$MOUNT_POINT" || true
+
+    if mount "$MOUNT_POINT" 2>/dev/null; then
+      echo "[$(date)] Successfully mounted $DEVICE_PATH to $MOUNT_POINT"
+    else
+      echo "[$(date)] WARNING: Failed to mount $DEVICE_PATH to $MOUNT_POINT"
+    fi
 
     # Set proper permissions for Docker containers
     chmod 755 "$MOUNT_POINT"
@@ -93,7 +134,11 @@ done
 # 5. Pull Docker image
 # -----------------------------------------------
 echo "[$(date)] Pulling Docker image: ${docker_image_uri}..."
-docker pull "${docker_image_uri}"
+if docker pull "${docker_image_uri}"; then
+  echo "[$(date)] Docker image pulled successfully"
+else
+  echo "[$(date)] WARNING: Failed to pull Docker image, attempting to run anyway..."
+fi
 
 # -----------------------------------------------
 # 6. Run Docker container
@@ -115,7 +160,11 @@ DOCKER_RUN_CMD="docker run \
   '${docker_image_uri}'"
 
 # Execute the docker run command
-eval "$DOCKER_RUN_CMD"
+if eval "$DOCKER_RUN_CMD"; then
+  echo "[$(date)] Docker container started successfully"
+else
+  echo "[$(date)] WARNING: Failed to start Docker container"
+fi
 
 # -----------------------------------------------
 # 7. Setup graceful shutdown handler
