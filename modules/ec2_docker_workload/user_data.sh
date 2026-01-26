@@ -82,9 +82,14 @@ echo "[$(date)] Setting up EBS volume mount points..."
 # Wait for volumes to be attached (give devices time to appear)
 sleep 10
 
-# Format and mount additional EBS volumes (check for common device names)
+# List of expected block devices (from Terraform configuration)
+EXPECTED_DEVICES="${expected_devices}"
+echo "[$(date)] Expected devices: $EXPECTED_DEVICES"
+
+# Format and mount additional EBS volumes
 # Also check NVMe device names (nvme1n1, nvme2n1, etc.)
-for DEVICE in sdf sdg sdh sdi sdj nvme1n1 nvme2n1 nvme3n1 nvme4n1 nvme5n1; do
+ALL_DEVICES="$EXPECTED_DEVICES nvme1n1 nvme2n1 nvme3n1 nvme4n1 nvme5n1"
+for DEVICE in $ALL_DEVICES; do
   DEVICE_PATH=""
 
   # Resolve device path (handle symlinks like /dev/sdf -> nvme1n1)

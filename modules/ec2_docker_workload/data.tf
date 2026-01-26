@@ -72,6 +72,22 @@ data "aws_ssm_parameter" "private_subnets" {
 }
 
 # -----------------------------------------------
+# Get Available AZs from Private Subnets
+# -----------------------------------------------
+# Used to determine where to create EBS volumes
+data "aws_subnets" "private" {
+  filter {
+    name   = "subnet-id"
+    values = split(",", data.aws_ssm_parameter.private_subnets.value)
+  }
+}
+
+data "aws_subnet" "private" {
+  for_each = toset(data.aws_subnets.private.ids)
+  id       = each.value
+}
+
+# -----------------------------------------------
 # Get Current AWS Region and Account ID
 # -----------------------------------------------
 data "aws_region" "current" {}

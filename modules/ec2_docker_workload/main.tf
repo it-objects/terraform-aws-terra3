@@ -262,6 +262,9 @@ resource "aws_cloudwatch_log_group" "docker_logs" {
 # -----------------------------------------------
 
 locals {
+  # Expected device names for volumes (for formatting and mounting)
+  volume_device_names = [for vol in var.ebs_volumes : trimprefix(vol.device_name, "/dev/")]
+
   user_data_script = base64gzip(templatefile("${path.module}/user_data.sh", {
     docker_image_uri     = var.docker_image_uri
     docker_env_vars      = local.docker_env_vars
@@ -271,6 +274,7 @@ locals {
     log_group_name       = aws_cloudwatch_log_group.docker_logs.name
     solution_name        = var.solution_name
     aws_region           = data.aws_region.current.name
+    expected_devices     = join(" ", local.volume_device_names)
   }))
 }
 
@@ -308,19 +312,8 @@ resource "aws_launch_template" "docker_workload" {
     }
   }
 
-  # Additional EBS volumes (for Docker container mounts)
-  dynamic "block_device_mappings" {
-    for_each = var.ebs_volumes
-    content {
-      device_name = block_device_mappings.value.device_name
-      ebs {
-        volume_size           = block_device_mappings.value.size
-        volume_type           = block_device_mappings.value.volume_type
-        delete_on_termination = block_device_mappings.value.delete_on_termination
-        encrypted             = true
-      }
-    }
-  }
+  # Note: Additional EBS volumes are created as separate aws_ebs_volume resources
+  # and attached via aws_volume_attachment to support persistence across instance restarts
 
   # User Data for Docker initialization
   user_data = local.user_data_script
@@ -386,6 +379,59 @@ resource "aws_autoscaling_group" "docker_workload" {
     aws_iam_role_policy.cloudwatch_logs,
     aws_iam_role_policy_attachment.ssm_managed_instance_core
   ]
+}
+
+# -----------------------------------------------
+# Persistent EBS Volumes (for Docker container mounts)
+# -----------------------------------------------
+# Create volumes that persist across instance termination
+# Only volumes with delete_on_termination = false are created here
+resource "aws_ebs_volume" "persistent" {
+  for_each = {
+    for idx, vol in local.persistent_volumes :
+    idx => vol
+  }
+
+  availability_zone = local.volume_az
+  size              = each.value.size
+  type              = each.value.volume_type
+  encrypted         = true
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name             = "${var.solution_name}-${var.instance_name}-volume-${each.key}"
+      DeviceName       = each.value.device_name
+      MountPath        = each.value.mount_path
+      Persistent       = "true"
+      WorkloadInstance = var.instance_name
+    }
+  )
+}
+
+# -----------------------------------------------
+# Attach Persistent Volumes to Running Instance
+# -----------------------------------------------
+# Attach to the instance currently in the ASG
+resource "aws_volume_attachment" "persistent" {
+  for_each = {
+    for idx, vol in local.persistent_volumes :
+    idx => vol
+  }
+
+  device_name  = each.value.device_name
+  volume_id    = aws_ebs_volume.persistent[each.key].id
+  instance_id  = try(data.aws_instances.docker_workload.ids[0], null)
+  force_detach = false
+  skip_destroy = true
+
+  # Only attach if instance exists
+  depends_on = [aws_autoscaling_group.docker_workload]
+
+  # Prevent immediate destruction if instance is running
+  lifecycle {
+    ignore_changes = [instance_id]
+  }
 }
 
 # -----------------------------------------------

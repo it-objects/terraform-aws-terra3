@@ -43,4 +43,11 @@ locals {
   # Internal DNS configuration
   internal_dns_zone_name   = var.internal_dns_zone_name != "" ? var.internal_dns_zone_name : "internal.${var.solution_name}.local"
   internal_dns_record_name = var.internal_dns_record_name != "" ? var.internal_dns_record_name : "${var.instance_name}.internal.${var.solution_name}.local"
+
+  # Persistent volumes (those that should NOT be deleted on termination)
+  persistent_volumes = [for vol in var.ebs_volumes : vol if vol.delete_on_termination == false]
+
+  # Get first AZ from private subnets (for volume creation)
+  # Volumes must be created in the same AZ as the instance
+  volume_az = length(data.aws_subnet.private) > 0 ? [for subnet in data.aws_subnet.private : subnet.availability_zone][0] : ""
 }

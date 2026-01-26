@@ -116,3 +116,16 @@ output "route53_updater_lambda_name" {
   description = "Name of the Lambda function that updates Route53 DNS records (if internal DNS enabled)"
   value       = try(aws_lambda_function.route53_updater[0].function_name, null)
 }
+
+output "persistent_volume_ids" {
+  description = "IDs of persistent EBS volumes (persisted across instance termination/restart)"
+  value       = [for vol in aws_ebs_volume.persistent : vol.id]
+}
+
+output "persistent_volume_devices" {
+  description = "Device names and volume IDs for persistent EBS volumes"
+  value = {
+    for idx, vol in aws_ebs_volume.persistent :
+    local.persistent_volumes[idx].device_name => vol.id
+  }
+}
