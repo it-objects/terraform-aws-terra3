@@ -66,10 +66,12 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:*:*:*"
+        Resource = aws_cloudwatch_log_group.docker_logs.arn
       }
     ]
   })
+
+  depends_on = [aws_cloudwatch_log_group.docker_logs]
 }
 
 # -----------------------------------------------

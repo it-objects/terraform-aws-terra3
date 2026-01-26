@@ -140,9 +140,9 @@ Mount persistent EBS volumes to Docker containers:
 
 ```hcl
 ebs_volumes = [
-  {    
-    size                  = 50                              # Size in GB    
-    mount_path            = "/var/lib/postgresql/data"     # Path in container    
+  {  
+    size                  = 50                              # Size in GB  
+    mount_path            = "/var/lib/postgresql/data"     # Path in container  
   }
 ]
 ```

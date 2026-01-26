@@ -70,3 +70,10 @@ data "aws_ssm_parameter" "vpc_id" {
 data "aws_ssm_parameter" "private_subnets" {
   name = "/${var.solution_name}/private_subnets"
 }
+
+# -----------------------------------------------
+# Get Current AWS Region and Account ID
+# -----------------------------------------------
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}

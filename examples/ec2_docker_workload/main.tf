@@ -63,7 +63,7 @@ module "terra3_examples" {
         module.container_psql_test
       ]
 
-      internal_service                 = true # No external routing    
+      internal_service                 = true # No external routing
       enable_target_group_health_check = false
     }
   }
@@ -82,18 +82,15 @@ module "container_psql_test" {
   container_cpu    = 256
   container_memory = 512
 
-  # just keep running 
-  # connection to ec2 docker hosted postgres db can be tested via ecs exec
+  # just keep running
+  # connection to ec2 docker hosted postgres db can be tested via ecs exec from the container shell:
+  # psql -h <ec3 docker workload instance private ip> -U <postgres_user> -d <postgres_db>
+  # (enter postgres_password on prompt)
   command = ["sh", "-c", "apk add --no-cache postgresql-client && sleep infinity"]
 
   port_mappings = []
 
   map_environment = {
-    "PGHOST"     = "postgres"
-    "PGPORT"     = "5432"
-    "PGUSER"     = var.postgres_user
-    "PGPASSWORD" = var.postgres_password
-    "PGDATABASE" = var.postgres_db
   }
 
   readonlyRootFilesystem = false

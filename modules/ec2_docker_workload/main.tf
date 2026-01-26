@@ -34,6 +34,7 @@ resource "aws_security_group_rule" "all_ingress" {
   protocol          = "-1"
   self              = true
   security_group_id = aws_security_group.default[0].id
+  description       = "Allow all inbound traffic from self for internal communication"
 
   lifecycle {
     create_before_destroy = true
@@ -54,6 +55,7 @@ resource "aws_security_group_rule" "bastion_to_mapped_ports" {
   protocol                 = var.port_mappings[count.index].protocol
   source_security_group_id = try(data.aws_security_group.bastion_host_ssm_sg.id, null)
   security_group_id        = aws_security_group.default[0].id
+  description              = "Allow inbound traffic from bastion host on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
 
   # Skip if bastion security group lookup fails (bastion not deployed)
   lifecycle {
@@ -79,6 +81,7 @@ resource "aws_security_group_rule" "ecs_task_to_mapped_ports" {
   protocol                 = var.port_mappings[count.index].protocol
   source_security_group_id = try(data.aws_security_group.ecs_task_sg.id, null)
   security_group_id        = aws_security_group.default[0].id
+  description              = "Allow inbound traffic from ECS tasks on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
 
   # Skip if ECS security group lookup fails (ECS not deployed)
   lifecycle {
@@ -90,17 +93,99 @@ resource "aws_security_group_rule" "ecs_task_to_mapped_ports" {
   }
 }
 
-# Allow all egress traffic
-resource "aws_security_group_rule" "all_egress" {
+# Allow egress to bastion host on mapped ports (if bastion exists)
+resource "aws_security_group_rule" "egress_to_bastion_host" {
+  count = try(
+    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 ? length(var.port_mappings) : 0,
+    0
+  )
+
+  type                     = "egress"
+  from_port                = var.port_mappings[count.index].hostPort
+  to_port                  = var.port_mappings[count.index].hostPort
+  protocol                 = var.port_mappings[count.index].protocol
+  source_security_group_id = try(data.aws_security_group.bastion_host_ssm_sg.id, null)
+  security_group_id        = aws_security_group.default[0].id
+  description              = "Allow outbound traffic to bastion host on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
+
+  lifecycle {
+    create_before_destroy = true
+    precondition {
+      condition     = try(data.aws_security_group.bastion_host_ssm_sg.id != null, false)
+      error_message = "Bastion host security group not found. Skipping bastion egress rule."
+    }
+  }
+}
+
+# Allow egress to ECS tasks on mapped ports (if ECS service exists)
+resource "aws_security_group_rule" "egress_to_ecs_task" {
+  count = try(
+    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 ? length(var.port_mappings) : 0,
+    0
+  )
+
+  type                     = "egress"
+  from_port                = var.port_mappings[count.index].hostPort
+  to_port                  = var.port_mappings[count.index].hostPort
+  protocol                 = var.port_mappings[count.index].protocol
+  source_security_group_id = try(data.aws_security_group.ecs_task_sg.id, null)
+  security_group_id        = aws_security_group.default[0].id
+  description              = "Allow outbound traffic to ECS tasks on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
+
+  lifecycle {
+    create_before_destroy = true
+    precondition {
+      condition     = try(data.aws_security_group.ecs_task_sg.id != null, false)
+      error_message = "ECS task security group not found. Skipping ECS egress rule."
+    }
+  }
+}
+
+# Allow egress to self for internal communication
+resource "aws_security_group_rule" "egress_to_self" {
   count = length(var.security_group_ids) == 0 ? 1 : 0
 
   type              = "egress"
   from_port         = 0
-  to_port           = 0
+  to_port           = 65535
   protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  ipv6_cidr_blocks  = ["::/0"]
+  self              = true
   security_group_id = aws_security_group.default[0].id
+  description       = "Allow all outbound traffic to self for internal communication"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+#tfsec:ignore:aws-ec2-no-public-egress-sgr # Allow egress for DNS (required for service discovery and AWS API calls)
+resource "aws_security_group_rule" "egress_dns" {
+  count = length(var.security_group_ids) == 0 ? 1 : 0
+
+  type              = "egress"
+  from_port         = 53
+  to_port           = 53
+  protocol          = "udp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.default[0].id
+  description       = "Allow egress for DNS (required for service discovery and AWS API calls)"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+#tfsec:ignore:aws-ec2-no-public-egress-sgr # Allow egress for HTTPS (required for AWS API calls and package downloads)
+resource "aws_security_group_rule" "egress_https" {
+  count = length(var.security_group_ids) == 0 ? 1 : 0
+
+  type              = "egress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.default[0].id
+  description       = "Allow egress for HTTPS (required for AWS API calls and package downloads)"
 
   lifecycle {
     create_before_destroy = true
@@ -108,12 +193,66 @@ resource "aws_security_group_rule" "all_egress" {
 }
 
 # -----------------------------------------------
-# CloudWatch Log Group
+# KMS Key for CloudWatch Logs Encryption
+# -----------------------------------------------
+
+resource "aws_kms_key" "logs" {
+  description             = "KMS key for ${var.solution_name} ${var.instance_name} CloudWatch logs encryption"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch Logs"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:CreateGrant",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+resource "aws_kms_alias" "logs" {
+  name          = "alias/${var.solution_name}-${var.instance_name}-logs"
+  target_key_id = aws_kms_key.logs.key_id
+}
+
+# -----------------------------------------------
+# CloudWatch Log Group (Encrypted)
 # -----------------------------------------------
 
 resource "aws_cloudwatch_log_group" "docker_logs" {
   name              = "/${var.solution_name}/ec2_docker_workload/${var.instance_name}"
   retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.logs.arn
 
   tags = local.common_tags
 }
@@ -361,11 +500,23 @@ resource "aws_iam_role_policy" "backup_ebs_policy" {
           "ec2:CreateSnapshot",
           "ec2:DescribeSnapshots",
           "ec2:CopySnapshot",
-          "ec2:CreateTags",
+          "ec2:CreateTags"
+        ]
+        Resource = concat(
+          [for vol in var.ebs_volumes : "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"],
+          ["arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:snapshot/*"]
+        )
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "ec2:DescribeVolumes",
           "ec2:DescribeInstances"
         ]
-        Resource = "*"
+        Resource = [
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+        ]
       },
       {
         Effect = "Allow"
