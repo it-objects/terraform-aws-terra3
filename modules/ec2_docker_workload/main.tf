@@ -312,7 +312,7 @@ resource "aws_launch_template" "docker_workload" {
     }
   }
 
-  # Note: Additional EBS volumes are created as separate aws_ebs_volume resources
+  # Note: Persistent EBS volumes are created as separate aws_ebs_volume resources
   # and attached via aws_volume_attachment to support persistence across instance restarts
 
   # User Data for Docker initialization
@@ -407,31 +407,6 @@ resource "aws_ebs_volume" "persistent" {
       WorkloadInstance = var.instance_name
     }
   )
-}
-
-# -----------------------------------------------
-# Attach Persistent Volumes to Running Instance
-# -----------------------------------------------
-# Attach to the instance currently in the ASG
-resource "aws_volume_attachment" "persistent" {
-  for_each = {
-    for idx, vol in local.persistent_volumes :
-    idx => vol
-  }
-
-  device_name  = each.value.device_name
-  volume_id    = aws_ebs_volume.persistent[each.key].id
-  instance_id  = try(data.aws_instances.docker_workload.ids[0], null)
-  force_detach = false
-  skip_destroy = true
-
-  # Only attach if instance exists
-  depends_on = [aws_autoscaling_group.docker_workload]
-
-  # Prevent immediate destruction if instance is running
-  lifecycle {
-    ignore_changes = [instance_id]
-  }
 }
 
 # -----------------------------------------------

@@ -53,7 +53,53 @@ cat > /etc/docker/daemon.json <<DOCKER_CONFIG
 DOCKER_CONFIG
 
 # -----------------------------------------------
-# 3. Start Docker service
+# 3. Attach Persistent EBS Volumes
+# -----------------------------------------------
+echo "[$(date)] Attaching persistent EBS volumes..."
+
+# Get instance ID from IMDSv2
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" 2>/dev/null || echo "")
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/instance-id" 2>/dev/null || echo "")
+
+if [ -z "$INSTANCE_ID" ]; then
+  echo "[$(date)] WARNING: Could not determine instance ID, skipping volume attachment"
+else
+  echo "[$(date)] Instance ID: $INSTANCE_ID"
+
+  # Find volumes tagged for this workload and attach them
+  echo "[$(date)] Querying for persistent volumes tagged with WorkloadInstance=${instance_name}..."
+
+  aws ec2 describe-volumes \
+    --region "$AWS_REGION" \
+    --filters "Name=tag:WorkloadInstance,Values=${instance_name}" \
+             "Name=tag:Persistent,Values=true" \
+    --query 'Volumes[*].[VolumeId,Tags[?Key==`DeviceName`].Value|[0]]' \
+    --output text 2>/dev/null | while read VOLUME_ID DEVICE_NAME; do
+
+    # Skip if empty line
+    if [ -z "$VOLUME_ID" ]; then
+      continue
+    fi
+
+    VOLUME_ID=$(echo "$VOLUME_ID" | xargs 2>/dev/null)
+    DEVICE_NAME=$(echo "$DEVICE_NAME" | xargs 2>/dev/null)
+
+    if [ -n "$VOLUME_ID" ] && [ -n "$DEVICE_NAME" ]; then
+      echo "[$(date)] Found volume $VOLUME_ID, attaching to $DEVICE_NAME..."
+      aws ec2 attach-volume \
+        --region "$AWS_REGION" \
+        --volume-id "$VOLUME_ID" \
+        --instance-id "$INSTANCE_ID" \
+        --device "$DEVICE_NAME" 2>/dev/null && echo "[$(date)] Attached $VOLUME_ID" || echo "[$(date)] WARNING: Failed to attach $VOLUME_ID"
+    fi
+  done
+
+  echo "[$(date)] Waiting for volumes to attach..."
+  sleep 15
+fi
+
+# -----------------------------------------------
+# 4. Start Docker service
 # -----------------------------------------------
 echo "[$(date)] Starting Docker service..."
 if systemctl start docker; then
@@ -75,7 +121,7 @@ usermod -a -G docker ec2-user 2>/dev/null || true
 sleep 5
 
 # -----------------------------------------------
-# 4. Create mount points for EBS volumes
+# 5. Create mount points for EBS volumes
 # -----------------------------------------------
 echo "[$(date)] Setting up EBS volume mount points..."
 
@@ -136,7 +182,7 @@ for DEVICE in $ALL_DEVICES; do
 done
 
 # -----------------------------------------------
-# 5. Pull Docker image
+# 6. Pull Docker image
 # -----------------------------------------------
 echo "[$(date)] Pulling Docker image: ${docker_image_uri}..."
 if docker pull "${docker_image_uri}"; then
@@ -146,7 +192,7 @@ else
 fi
 
 # -----------------------------------------------
-# 6. Run Docker container
+# 7. Run Docker container
 # -----------------------------------------------
 echo "[$(date)] Starting Docker container..."
 
@@ -172,7 +218,7 @@ else
 fi
 
 # -----------------------------------------------
-# 7. Setup graceful shutdown handler
+# 8. Setup graceful shutdown handler
 # -----------------------------------------------
 echo "[$(date)] Setting up graceful shutdown handler..."
 cat > /usr/local/bin/docker-shutdown.sh <<'SHUTDOWN_EOF'
@@ -203,7 +249,7 @@ systemctl daemon-reload
 systemctl enable docker-shutdown.service
 
 # -----------------------------------------------
-# 8. Verification
+# 9. Verification
 # -----------------------------------------------
 echo "[$(date)] Waiting for container to be ready..."
 sleep 10
