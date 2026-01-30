@@ -42,19 +42,13 @@ variable "security_group_ids" {
 }
 
 variable "enable_internal_dns" {
-  description = "Create Route53 private hosted zone with DNS records for service discovery via internal hostname."
+  description = "Create DNS A records for service discovery via internal hostname. Zone is managed by Terra3 base module."
   type        = bool
   default     = true
 }
 
-variable "internal_dns_zone_name" {
-  description = "Route53 private hosted zone name for internal DNS. If not provided, defaults to 'internal.{solution_name}.local'"
-  type        = string
-  default     = ""
-}
-
-variable "internal_dns_record_name" {
-  description = "DNS record name for this workload. If not provided, defaults to '{instance_name}.internal.{solution_name}.local'"
+variable "internal_dns_workload_name" {
+  description = "DNS workload name used for A record creation. Final DNS name will be '{internal_dns_workload_name}.internal.{solution_name}.local' (zone name managed by base module)."
   type        = string
   default     = ""
 }
@@ -220,4 +214,113 @@ variable "backup_schedule" {
   description = "Backup schedule in AWS EventBridge cron format (UTC). Default: daily at 2 AM UTC"
   type        = string
   default     = "cron(0 2 ? * * *)"
+}
+
+# -----------------------------------------------
+# ALB Integration
+# -----------------------------------------------
+
+variable "enable_load_balancer" {
+  description = "Enable ALB integration to expose the service through the load balancer"
+  type        = bool
+  default     = false
+}
+
+variable "internal_service" {
+  description = "If true, service is not exposed via ALB (even if enable_load_balancer is true)"
+  type        = bool
+  default     = false
+}
+
+variable "path_mapping" {
+  description = "ALB path pattern for routing (e.g., '/postgres/*'). Only used if enable_load_balancer is true"
+  type        = string
+  default     = "/*"
+}
+
+variable "listener_rule_prio" {
+  description = "ALB listener rule priority (must be unique across all rules). Only used if enable_load_balancer is true"
+  type        = number
+  default     = 1000
+
+  validation {
+    condition     = var.listener_rule_prio > 0 && var.listener_rule_prio < 50000
+    error_message = "Listener rule priority must be between 1 and 49999."
+  }
+}
+
+variable "lb_healthcheck_port" {
+  description = "Port for ALB health checks (defaults to hostPort of first port_mapping if enable_load_balancer is true)"
+  type        = string
+  default     = "traffic-port"
+}
+
+variable "lb_healthcheck_interval" {
+  description = "ALB health check interval in seconds"
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.lb_healthcheck_interval >= 5 && var.lb_healthcheck_interval <= 300
+    error_message = "Health check interval must be between 5 and 300 seconds."
+  }
+}
+
+variable "lb_healthcheck_timeout" {
+  description = "ALB health check timeout in seconds"
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.lb_healthcheck_timeout >= 2 && var.lb_healthcheck_timeout <= 120
+    error_message = "Health check timeout must be between 2 and 120 seconds."
+  }
+}
+
+variable "lb_healthcheck_healthy_threshold" {
+  description = "Number of consecutive health checks to mark instance healthy"
+  type        = number
+  default     = 2
+
+  validation {
+    condition     = var.lb_healthcheck_healthy_threshold >= 2 && var.lb_healthcheck_healthy_threshold <= 10
+    error_message = "Healthy threshold must be between 2 and 10."
+  }
+}
+
+variable "lb_healthcheck_unhealthy_threshold" {
+  description = "Number of consecutive health checks to mark instance unhealthy"
+  type        = number
+  default     = 2
+
+  validation {
+    condition     = var.lb_healthcheck_unhealthy_threshold >= 2 && var.lb_healthcheck_unhealthy_threshold <= 10
+    error_message = "Unhealthy threshold must be between 2 and 10."
+  }
+}
+
+variable "deregistration_delay" {
+  description = "Time (in seconds) to wait for connections to drain before forcefully closing them"
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.deregistration_delay >= 0 && var.deregistration_delay <= 3600
+    error_message = "Deregistration delay must be between 0 and 3600 seconds."
+  }
+}
+
+# -----------------------------------------------
+# SSM & Health Checks
+# -----------------------------------------------
+
+variable "health_check_grace_period" {
+  description = "Time (in seconds) to wait for the instance to become healthy before starting health checks. Increase if SSM Agent takes longer to initialize."
+  type        = number
+  default     = 600
+
+  validation {
+    condition     = var.health_check_grace_period >= 60 && var.health_check_grace_period <= 3600
+    error_message = "Health check grace period must be between 60 and 3600 seconds."
+  }
 }

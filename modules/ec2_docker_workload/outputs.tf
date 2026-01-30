@@ -87,16 +87,6 @@ output "backup_enabled" {
   value       = var.enable_backup
 }
 
-output "internal_dns_zone_id" {
-  description = "Route53 private hosted zone ID for internal service discovery"
-  value       = try(aws_route53_zone.internal[0].zone_id, null)
-}
-
-output "internal_dns_zone_name" {
-  description = "Route53 private hosted zone name"
-  value       = try(aws_route53_zone.internal[0].name, null)
-}
-
 output "internal_dns_fqdn" {
   description = "Fully qualified domain name for accessing this workload internally"
   value       = try(aws_route53_record.workload[0].fqdn, null)

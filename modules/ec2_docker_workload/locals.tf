@@ -40,14 +40,39 @@ locals {
   # Parameter paths for SSM discovery
   ssm_param_prefix = "/${var.solution_name}/ec2_docker_workload/${var.instance_name}"
 
-  # Internal DNS configuration
-  internal_dns_zone_name   = var.internal_dns_zone_name != "" ? var.internal_dns_zone_name : "internal.${var.solution_name}.local"
-  internal_dns_record_name = var.internal_dns_record_name != "" ? var.internal_dns_record_name : "${var.instance_name}.internal.${var.solution_name}.local"
+  # Internal DNS configuration (zone managed by base module, read from SSM)
+  internal_dns_zone_id       = try(data.aws_ssm_parameter.internal_dns_zone_id[0].value, "")
+  internal_dns_zone_name     = try(data.aws_ssm_parameter.internal_dns_zone_name[0].value, "")
+  internal_dns_workload_name = var.internal_dns_workload_name != "" ? var.internal_dns_workload_name : var.instance_name
+  internal_dns_record_name   = var.enable_internal_dns ? "${local.internal_dns_workload_name}.${local.internal_dns_zone_name}" : ""
 
   # Persistent volumes (those that should NOT be deleted on termination)
   persistent_volumes = [for vol in var.ebs_volumes : vol if vol.delete_on_termination == false]
 
   # Get first AZ from private subnets (for volume creation)
   # Volumes must be created in the same AZ as the instance
-  volume_az = length(data.aws_subnet.private) > 0 ? [for subnet in data.aws_subnet.private : subnet.availability_zone][0] : ""
+  volume_az = try(data.aws_subnet.private_first.availability_zone, "")
+
+  # -----------------------------------------------
+  # ALB Configuration
+  # -----------------------------------------------
+
+  # Determine if we should use HTTPS listener (port 443)
+  # by checking if the ALB has a valid HTTPS listener ARN
+  use_https_listener = (
+    var.enable_load_balancer &&
+    !var.internal_service &&
+    try(data.aws_ssm_parameter.alb_listener_443_arn[0].value != "-", false)
+  )
+
+  # Select the appropriate listener ARN based on HTTPS availability
+  alb_listener_arn = (
+    local.use_https_listener ?
+    try(data.aws_ssm_parameter.alb_listener_443_arn[0].value, "") :
+    try(data.aws_ssm_parameter.alb_listener_80_arn[0].value, "")
+  )
+
+  # Get the host port from the first port_mapping (for health checks and target group)
+  service_port = var.enable_load_balancer && length(var.port_mappings) > 0 ? var.port_mappings[0].hostPort : 0
+
 }

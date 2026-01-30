@@ -39,14 +39,21 @@ output "ecs_psql_test_service" {
 output "postgres_internal_dns_fqdn" {
   description = "Internal DNS FQDN for PostgreSQL service discovery"
   value       = module.postgres_docker.internal_dns_fqdn
+  sensitive   = true
 }
 
 output "postgres_internal_dns_hostname" {
   description = "Internal DNS hostname for PostgreSQL (short name)"
   value       = module.postgres_docker.internal_dns_hostname
+  sensitive   = true
 }
 
-output "postgres_internal_dns_zone" {
-  description = "Route53 private hosted zone name for internal service discovery"
-  value       = module.postgres_docker.internal_dns_zone_name
+output "internal_service_dns_zone_name" {
+  description = "Route53 private hosted zone name for internal service discovery (managed by Terra3 base module)"
+  value       = module.terra3_examples.internal_service_dns_zone_name
+}
+
+output "internal_service_dns_zone_id" {
+  description = "Route53 private hosted zone ID (managed by Terra3 base module)"
+  value       = module.terra3_examples.internal_service_dns_zone_id
 }

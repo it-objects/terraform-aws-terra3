@@ -461,26 +461,12 @@ resource "aws_ebs_volume" "persistent" {
 # -----------------------------------------------
 
 # Private hosted zone for internal service discovery
-resource "aws_route53_zone" "internal" {
-  count = var.enable_internal_dns ? 1 : 0
-  name  = local.internal_dns_zone_name
-
-  vpc {
-    vpc_id = data.aws_ssm_parameter.vpc_id.value
-  }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.solution_name}-${var.instance_name}-internal-zone"
-    }
-  )
-}
-
+# Create zone if internal DNS is enabled and no zone ID is provided
+# Once created, the zone persists and is reused by other workloads
 # DNS A record pointing to the current running instance
 resource "aws_route53_record" "workload" {
   count   = var.enable_internal_dns ? 1 : 0
-  zone_id = aws_route53_zone.internal[0].zone_id
+  zone_id = try(data.aws_ssm_parameter.internal_dns_zone_id[0].value, "")
   name    = local.internal_dns_record_name
   type    = "A"
   ttl     = 60
@@ -724,7 +710,7 @@ resource "aws_iam_role_policy" "route53_updater_lambda" {
         Action = [
           "route53:ChangeResourceRecordSets"
         ]
-        Resource = aws_route53_zone.internal[0].arn
+        Resource = try(data.aws_route53_zone.internal[0].arn, "arn:aws:route53:::hostedzone/*")
       },
       {
         Effect = "Allow"
@@ -760,7 +746,7 @@ resource "aws_lambda_function" "route53_updater" {
 
   environment {
     variables = {
-      ZONE_ID       = aws_route53_zone.internal[0].zone_id
+      ZONE_ID       = local.internal_dns_zone_id
       RECORD_NAME   = local.internal_dns_record_name
       ASG_NAME      = aws_autoscaling_group.docker_workload.name
       SOLUTION_NAME = var.solution_name

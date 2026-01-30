@@ -72,19 +72,12 @@ data "aws_ssm_parameter" "private_subnets" {
 }
 
 # -----------------------------------------------
-# Get Available AZs from Private Subnets
+# Get First Private Subnet Details
 # -----------------------------------------------
-# Used to determine where to create EBS volumes
-data "aws_subnets" "private" {
-  filter {
-    name   = "subnet-id"
-    values = split(",", data.aws_ssm_parameter.private_subnets.value)
-  }
-}
-
-data "aws_subnet" "private" {
-  for_each = toset(data.aws_subnets.private.ids)
-  id       = each.value
+# Used to determine AZ for EBS volume creation
+# We extract just the first subnet ID since we only need one AZ
+data "aws_subnet" "private_first" {
+  id = element(split(",", nonsensitive(data.aws_ssm_parameter.private_subnets.value)), 0)
 }
 
 # -----------------------------------------------
@@ -111,4 +104,50 @@ data "aws_instances" "docker_workload" {
   }
 
   depends_on = [aws_autoscaling_group.docker_workload]
+}
+
+# -----------------------------------------------
+# Get ALB ARN from SSM Parameter (if ALB enabled)
+# -----------------------------------------------
+
+data "aws_ssm_parameter" "alb_arn" {
+  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  name  = "/${var.solution_name}/alb_arn"
+}
+
+data "aws_ssm_parameter" "alb_listener_443_arn" {
+  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  name  = "/${var.solution_name}/alb_listener_443_arn"
+}
+
+data "aws_ssm_parameter" "alb_listener_80_arn" {
+  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  name  = "/${var.solution_name}/alb_listener_80_arn"
+}
+
+# Get ALB details to check if it's HTTPS-enabled
+data "aws_lb" "alb" {
+  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  arn   = data.aws_ssm_parameter.alb_arn[0].value
+}
+
+
+# -----------------------------------------------
+# Get Internal DNS Zone from SSM (managed by base module)
+# -----------------------------------------------
+
+data "aws_ssm_parameter" "internal_dns_zone_id" {
+  count = var.enable_internal_dns ? 1 : 0
+  name  = "/${var.solution_name}/internal_service_dns/zone_id"
+}
+
+data "aws_ssm_parameter" "internal_dns_zone_name" {
+  count = var.enable_internal_dns ? 1 : 0
+  name  = "/${var.solution_name}/internal_service_dns/zone_name"
+}
+
+# Get Route53 Zone Details
+data "aws_route53_zone" "internal" {
+  count   = var.enable_internal_dns ? 1 : 0
+  zone_id = try(data.aws_ssm_parameter.internal_dns_zone_id[0].value, "")
 }

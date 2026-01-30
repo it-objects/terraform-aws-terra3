@@ -294,6 +294,137 @@ The module creates an IAM role with:
 - Access via AWS Systems Manager Session Manager (no SSH keys)
 - IMDSv2 enforced (prevents SSRF attacks)
 
+## Route53 Internal DNS
+
+### Zone Management via Terra3 Base Module
+
+The Route53 private hosted zone for internal service discovery is now managed at the Terra3 base module level. This ensures:
+
+- **Single Zone Per VPC**: Eliminates `ConflictingDomainExists` errors
+- **Shared Across Workloads**: All `ec2_docker_workload` instances use the same zone
+- **Zone Persistence**: Survives workload destruction (`prevent_destroy = true`)
+- **Auto-Discovery**: Workloads automatically discover zone via SSM Parameter Store
+
+### Default Behavior
+
+By default, `enable_internal_dns = true` in this module:
+
+```hcl
+module "postgres_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name = "myapp"
+  instance_name = "postgres"
+
+  # enable_internal_dns defaults to true
+  # Zone auto-discovered from SSM: /{solution_name}/internal_service_dns/zone_id
+  # Creates DNS record: postgres.internal.myapp.local
+}
+
+module "nginx_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name = "myapp"
+  instance_name = "nginx"
+
+  # Also uses the same shared zone
+  # Creates DNS record: nginx.internal.myapp.local
+}
+```
+
+### DNS Naming Scheme
+
+By default, DNS records follow this pattern:
+
+```
+{instance_name}.internal.{solution_name}.local
+```
+
+Examples:
+- `postgres.internal.myapp.local` → postgres instance IP
+- `nginx.internal.myapp.local` → nginx instance IP
+- `redis.internal.myapp.local` → redis instance IP
+
+### Custom DNS Workload Names
+
+To override the default DNS workload name:
+
+```hcl
+module "postgres_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name            = "myapp"
+  instance_name            = "postgres"
+  internal_dns_workload_name = "db"  # Custom DNS name
+
+  # Creates DNS record: db.internal.myapp.local (instead of postgres.internal.myapp.local)
+}
+```
+
+### Disabling Internal DNS
+
+To deploy without internal DNS:
+
+```hcl
+module "postgres_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name       = "myapp"
+  instance_name       = "postgres"
+  enable_internal_dns = false
+
+  # No DNS record created
+}
+```
+
+### Multiple Workloads Sharing One Zone
+
+All workloads automatically register in the shared zone:
+
+```
+postgres.internal.myapp.local  → 10.0.1.5
+nginx.internal.myapp.local     → 10.0.1.10
+redis.internal.myapp.local     → 10.0.1.15
+```
+
+Workloads can discover each other via internal DNS for inter-service communication!
+
+### Zone Configuration (Terra3 Level)
+
+The zone is configured in the Terra3 base module:
+
+```hcl
+module "terra3" {
+  source = "..."
+
+  enable_internal_service_dns = true  # Enable/disable zone creation
+  internal_service_dns_zone_name = ""  # Custom zone name (optional)
+
+  # Zone details are exported to SSM:
+  # - /{solution_name}/internal_service_dns/zone_id
+  # - /{solution_name}/internal_service_dns/zone_name
+}
+```
+
+See the `internal_service_dns` module documentation for advanced zone configuration.
+
+### Troubleshooting
+
+**Error: `Error reading SSM Parameter: ParameterNotFound`**
+
+The Terra3 base module must have `enable_internal_service_dns = true` to create the zone:
+
+```hcl
+module "terra3" {
+  enable_internal_service_dns = true  # Ensure this is true
+  ...
+}
+```
+
+**Error: `ConflictingDomainExists` (old deployments)**
+
+If migrating from the old architecture where each workload created its own zone, follow the backwards compatibility guide in the `internal_service_dns` module documentation.
+
 ## Debugging
 
 ### Access EC2 Instance
@@ -304,7 +435,36 @@ Use AWS Systems Manager Session Manager:
 aws ssm start-session --target <instance-id>
 ```
 
-Then view Docker container logs:
+**Troubleshooting SSM Access Issues:**
+
+If you get "SSM Agent unable to acquire credentials" error:
+
+1. **Check instance is in private subnet with NAT:**
+   - Instance needs outbound HTTPS access to SSM service endpoints
+   - Verify NAT Gateway/Instance is properly configured
+
+2. **Check IAM role has SSM policy:**
+   ```bash
+   aws iam get-role-policy --role-name <role-name> --policy-name AmazonSSMManagedInstanceCore
+   ```
+
+3. **Check instance health in EC2 console:**
+   - Look for "2/2 checks passed" status
+   - Wait 5-10 minutes after instance launch for SSM Agent to connect
+
+4. **Check security group allows HTTPS egress:**
+   - Outbound rule: Port 443 (TCP) to 0.0.0.0/0
+   - Current config includes this automatically
+
+5. **View instance system log (EC2 Console):**
+   - Look for "SSM Agent is running" message
+   - Check for network connectivity errors
+
+6. **Multiple workloads deployment:**
+   - When deploying multiple workloads, later instances may take longer to become SSM-accessible
+   - Ensure explicit `depends_on` between modules to avoid race conditions
+
+Once connected, view Docker container logs:
 
 ```bash
 docker ps                                   # List containers
@@ -527,3 +687,64 @@ resource "aws_security_group_rule" "ecs_to_docker" {
   source_security_group_id = module.security_groups.ecs_task_sg_id
 }
 ```
+
+## Related Modules and Documentation
+
+- **Internal Service DNS Module** (`modules/internal_service_dns/`): Manages Route53 private hosted zones for internal service discovery
+- **Terra3 Base Module**: Orchestrates all infrastructure components including the internal DNS zone
+- **Container Module** (`modules/container/`): Defines ECS container specifications
+- **VPC Module**: Network infrastructure and subnets
+- **Security Groups Module** (`modules/securitygroups/`): Manages security group configuration
+
+## Example Integration Pattern
+
+Complete example showing Terra3 + internal DNS + multiple workloads:
+
+```hcl
+# 1. Deploy Terra3 with internal DNS enabled (default)
+module "terra3" {
+  source = "./modules/terra3"
+
+  solution_name = "myapp"
+  enable_internal_service_dns = true  # Default
+  # ...
+}
+
+# 2. Deploy PostgreSQL workload (zone auto-discovered from SSM)
+module "postgres_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name = "myapp"
+  instance_name = "postgres"
+  docker_image_uri = "postgres:15-alpine"
+  # ...
+}
+
+# 3. Deploy Redis workload (reuses same zone)
+module "redis_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name = "myapp"
+  instance_name = "redis"
+  docker_image_uri = "redis:7-alpine"
+  # ...
+}
+
+# 4. Deploy ECS service that connects to Docker workloads
+module "app_components" {
+  source = "./modules/app_components"
+
+  app_components = {
+    api = {
+      container = [module.api_container]
+      # Container environment variables can use internal DNS names:
+      map_environment = {
+        DATABASE_HOST = "postgres.internal.myapp.local"
+        REDIS_HOST    = "redis.internal.myapp.local"
+      }
+    }
+  }
+}
+```
+
+Result: All services auto-discover each other via internal DNS names!

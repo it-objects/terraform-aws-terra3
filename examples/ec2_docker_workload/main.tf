@@ -179,10 +179,41 @@ module "postgres_docker" {
   backup_schedule       = "cron(0 2 ? * * *)" # Daily at 2 AM UTC
 
   # Internal DNS is enabled by default
-  # The module automatically creates Route53 DNS records for service discovery
+  # The Route53 zone is created by the Terra3 base module
+  # This module automatically creates DNS A records for service discovery
 
   # Explicit dependency to ensure VPC and subnets are created first
   depends_on = [module.terra3_examples]
+}
+
+module "nginx_docker" {
+  source = "../../modules/ec2_docker_workload"
+
+  solution_name = local.solution_name
+  instance_name = "nginx"
+
+  # Docker Configuration
+  docker_image_uri = "nginx:latest"
+
+  # Port Mappings
+  port_mappings = [
+    {
+      containerPort = 80
+      hostPort      = 80
+      protocol      = "tcp"
+    }
+  ]
+
+  # CloudWatch Logs
+  log_retention_days = 7
+
+  # Explicit dependencies to ensure proper deployment order and SSM access
+  # Note: nginx depends on postgres being fully deployed to avoid race conditions
+  # with security group and Route53 zone initialization
+  depends_on = [
+    module.terra3_examples,
+    module.postgres_docker
+  ]
 }
 
 # -----------------------------------------------
