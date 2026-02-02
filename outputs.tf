@@ -77,3 +77,18 @@ output "elasticache_subnet_ids" {
   value       = local.elasticache_subnet_ids
   description = "Return elasticache_subnet_ids of VPC in use."
 }
+
+output "internal_service_dns_zone_id" {
+  value       = try(module.internal_service_dns[0].zone_id, "")
+  description = "Route53 internal service DNS zone ID"
+}
+
+output "internal_service_dns_zone_name" {
+  value       = try(module.internal_service_dns[0].zone_name, "")
+  description = "Route53 internal service DNS zone name"
+}
+
+output "internal_service_dns_zone_arn" {
+  value       = try(module.internal_service_dns[0].zone_arn, "")
+  description = "Route53 internal service DNS zone ARN"
+}

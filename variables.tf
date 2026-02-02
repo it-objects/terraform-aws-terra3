@@ -820,3 +820,19 @@ variable "addOidcUrlToIamS3StaticWebsiteRoleMapping" {
   type        = any
   default     = {}
 }
+
+# -----------------------------------------------
+# Internal Service DNS
+# -----------------------------------------------
+
+variable "enable_internal_service_dns" {
+  description = "Enable internal service DNS for Docker workloads. Creates a Route53 private hosted zone for internal service discovery."
+  type        = bool
+  default     = true
+}
+
+variable "internal_service_dns_zone_name" {
+  description = "Custom zone name for internal services (defaults to internal.{solution_name}.local)"
+  type        = string
+  default     = ""
+}
