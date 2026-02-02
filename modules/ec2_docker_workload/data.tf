@@ -111,23 +111,23 @@ data "aws_instances" "docker_workload" {
 # -----------------------------------------------
 
 data "aws_ssm_parameter" "alb_arn" {
-  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  count = var.enable_load_balancer ? 1 : 0
   name  = "/${var.solution_name}/alb_arn"
 }
 
 data "aws_ssm_parameter" "alb_listener_443_arn" {
-  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  count = var.enable_load_balancer ? 1 : 0
   name  = "/${var.solution_name}/alb_listener_443_arn"
 }
 
 data "aws_ssm_parameter" "alb_listener_80_arn" {
-  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  count = var.enable_load_balancer ? 1 : 0
   name  = "/${var.solution_name}/alb_listener_80_arn"
 }
 
 # Get ALB details to check if it's HTTPS-enabled
 data "aws_lb" "alb" {
-  count = var.enable_load_balancer && !var.internal_service ? 1 : 0
+  count = var.enable_load_balancer ? 1 : 0
   arn   = data.aws_ssm_parameter.alb_arn[0].value
 }
 

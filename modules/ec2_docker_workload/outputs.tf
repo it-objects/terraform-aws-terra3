@@ -119,3 +119,43 @@ output "persistent_volume_devices" {
     local.persistent_volumes[idx].device_name => vol.id
   }
 }
+
+output "target_group_arn" {
+  description = "ARN of the ALB target group (if ALB enabled)"
+  value       = try(aws_lb_target_group.alb[0].arn, null)
+}
+
+output "target_group_name" {
+  description = "Name of the ALB target group (if ALB enabled)"
+  value       = try(aws_lb_target_group.alb[0].name, null)
+}
+
+output "listener_rule_arn" {
+  description = "ARN of the ALB listener rule (if ALB enabled)"
+  value       = try(aws_lb_listener_rule.alb[0].arn, null)
+}
+
+output "alb_listener_arn_used" {
+  description = "Which ALB listener ARN is being used for the rule (for debugging)"
+  value       = local.alb_listener_arn
+}
+
+output "use_https_listener" {
+  description = "Whether HTTPS listener is being used (for debugging)"
+  value       = local.use_https_listener
+}
+
+output "path_mapping_configured" {
+  description = "Path mapping pattern being used"
+  value       = var.path_mapping
+}
+
+output "listener_rule_created" {
+  description = "Whether listener rule resource was created"
+  value       = length(aws_lb_listener_rule.alb) > 0
+}
+
+output "target_group_created" {
+  description = "Whether ALB target group resource was created"
+  value       = length(aws_lb_target_group.alb) > 0
+}

@@ -226,12 +226,6 @@ variable "enable_load_balancer" {
   default     = false
 }
 
-variable "internal_service" {
-  description = "If true, service is not exposed via ALB (even if enable_load_balancer is true)"
-  type        = bool
-  default     = false
-}
-
 variable "path_mapping" {
   description = "ALB path pattern for routing (e.g., '/postgres/*'). Only used if enable_load_balancer is true"
   type        = string
@@ -296,6 +290,39 @@ variable "lb_healthcheck_unhealthy_threshold" {
   validation {
     condition     = var.lb_healthcheck_unhealthy_threshold >= 2 && var.lb_healthcheck_unhealthy_threshold <= 10
     error_message = "Unhealthy threshold must be between 2 and 10."
+  }
+}
+
+variable "lb_healthcheck_protocol" {
+  description = "Protocol for ALB health checks"
+  type        = string
+  default     = "HTTP"
+
+  validation {
+    condition     = contains(["HTTP", "HTTPS"], var.lb_healthcheck_protocol)
+    error_message = "Health check protocol must be HTTP or HTTPS."
+  }
+}
+
+variable "lb_healthcheck_url" {
+  description = "URL path for ALB health checks"
+  type        = string
+  default     = "/"
+
+  validation {
+    condition     = startswith(var.lb_healthcheck_url, "/")
+    error_message = "Health check URL must start with '/'."
+  }
+}
+
+variable "lb_healthcheck_matcher" {
+  description = "HTTP status codes considered healthy for ALB health checks"
+  type        = string
+  default     = "200"
+
+  validation {
+    condition     = can(regex("^[0-9,]+(-[0-9]+)?$", var.lb_healthcheck_matcher))
+    error_message = "Health check matcher must be valid HTTP status codes (e.g., '200' or '200,302' or '200-299')."
   }
 }
 

@@ -61,7 +61,6 @@ locals {
   # by checking if the ALB has a valid HTTPS listener ARN
   use_https_listener = (
     var.enable_load_balancer &&
-    !var.internal_service &&
     try(data.aws_ssm_parameter.alb_listener_443_arn[0].value != "-", false)
   )
 

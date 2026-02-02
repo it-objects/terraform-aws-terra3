@@ -141,6 +141,58 @@ resource "aws_security_group_rule" "egress_to_ecs_task" {
   }
 }
 
+# Allow ingress from ALB on mapped ports (if ALB enabled)
+resource "aws_security_group_rule" "alb_to_mapped_ports" {
+  # Only create if: (1) we have port mappings, (2) using module-created SG, (3) ALB is enabled, (4) ALB SG exists
+  count = try(
+    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 && var.enable_load_balancer ? length(var.port_mappings) : 0,
+    0
+  )
+
+  type                     = "ingress"
+  from_port                = var.port_mappings[count.index].hostPort
+  to_port                  = var.port_mappings[count.index].hostPort
+  protocol                 = var.port_mappings[count.index].protocol
+  source_security_group_id = try(data.aws_security_group.loadbalancer_sg.id, null)
+  security_group_id        = aws_security_group.default[0].id
+  description              = "Allow inbound traffic from ALB on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
+
+  # Skip if ALB security group lookup fails (ALB not deployed)
+  lifecycle {
+    create_before_destroy = true
+    precondition {
+      condition     = try(data.aws_security_group.loadbalancer_sg.id != null, false)
+      error_message = "Load balancer security group not found. Skipping ALB ingress rule."
+    }
+  }
+}
+
+# Allow ALB to send outbound traffic to docker workload on mapped ports (if ALB enabled)
+resource "aws_security_group_rule" "alb_egress_to_mapped_ports" {
+  # Only create if: (1) we have port mappings, (2) using module-created SG, (3) ALB is enabled, (4) ALB SG exists
+  count = try(
+    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 && var.enable_load_balancer ? length(var.port_mappings) : 0,
+    0
+  )
+
+  type                     = "egress"
+  from_port                = var.port_mappings[count.index].hostPort
+  to_port                  = var.port_mappings[count.index].hostPort
+  protocol                 = var.port_mappings[count.index].protocol
+  source_security_group_id = aws_security_group.default[0].id
+  security_group_id        = try(data.aws_security_group.loadbalancer_sg.id, null)
+  description              = "Allow outbound traffic from ALB to docker workload on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
+
+  # Skip if ALB security group lookup fails (ALB not deployed)
+  lifecycle {
+    create_before_destroy = true
+    precondition {
+      condition     = try(data.aws_security_group.loadbalancer_sg.id != null, false)
+      error_message = "Load balancer security group not found. Skipping ALB egress rule."
+    }
+  }
+}
+
 # Allow egress to self for internal communication
 resource "aws_security_group_rule" "egress_to_self" {
   count = length(var.security_group_ids) == 0 ? 1 : 0
@@ -406,9 +458,13 @@ resource "aws_autoscaling_group" "docker_workload" {
     version = "$Latest"
   }
 
+  # Register instances with ALB target group (if ALB is enabled)
+  # When instances are launched/terminated, ASG automatically registers/deregisters them
+  target_group_arns = var.enable_load_balancer ? [aws_lb_target_group.alb[0].arn] : []
+
   health_check_grace_period = 300
   default_cooldown          = 300
-  health_check_type         = "EC2"
+  health_check_type         = var.enable_load_balancer ? "ELB" : "EC2"
 
   instance_refresh {
     strategy = "Rolling"
@@ -424,6 +480,7 @@ resource "aws_autoscaling_group" "docker_workload" {
   depends_on = [
     aws_iam_role_policy.cloudwatch_logs,
     aws_iam_role_policy_attachment.ssm_managed_instance_core
+    # Note: target_group_arns doesn't create a terraform dependency, only AWS-level dependency
   ]
 }
 
@@ -802,4 +859,69 @@ resource "aws_lambda_permission" "allow_eventbridge" {
   function_name = aws_lambda_function.route53_updater[0].function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.asg_instance_launch[0].arn
+}
+
+# -----------------------------------------------
+# ALB Integration (Optional)
+# -----------------------------------------------
+# Register EC2 instance with ALB target group for path-based routing
+# Only created when enable_load_balancer = true
+
+resource "aws_lb_target_group" "alb" {
+  count = var.enable_load_balancer ? 1 : 0
+
+  name_prefix          = substr(replace(var.instance_name, "_", "-"), 0, 6)
+  port                 = local.service_port
+  protocol             = "HTTP"
+  vpc_id               = data.aws_ssm_parameter.vpc_id.value
+  target_type          = "instance"
+  deregistration_delay = var.deregistration_delay
+
+  health_check {
+    healthy_threshold   = var.lb_healthcheck_healthy_threshold
+    unhealthy_threshold = var.lb_healthcheck_unhealthy_threshold
+    interval            = var.lb_healthcheck_interval
+    timeout             = var.lb_healthcheck_timeout
+    protocol            = var.lb_healthcheck_protocol
+    port                = tostring(var.lb_healthcheck_port)
+    path                = var.lb_healthcheck_url
+    matcher             = var.lb_healthcheck_matcher
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Note: Target group attachment is now configured directly in the ASG resource
+# When the ASG replaces an instance, it automatically deregisters the old instance
+# and registers the new one with the target group
+
+# Create ALB listener rule for path-based routing
+resource "aws_lb_listener_rule" "alb" {
+  count = var.enable_load_balancer ? 1 : 0
+
+  listener_arn = local.alb_listener_arn
+  priority     = var.listener_rule_prio
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.alb[0].arn
+  }
+
+  condition {
+    path_pattern {
+      values = [var.path_mapping]
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    precondition {
+      condition     = local.alb_listener_arn != ""
+      error_message = "ALB listener ARN is empty. Ensure ALB is created and SSM parameters are configured correctly."
+    }
+  }
+
+  depends_on = [aws_lb_target_group.alb]
 }

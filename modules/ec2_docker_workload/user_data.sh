@@ -102,23 +102,41 @@ fi
 # 4. Start Docker service
 # -----------------------------------------------
 echo "[$(date)] Starting Docker service..."
+
+# Enable Docker to start on boot (important for ASG replacements)
+if systemctl enable docker; then
+  echo "[$(date)] Docker service enabled for boot"
+else
+  echo "[$(date)] WARNING: Failed to enable Docker service for boot"
+fi
+
+# Start Docker service now
 if systemctl start docker; then
   echo "[$(date)] Docker service started"
 else
   echo "[$(date)] WARNING: Failed to start Docker service"
 fi
 
-if systemctl enable docker; then
-  echo "[$(date)] Docker service enabled"
-else
-  echo "[$(date)] WARNING: Failed to enable Docker service"
+# Wait for Docker daemon to be ready
+echo "[$(date)] Waiting for Docker daemon to be ready..."
+DOCKER_READY=false
+for i in {1..30}; do
+  if docker ps &>/dev/null; then
+    echo "[$(date)] Docker daemon is ready"
+    DOCKER_READY=true
+    break
+  fi
+  echo "[$(date)] Waiting for Docker... ($i/30)"
+  sleep 1
+done
+
+if [ "$DOCKER_READY" = false ]; then
+  echo "[$(date)] ERROR: Docker daemon failed to start after 30 seconds"
+  exit 1
 fi
 
 # Allow ec2-user to run Docker commands
 usermod -a -G docker ec2-user 2>/dev/null || true
-
-# Wait for Docker daemon to be ready
-sleep 5
 
 # -----------------------------------------------
 # 5. Create mount points for EBS volumes
@@ -197,6 +215,8 @@ fi
 echo "[$(date)] Starting Docker container..."
 
 # Build docker run command
+# Use bridge networking (default) with explicit port mappings
+# ALB targets the instance on the host port, which is mapped to the container port
 DOCKER_RUN_CMD="docker run \
   --name '$INSTANCE_NAME' \
   --restart=unless-stopped \

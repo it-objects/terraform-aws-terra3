@@ -199,13 +199,27 @@ module "nginx_docker" {
   port_mappings = [
     {
       containerPort = 80
-      hostPort      = 80
+      hostPort      = 8080
       protocol      = "tcp"
     }
   ]
 
   # CloudWatch Logs
   log_retention_days = 7
+
+  # Backup Configuration
+  enable_backup = false # No backups for stateless nginx container
+
+  # ALB Integration (optional - demonstrates exposing the container through the load balancer)
+  enable_load_balancer = true
+  path_mapping         = "/*"
+  listener_rule_prio   = 100
+
+  # Health Check Configuration for nginx
+  lb_healthcheck_port     = "8080"
+  lb_healthcheck_url      = "/"
+  lb_healthcheck_protocol = "HTTP"
+  lb_healthcheck_matcher  = "200"
 
   # Explicit dependencies to ensure proper deployment order and SSM access
   # Note: nginx depends on postgres being fully deployed to avoid race conditions
