@@ -7,7 +7,7 @@
 # -----------------------------------------------
 
 resource "aws_iam_role" "docker_workload_role" {
-  name_prefix = "${var.solution_name}-${var.instance_name}-"
+  name_prefix = "${var.solution_name}-${var.instance_name}-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

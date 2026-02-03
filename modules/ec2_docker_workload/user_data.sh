@@ -86,11 +86,56 @@ else
 
     if [ -n "$VOLUME_ID" ] && [ -n "$DEVICE_NAME" ]; then
       echo "[$(date)] Found volume $VOLUME_ID, attaching to $DEVICE_NAME..."
-      aws ec2 attach-volume \
+
+      # First, detach from any old instance if still attached
+      ATTACHED_INSTANCE=$(aws ec2 describe-volumes \
+        --region "$AWS_REGION" \
+        --volume-ids "$VOLUME_ID" \
+        --query 'Volumes[0].Attachments[0].InstanceId' \
+        --output text 2>/dev/null)
+
+      if [ -n "$ATTACHED_INSTANCE" ] && [ "$ATTACHED_INSTANCE" != "None" ] && [ "$ATTACHED_INSTANCE" != "$INSTANCE_ID" ]; then
+        echo "[$(date)] Volume $VOLUME_ID is still attached to instance $ATTACHED_INSTANCE, detaching first..."
+        aws ec2 detach-volume \
+          --region "$AWS_REGION" \
+          --volume-id "$VOLUME_ID" 2>/dev/null
+
+        # Wait for detach to complete (up to 60 seconds)
+        echo "[$(date)] Waiting for volume to detach..."
+        for i in {1..12}; do
+          STATE=$(aws ec2 describe-volumes \
+            --region "$AWS_REGION" \
+            --volume-ids "$VOLUME_ID" \
+            --query 'Volumes[0].State' \
+            --output text 2>/dev/null)
+
+          if [ "$STATE" = "available" ]; then
+            echo "[$(date)] Volume is now available"
+            break
+          fi
+          echo "[$(date)] Volume state: $STATE, waiting... ($i/12)"
+          sleep 5
+        done
+      fi
+
+      # Now attach to this instance
+      echo "[$(date)] Attaching $VOLUME_ID to $DEVICE_NAME..."
+      ATTACH_OUTPUT=$(aws ec2 attach-volume \
         --region "$AWS_REGION" \
         --volume-id "$VOLUME_ID" \
         --instance-id "$INSTANCE_ID" \
-        --device "$DEVICE_NAME" 2>/dev/null && echo "[$(date)] Attached $VOLUME_ID" || echo "[$(date)] WARNING: Failed to attach $VOLUME_ID"
+        --device "$DEVICE_NAME" 2>&1)
+
+      if [ $? -eq 0 ]; then
+        echo "[$(date)] Attached $VOLUME_ID successfully"
+        echo "[$(date)] Attachment details: $ATTACH_OUTPUT"
+      else
+        echo "[$(date)] ERROR: Failed to attach $VOLUME_ID"
+        echo "[$(date)] AWS Error: $ATTACH_OUTPUT"
+        echo "[$(date)] Checking volume and instance state..."
+        aws ec2 describe-volumes --region "$AWS_REGION" --volume-ids "$VOLUME_ID" --query 'Volumes[0].[VolumeId,State,Attachments]' --output text 2>/dev/null || true
+        aws ec2 describe-instances --region "$AWS_REGION" --instance-ids "$INSTANCE_ID" --query 'Reservations[0].Instances[0].[InstanceId,State.Name]' --output text 2>/dev/null || true
+      fi
     fi
   done
 

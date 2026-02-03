@@ -246,52 +246,6 @@ resource "aws_kms_alias" "logs" {
 }
 
 # -----------------------------------------------
-# KMS Key for EBS Volume Encryption
-# -----------------------------------------------
-
-resource "aws_kms_key" "ebs_volumes" {
-  description             = "KMS key for ${var.solution_name} ${var.instance_name} EBS volume encryption"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow EC2 Service"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Action = [
-          "kms:Decrypt",
-          "kms:GenerateDataKey",
-          "kms:CreateGrant",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = local.common_tags
-}
-
-resource "aws_kms_alias" "ebs_volumes" {
-  name          = "alias/${var.solution_name}-${var.instance_name}-ebs"
-  target_key_id = aws_kms_key.ebs_volumes.key_id
-}
-
-# -----------------------------------------------
 # CloudWatch Log Group (Encrypted)
 # -----------------------------------------------
 
@@ -442,7 +396,8 @@ resource "aws_ebs_volume" "persistent" {
   size              = each.value.size
   type              = each.value.volume_type
   encrypted         = true
-  kms_key_id        = aws_kms_key.ebs_volumes.arn
+  # Use AWS-managed aws/ebs key (default) - no custom KMS key needed
+  # The aws/ebs key allows all EC2 instances to attach encrypted volumes
 
   tags = merge(
     local.common_tags,
