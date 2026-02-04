@@ -160,7 +160,7 @@ resource "aws_iam_role_policy" "route53_registration" {
         Action = [
           "route53:ChangeResourceRecordSets"
         ]
-        Resource = try(data.aws_route53_zone.internal[0].arn, "arn:aws:route53:::hostedzone/*")
+        Resource = data.aws_route53_zone.internal[0].arn
       }
     ]
   })
