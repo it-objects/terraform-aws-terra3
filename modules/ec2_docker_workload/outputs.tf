@@ -97,16 +97,6 @@ output "internal_dns_hostname" {
   value       = try(aws_route53_record.workload[0].name, null)
 }
 
-output "route53_updater_lambda_arn" {
-  description = "ARN of the Lambda function that updates Route53 DNS records on instance launch (if internal DNS enabled)"
-  value       = try(aws_lambda_function.route53_updater[0].arn, null)
-}
-
-output "route53_updater_lambda_name" {
-  description = "Name of the Lambda function that updates Route53 DNS records (if internal DNS enabled)"
-  value       = try(aws_lambda_function.route53_updater[0].function_name, null)
-}
-
 output "persistent_volume_ids" {
   description = "IDs of persistent EBS volumes (persisted across instance termination/restart)"
   value       = [for vol in aws_ebs_volume.persistent : vol.id]

@@ -5,6 +5,8 @@
 
 INSTANCE_NAME="${instance_name}"
 LOG_GROUP_NAME="${log_group_name}"
+ROUTE53_ZONE_ID="${route53_zone_id}"
+ROUTE53_RECORD_NAME="${route53_record_name}"
 
 echo "Starting EC2 Docker Workload initialization..."
 echo "Instance: $INSTANCE_NAME"
@@ -263,7 +265,47 @@ else
 fi
 
 # -----------------------------------------------
-# 8. Setup graceful shutdown handler
+# 8. Register with Route53 (for internal DNS service discovery)
+# -----------------------------------------------
+if [ -n "$ROUTE53_ZONE_ID" ] && [ -n "$ROUTE53_RECORD_NAME" ]; then
+  echo "[$(date)] Registering instance with Route53..."
+
+  # Get private IP address from IMDSv2
+  PRIVATE_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/local-ipv4" 2>/dev/null || echo "")
+
+  if [ -n "$PRIVATE_IP" ]; then
+    echo "[$(date)] Private IP: $PRIVATE_IP"
+    echo "[$(date)] Updating Route53 record: $ROUTE53_RECORD_NAME -> $PRIVATE_IP"
+
+    aws route53 change-resource-record-sets \
+      --hosted-zone-id "$ROUTE53_ZONE_ID" \
+      --region "$AWS_REGION" \
+      --change-batch "{
+        \"Changes\": [{
+          \"Action\": \"UPSERT\",
+          \"ResourceRecordSet\": {
+            \"Name\": \"$ROUTE53_RECORD_NAME\",
+            \"Type\": \"A\",
+            \"TTL\": 60,
+            \"ResourceRecords\": [{\"Value\": \"$PRIVATE_IP\"}]
+          }
+        }]
+      }" 2>/dev/null
+
+    if [ $? -eq 0 ]; then
+      echo "[$(date)] Successfully registered with Route53"
+    else
+      echo "[$(date)] WARNING: Failed to register with Route53"
+    fi
+  else
+    echo "[$(date)] WARNING: Could not determine private IP address"
+  fi
+else
+  echo "[$(date)] Route53 registration disabled (no ZONE_ID or RECORD_NAME)"
+fi
+
+# -----------------------------------------------
+# 9. Setup graceful shutdown handler
 # -----------------------------------------------
 echo "[$(date)] Setting up graceful shutdown handler..."
 cat > /usr/local/bin/docker-shutdown.sh <<'SHUTDOWN_EOF'
@@ -294,7 +336,7 @@ systemctl daemon-reload
 systemctl enable docker-shutdown.service
 
 # -----------------------------------------------
-# 9. Verification
+# 10. Verification
 # -----------------------------------------------
 echo "[$(date)] Waiting for container to be ready..."
 sleep 10

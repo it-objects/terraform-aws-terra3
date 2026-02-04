@@ -144,6 +144,31 @@ resource "aws_iam_role_policy" "ebs_volume_attachment" {
 }
 
 # -----------------------------------------------
+# Route53 DNS Registration Policy (for internal DNS)
+# -----------------------------------------------
+
+resource "aws_iam_role_policy" "route53_registration" {
+  count       = var.enable_internal_dns ? 1 : 0
+  name_prefix = "route53-registration-"
+  role        = aws_iam_role.docker_workload_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "route53:ChangeResourceRecordSets"
+        ]
+        Resource = try(data.aws_route53_zone.internal[0].arn, "arn:aws:route53:::hostedzone/*")
+      }
+    ]
+  })
+
+  depends_on = [aws_iam_role.docker_workload_role]
+}
+
+# -----------------------------------------------
 # Additional Policy Attachments (user-provided)
 # -----------------------------------------------
 
