@@ -41,6 +41,24 @@ variable "security_group_ids" {
   default     = []
 }
 
+variable "enable_bastion_access" {
+  description = "Allow bidirectional traffic with bastion host on mapped ports"
+  type        = bool
+  default     = false
+}
+
+variable "enable_ecs_access" {
+  description = "Allow bidirectional traffic with ECS tasks on mapped ports"
+  type        = bool
+  default     = true
+}
+
+variable "enable_loadbalancer_access" {
+  description = "Allow ingress from load balancer on mapped ports"
+  type        = bool
+  default     = false
+}
+
 variable "enable_internal_dns" {
   description = "Create DNS A records for service discovery via internal hostname. Zone is managed by Terra3 base module."
   type        = bool

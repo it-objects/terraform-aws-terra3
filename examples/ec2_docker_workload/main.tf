@@ -150,6 +150,9 @@ module "postgres_docker" {
     }
   ]
 
+  enable_bastion_access = true
+  enable_ecs_access     = true
+
   # Environment Variables
   # Important: PGDATA uses a subdirectory to avoid "directory not empty" errors
   # when EBS volumes contain lost+found directory from formatting

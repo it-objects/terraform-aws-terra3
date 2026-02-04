@@ -41,103 +41,118 @@ resource "aws_security_group_rule" "all_ingress" {
   }
 }
 
-# Allow ingress from bastion host on mapped ports (if bastion exists)
-resource "aws_security_group_rule" "bastion_to_mapped_ports" {
-  # Only create if: (1) we have port mappings, (2) using module-created SG, (3) bastion SG exists
-  count = try(
-    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 ? length(var.port_mappings) : 0,
-    0
+# Allow ingress from bastion host on mapped ports
+resource "aws_security_group_rule" "bastion_ingress" {
+  count = (
+    var.enable_bastion_access &&
+    length(var.port_mappings) > 0 &&
+    length(var.security_group_ids) == 0
+    ? length(var.port_mappings)
+    : 0
   )
 
   type                     = "ingress"
   from_port                = var.port_mappings[count.index].hostPort
   to_port                  = var.port_mappings[count.index].hostPort
   protocol                 = var.port_mappings[count.index].protocol
-  source_security_group_id = try(data.aws_security_group.bastion_host_ssm_sg.id, null)
+  source_security_group_id = data.aws_security_group.bastion_host_ssm_sg.id
   security_group_id        = aws_security_group.default[0].id
   description              = "Allow inbound traffic from bastion host on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
 
-  # Skip if bastion security group lookup fails (bastion not deployed)
   lifecycle {
     create_before_destroy = true
-    precondition {
-      condition     = try(data.aws_security_group.bastion_host_ssm_sg.id != null, false)
-      error_message = "Bastion host security group not found. Skipping bastion ingress rule."
-    }
   }
 }
 
-# Allow ingress from ECS tasks on mapped ports (if ecs service exists)
-resource "aws_security_group_rule" "ecs_task_to_mapped_ports" {
-  # Only create if: (1) we have port mappings, (2) using module-created SG, (3) ECS SG exists
-  count = try(
-    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 ? length(var.port_mappings) : 0,
-    0
+# Allow ingress from ECS tasks on mapped ports
+resource "aws_security_group_rule" "ecs_ingress" {
+  count = (
+    var.enable_ecs_access &&
+    length(var.port_mappings) > 0 &&
+    length(var.security_group_ids) == 0
+    ? length(var.port_mappings)
+    : 0
   )
 
   type                     = "ingress"
   from_port                = var.port_mappings[count.index].hostPort
   to_port                  = var.port_mappings[count.index].hostPort
   protocol                 = var.port_mappings[count.index].protocol
-  source_security_group_id = try(data.aws_security_group.ecs_task_sg.id, null)
+  source_security_group_id = data.aws_security_group.ecs_task_sg.id
   security_group_id        = aws_security_group.default[0].id
   description              = "Allow inbound traffic from ECS tasks on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
 
-  # Skip if ECS security group lookup fails (ECS not deployed)
   lifecycle {
     create_before_destroy = true
-    precondition {
-      condition     = try(data.aws_security_group.ecs_task_sg.id != null, false)
-      error_message = "ECS task security group not found. Skipping ECS ingress rule."
-    }
   }
 }
 
-# Allow egress to bastion host on mapped ports (if bastion exists)
-resource "aws_security_group_rule" "egress_to_bastion_host" {
-  count = try(
-    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 ? length(var.port_mappings) : 0,
-    0
+# Allow egress to bastion host on mapped ports
+resource "aws_security_group_rule" "bastion_egress" {
+  count = (
+    var.enable_bastion_access &&
+    length(var.port_mappings) > 0 &&
+    length(var.security_group_ids) == 0
+    ? length(var.port_mappings)
+    : 0
   )
 
   type                     = "egress"
   from_port                = var.port_mappings[count.index].hostPort
   to_port                  = var.port_mappings[count.index].hostPort
   protocol                 = var.port_mappings[count.index].protocol
-  source_security_group_id = try(data.aws_security_group.bastion_host_ssm_sg.id, null)
+  source_security_group_id = data.aws_security_group.bastion_host_ssm_sg.id
   security_group_id        = aws_security_group.default[0].id
   description              = "Allow outbound traffic to bastion host on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
 
   lifecycle {
     create_before_destroy = true
-    precondition {
-      condition     = try(data.aws_security_group.bastion_host_ssm_sg.id != null, false)
-      error_message = "Bastion host security group not found. Skipping bastion egress rule."
-    }
   }
 }
 
-# Allow egress to ECS tasks on mapped ports (if ECS service exists)
-resource "aws_security_group_rule" "egress_to_ecs_task" {
-  count = try(
-    length(var.port_mappings) > 0 && length(var.security_group_ids) == 0 ? length(var.port_mappings) : 0,
-    0
+# Allow egress to ECS tasks on mapped ports
+resource "aws_security_group_rule" "ecs_egress" {
+  count = (
+    var.enable_ecs_access &&
+    length(var.port_mappings) > 0 &&
+    length(var.security_group_ids) == 0
+    ? length(var.port_mappings)
+    : 0
   )
 
   type                     = "egress"
   from_port                = var.port_mappings[count.index].hostPort
   to_port                  = var.port_mappings[count.index].hostPort
   protocol                 = var.port_mappings[count.index].protocol
-  source_security_group_id = try(data.aws_security_group.ecs_task_sg.id, null)
+  source_security_group_id = data.aws_security_group.ecs_task_sg.id
   security_group_id        = aws_security_group.default[0].id
   description              = "Allow outbound traffic to ECS tasks on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
 
   lifecycle {
     create_before_destroy = true
-    precondition {
-      condition     = try(data.aws_security_group.ecs_task_sg.id != null, false)
-      error_message = "ECS task security group not found. Skipping ECS egress rule."
-    }
+  }
+}
+
+# Allow ingress from load balancer on mapped ports
+resource "aws_security_group_rule" "loadbalancer_ingress" {
+  count = (
+    var.enable_loadbalancer_access &&
+    length(var.port_mappings) > 0 &&
+    length(var.security_group_ids) == 0
+    ? length(var.port_mappings)
+    : 0
+  )
+
+  type                     = "ingress"
+  from_port                = var.port_mappings[count.index].hostPort
+  to_port                  = var.port_mappings[count.index].hostPort
+  protocol                 = var.port_mappings[count.index].protocol
+  source_security_group_id = data.aws_security_group.loadbalancer_sg.id
+  security_group_id        = aws_security_group.default[0].id
+  description              = "Allow inbound traffic from load balancer on port ${var.port_mappings[count.index].hostPort}/${var.port_mappings[count.index].protocol}"
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -386,6 +401,7 @@ resource "aws_autoscaling_group" "docker_workload" {
 # -----------------------------------------------
 # Create volumes that persist across instance termination
 # Only volumes with delete_on_termination = false are created here
+#tfsec:ignore:aws-ec2-volume-encryption-customer-key # AWS-managed encryption sufficient for persistent workload volumes
 resource "aws_ebs_volume" "persistent" {
   for_each = {
     for idx, vol in local.persistent_volumes :
