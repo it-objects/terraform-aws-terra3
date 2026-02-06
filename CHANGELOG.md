@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.60.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.59.0...v1.60.0) (2026-02-06)
+
+
+### Features
+
+* add a module to host persistent docker based workloads on EC2 ([#63](https://github.com/it-objects/terraform-aws-terra3/issues/63)) ([81d433b](https://github.com/it-objects/terraform-aws-terra3/commit/81d433b52c0717cf2c7637e5921d04a255e96b0a))
+
 ## [1.59.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.58.1...v1.59.0) (2025-12-03)
 
 
