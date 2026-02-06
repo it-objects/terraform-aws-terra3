@@ -275,6 +275,28 @@ resource "aws_ssm_parameter" "enable_custom_domain" {
   value = var.enable_custom_domain
 }
 
+# -----------------------------------------------
+# Internal Service DNS Zone
+# -----------------------------------------------
+# Creates a Route53 private hosted zone for internal service discovery
+# Shared by all ec2_docker_workload instances
+module "internal_service_dns" {
+  count = var.enable_internal_service_dns && !var.disable_vpc_creation ? 1 : 0
+
+  source = "./modules/internal_service_dns"
+
+  enable        = var.enable_internal_service_dns
+  vpc_id        = local.vpc_id
+  solution_name = var.solution_name
+  zone_name     = var.internal_service_dns_zone_name != "" ? var.internal_service_dns_zone_name : ""
+  tags = {
+    ManagedBy = "Terraform"
+    Solution  = var.solution_name
+  }
+
+  depends_on = [module.vpc]
+}
+
 locals {
   is_spa_enable                                                    = try("${module.lambda_at_edge[0].lambda_at_edge_arn}:${module.lambda_at_edge[0].lambda_at_edge_version}", "")
   enable_s3_static_website_bucket_cf_lambda_at_edge_origin_request = var.enable_spa ? local.is_spa_enable : var.s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn
