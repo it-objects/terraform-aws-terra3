@@ -317,6 +317,10 @@ module "cloudfront_cdn" {
   calculated_zone_id           = var.enable_custom_domain ? module.dns_and_certificates[0].hosted_zone_id : ""
   create_route53_domain_record = var.enable_custom_domain
 
+  cf_alb_origin_ssl_protocols        = length(module.l7_loadbalancer) == 0 ? null : var.cf_alb_origin_ssl_protocols
+  cf_alb_origin_keepalive_timeout    = length(module.l7_loadbalancer) == 0 ? null : var.cf_alb_origin_keepalive_timeout
+  cf_alb_origin_read_timeout_seconds = length(module.l7_loadbalancer) == 0 ? null : var.cf_alb_origin_read_timeout_seconds
+
   enable_cf_logs         = var.enable_cf_logs
   cf_logs_expiration     = var.cf_logs_expiration
   cf_logs_v2_destination = var.cf_logs_v2_destination

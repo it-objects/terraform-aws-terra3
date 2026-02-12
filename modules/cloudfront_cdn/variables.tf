@@ -13,6 +13,24 @@ variable "origin_alb_url" {
   default = ""
 }
 
+variable "cf_alb_origin_ssl_protocols" {
+  description = "SSL/TLS protocols CloudFront is allowed to use when connecting to the origin. Default restricts to TLS 1.2 only."
+  type        = list(string)
+  default     = ["TLSv1.2"]
+}
+
+variable "cf_alb_origin_keepalive_timeout" {
+  description = "CloudFront custom origin (ALB) keepalive timeout, in seconds. Controls how long CloudFront keeps an idle connection open to the ALB origin before closing it. Set to null to use the provider/resource default."
+  type        = number
+  default     = null
+}
+
+variable "cf_alb_origin_read_timeout_seconds" {
+  description = "CloudFront custom origin (ALB) read timeout, in seconds. Controls how long CloudFront waits for a response from the ALB before timing out. Set to null to use the provider/resource default."
+  type        = number
+  default     = null
+}
+
 variable "domain" {
   type        = string
   description = "DNS configuration: Domain name. E.g. aws-sandbox.terra3.io"
