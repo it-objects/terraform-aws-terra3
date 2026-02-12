@@ -18,10 +18,6 @@ resource "aws_route53_zone" "internal" {
       Name = "${var.solution_name}-internal-zone"
     }
   )
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # Export zone ID to SSM Parameter Store for discovery by ec2_docker_workload modules
