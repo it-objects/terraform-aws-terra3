@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.61.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.60.0...v1.61.0) (2026-02-12)
+
+
+### Features
+
+* add parameters to CloudFront ALB origin configuration ([52fda17](https://github.com/it-objects/terraform-aws-terra3/commit/52fda17ce1ad748ca10a48d677f9b9a9c3c53c25))
+
 ## [1.60.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.59.0...v1.60.0) (2026-02-06)
 
 
