@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.61.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.61.0...v1.61.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* **internal_service_dns:** disable internal service DNS by default and remove lifecycle protection ([d0f6771](https://github.com/it-objects/terraform-aws-terra3/commit/d0f67710d5ec758ae8de707c05b1dff1a17e2425))
+
 ## [1.61.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.60.0...v1.61.0) (2026-02-12)
 
 
