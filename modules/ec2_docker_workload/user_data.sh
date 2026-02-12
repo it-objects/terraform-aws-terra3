@@ -229,7 +229,32 @@ for DEVICE in $ALL_DEVICES; do
 done
 
 # -----------------------------------------------
-# 6. Pull Docker image
+# 6. Authenticate with ECR (if enabled)
+# -----------------------------------------------
+if [ "${enable_ecr_access}" = "true" ] || [ "${enable_ecr_access}" = "True" ]; then
+  echo "[$(date)] ECR access enabled, authenticating with ECR..."
+
+  # Extract registry URL from image URI (everything before first /)
+  REGISTRY_URL=$(echo "${docker_image_uri}" | cut -d'/' -f1)
+
+  if [[ "$REGISTRY_URL" =~ dkr\.ecr\. ]]; then
+    echo "[$(date)] Detected ECR registry: $REGISTRY_URL"
+
+    if aws ecr get-login-password --region "$AWS_REGION" 2>/dev/null | \
+       docker login --username AWS --password-stdin "$REGISTRY_URL" 2>/dev/null; then
+      echo "[$(date)] Successfully authenticated with ECR"
+    else
+      echo "[$(date)] ERROR: Failed to authenticate with ECR, but continuing..."
+    fi
+  else
+    echo "[$(date)] Image URI does not appear to be from ECR, skipping ECR authentication"
+  fi
+else
+  echo "[$(date)] ECR access not enabled"
+fi
+
+# -----------------------------------------------
+# 7. Pull Docker image
 # -----------------------------------------------
 echo "[$(date)] Pulling Docker image: ${docker_image_uri}..."
 if docker pull "${docker_image_uri}"; then
@@ -239,7 +264,7 @@ else
 fi
 
 # -----------------------------------------------
-# 7. Run Docker container
+# 8. Run Docker container
 # -----------------------------------------------
 echo "[$(date)] Starting Docker container..."
 
@@ -265,7 +290,7 @@ else
 fi
 
 # -----------------------------------------------
-# 8. Register with Route53 (for internal DNS service discovery)
+# 9. Register with Route53 (for internal DNS service discovery)
 # -----------------------------------------------
 if [ -n "$ROUTE53_ZONE_ID" ] && [ -n "$ROUTE53_RECORD_NAME" ]; then
   echo "[$(date)] Registering instance with Route53..."
@@ -305,7 +330,7 @@ else
 fi
 
 # -----------------------------------------------
-# 9. Setup graceful shutdown handler
+# 10. Setup graceful shutdown handler
 # -----------------------------------------------
 echo "[$(date)] Setting up graceful shutdown handler..."
 cat > /usr/local/bin/docker-shutdown.sh <<'SHUTDOWN_EOF'
@@ -336,7 +361,7 @@ systemctl daemon-reload
 systemctl enable docker-shutdown.service
 
 # -----------------------------------------------
-# 10. Verification
+# 11. Verification
 # -----------------------------------------------
 echo "[$(date)] Waiting for container to be ready..."
 sleep 10

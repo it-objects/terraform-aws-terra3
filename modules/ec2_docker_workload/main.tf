@@ -292,6 +292,7 @@ locals {
     expected_devices     = join(" ", local.volume_device_names)
     route53_zone_id      = local.internal_dns_zone_id
     route53_record_name  = local.internal_dns_record_name
+    enable_ecr_access    = var.enable_ecr_access
   }))
 }
 
