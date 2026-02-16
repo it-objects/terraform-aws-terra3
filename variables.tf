@@ -174,6 +174,12 @@ variable "alb_logs_expiration" {
   default     = 90
 }
 
+variable "alb_idle_timeout" {
+  description = "The time in seconds that the ALB connection is allowed to be idle. Valid range is 1-4000 seconds."
+  type        = number
+  default     = 60
+}
+
 variable "enable_alb_deletion_protection" {
   type        = bool
   description = "Enable or disable deletion protection of ALB."

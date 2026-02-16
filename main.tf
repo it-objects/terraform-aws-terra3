@@ -216,6 +216,7 @@ module "l7_loadbalancer" {
 
   enable_alb_logs            = var.enable_alb_logs
   alb_logs_expiration        = var.alb_logs_expiration
+  alb_idle_timeout           = var.alb_idle_timeout
   enable_deletion_protection = var.enable_alb_deletion_protection
 
   enable_custom_domain = var.enable_custom_domain

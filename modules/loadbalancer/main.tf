@@ -12,6 +12,7 @@ resource "aws_lb" "this" {
 
   enable_deletion_protection = var.enable_deletion_protection
   drop_invalid_header_fields = true
+  idle_timeout               = var.alb_idle_timeout
 
   access_logs {
     bucket  = try(module.log_bucket[0].s3_bucket_id, "")

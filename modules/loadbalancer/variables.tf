@@ -53,3 +53,9 @@ variable "alb_logs_expiration" {
   type        = number
   default     = 90
 }
+
+variable "alb_idle_timeout" {
+  description = "The time in seconds that the ALB connection is allowed to be idle. Valid range is 1-4000 seconds."
+  type        = number
+  default     = 60
+}
