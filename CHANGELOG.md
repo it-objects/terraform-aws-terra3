@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.62.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.61.1...v1.62.0) (2026-02-16)
+
+
+### Features
+
+* add ALB idle timeout configuration variable ([e4ffecf](https://github.com/it-objects/terraform-aws-terra3/commit/e4ffecf09d8fb5e4e63d386741f9bac3ab8066d6))
+
 ### [1.61.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.61.0...v1.61.1) (2026-02-12)
 
 
