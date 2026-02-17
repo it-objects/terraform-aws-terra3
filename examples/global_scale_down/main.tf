@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  solution_name = "scale"
+  solution_name = "findings"
 }
 
 module "terra3_examples" {
@@ -19,7 +19,7 @@ module "terra3_examples" {
   create_bastion_host  = true
 
   # dependency: required for downloading container images
-  nat = "NAT_INSTANCES"
+  nat = "FCK_NAT_INSTANCES"
 
   # Please make sure to enable only one feature at a time.
   # Either enable_environment_hibernation_sleep_schedule OR enable_autoscaling in app_components.

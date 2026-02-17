@@ -81,7 +81,7 @@
 
         var token = document.getElementById("ScaleDownToken").value;
 
-        var apiEndpoint = "${status_api_endpoint}";
+        var apiEndpoint = "/admin-terra3/api/status";
         fetch(apiEndpoint)
           .then((response) => response.json())
           .then((data) => {
@@ -109,7 +109,7 @@
           return false; // Prevent form submission
         }
 
-        var apiEndpoint = "${scale_down_api_endpoint}";
+        var apiEndpoint = "/admin-terra3/api/scale-down";
         var url = apiEndpoint + "?token=" + token;
         fetch(url)
           .then((response) => response.json())
@@ -142,7 +142,7 @@
         }
 
         //var token = document.getElementById("token").value;
-        var apiEndpoint = "${scale_up_api_endpoint}";
+        var apiEndpoint = "/admin-terra3/api/scale-up";
         var url = apiEndpoint + "?token=" + token;
         fetch(url)
           .then((response) => response.json())

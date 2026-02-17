@@ -154,6 +154,24 @@ variable "enable_environment_hibernation_admin_website" {
   default     = false
 }
 
+variable "scale_up_lambda_function_url" {
+  description = "Lambda Function URL for scale up (used as CloudFront origin)."
+  type        = string
+  default     = ""
+}
+
+variable "scale_down_lambda_function_url" {
+  description = "Lambda Function URL for scale down (used as CloudFront origin)."
+  type        = string
+  default     = ""
+}
+
+variable "status_lambda_function_url" {
+  description = "Lambda Function URL for status (used as CloudFront origin)."
+  type        = string
+  default     = ""
+}
+
 variable "enable_cf_logs" {
   type        = bool
   description = "Select to enable storing CloudFront logs in s3 bucket."
