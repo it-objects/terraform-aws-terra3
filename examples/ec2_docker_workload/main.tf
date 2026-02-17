@@ -19,10 +19,6 @@ terraform {
   }
 }
 
-provider "aws" {
-  region = var.aws_region
-}
-
 locals {
   solution_name = var.solution_name
 }
@@ -49,6 +45,8 @@ module "terra3_examples" {
 
   create_bastion_host = true
   enable_ecs_exec     = true # Required for app_components with enable_ecs_exec
+
+  enable_internal_service_dns = true
 
   # App component for testing PostgreSQL connectivity
   app_components = {
@@ -138,8 +136,10 @@ module "postgres_docker" {
   solution_name = local.solution_name
   instance_name = "postgres"
 
+  enable_ecr_access = true
+
   # Docker Configuration
-  docker_image_uri = "postgres:15-alpine"
+  docker_image_uri = "531874807515.dkr.ecr.eu-central-1.amazonaws.com/postgres:17"
 
   # Port Mappings
   port_mappings = [

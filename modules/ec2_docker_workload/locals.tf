@@ -53,6 +53,12 @@ locals {
   # Volumes must be created in the same AZ as the instance
   volume_az = try(data.aws_subnet.private_first.availability_zone, "")
 
+  # Extract ECR repository name from docker_image_uri if it's an ECR image
+  # ECR format: 123456789.dkr.ecr.us-east-1.amazonaws.com/repo-name:tag
+  # Public format: postgres:15 or nginx:latest
+  is_ecr_image  = can(regex("dkr\\.ecr\\.", var.docker_image_uri))
+  ecr_repo_name = local.is_ecr_image ? split("/", split(":", var.docker_image_uri)[0])[1] : ""
+
   # -----------------------------------------------
   # ALB Configuration
   # -----------------------------------------------
