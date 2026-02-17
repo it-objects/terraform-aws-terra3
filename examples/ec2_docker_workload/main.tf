@@ -126,6 +126,8 @@ module "container_psql_test" {
   depends_on = [aws_ssm_parameter.postgres_password]
 }
 
+data "aws_caller_identity" "current" {}
+
 # -----------------------------------------------
 # EC2 Docker Workload - PostgreSQL Database
 # -----------------------------------------------
@@ -139,7 +141,7 @@ module "postgres_docker" {
   enable_ecr_access = true
 
   # Docker Configuration
-  docker_image_uri = "531874807515.dkr.ecr.eu-central-1.amazonaws.com/postgres:17"
+  docker_image_uri = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/postgres:17"
 
   # Port Mappings
   port_mappings = [
