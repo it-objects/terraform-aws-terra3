@@ -100,6 +100,12 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "map_secrets" {
+  description = "Map of environment variable names to secret ARNs. Supports both SSM Parameter Store (arn:aws:ssm:...) and AWS Secrets Manager (arn:aws:secretsmanager:...) secrets. Secrets are fetched at runtime and injected as environment variables."
+  type        = map(string)
+  default     = {}
+}
+
 variable "ebs_volumes" {
   description = "List of EBS volumes to create and mount to the Docker container."
   type = list(object({

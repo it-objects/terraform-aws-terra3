@@ -20,6 +20,14 @@ locals {
     "-e ${key}=\"${replace(value, "\"", "\\\\")}\"" # Escape quotes in values
   ])
 
+  # Secrets configuration for user data script
+  # Converts map of env_var_name -> ssm_arn to JSON for passing to script
+  docker_secrets_json = jsonencode(var.map_secrets)
+
+  # Separate secrets by type for IAM policies
+  ssm_secret_arns = [for arn in var.map_secrets : arn if can(regex("arn:aws:ssm:", arn))]
+  sm_secret_arns  = [for arn in var.map_secrets : arn if can(regex("arn:aws:secretsmanager:", arn))]
+
   # Port mappings for Docker run command
   docker_port_args = join(" ", [
     for pm in var.port_mappings :

@@ -73,14 +73,14 @@ module "terra3_examples" {
 
 resource "aws_ssm_parameter" "postgres_password" {
   name        = "/${local.solution_name}/postgres/password"
-  description = "PostgreSQL password for ECS tasks"
+  description = "PostgreSQL password for EC2 Docker workload"
   type        = "SecureString"
   value       = var.postgres_password
   overwrite   = true
 
   tags = {
     Name    = "${local.solution_name}-postgres-password"
-    Purpose = "PostgreSQL password for ECS tasks"
+    Purpose = "PostgreSQL password for EC2 Docker workload"
   }
 }
 
@@ -159,10 +159,15 @@ module "postgres_docker" {
   # Important: PGDATA uses a subdirectory to avoid "directory not empty" errors
   # when EBS volumes contain lost+found directory from formatting
   environment_variables = {
-    "POSTGRES_USER"     = var.postgres_user
-    "POSTGRES_PASSWORD" = var.postgres_password
-    "POSTGRES_DB"       = var.postgres_db
-    "PGDATA"            = "/var/lib/postgresql/data/db" # Subdirectory within mount
+    "POSTGRES_USER" = var.postgres_user
+    "POSTGRES_DB"   = var.postgres_db
+    "PGDATA"        = "/var/lib/postgresql/data/db" # Subdirectory within mount
+  }
+
+  # Secrets from SSM Parameter Store
+  # Password is fetched at runtime and injected as environment variable
+  map_secrets = {
+    "POSTGRES_PASSWORD" = aws_ssm_parameter.postgres_password.arn
   }
 
   # EBS Volume Configuration
@@ -188,7 +193,10 @@ module "postgres_docker" {
   # This module automatically creates DNS A records for service discovery
 
   # Explicit dependency to ensure VPC and subnets are created first
-  depends_on = [module.terra3_examples]
+  depends_on = [
+    module.terra3_examples,
+    aws_ssm_parameter.postgres_password
+  ]
 }
 
 module "nginx_docker" {

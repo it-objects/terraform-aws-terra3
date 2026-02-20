@@ -8,7 +8,7 @@
 
 resource "aws_security_group" "default" {
   count       = length(var.security_group_ids) == 0 ? 1 : 0
-  name_prefix = "${var.solution_name}-${var.instance_name}-"
+  name        = "${var.solution_name}-${var.instance_name}-sg"
   description = "Security group for ${var.solution_name} ${var.instance_name} Docker workload"
   vpc_id      = data.aws_ssm_parameter.vpc_id.value
 
@@ -285,6 +285,7 @@ locals {
     docker_env_vars      = local.docker_env_vars
     docker_port_args     = local.docker_port_args
     docker_volume_mounts = local.docker_volume_mounts
+    docker_secrets_json  = local.docker_secrets_json
     instance_name        = var.instance_name
     log_group_name       = aws_cloudwatch_log_group.docker_logs.name
     solution_name        = var.solution_name
@@ -301,7 +302,7 @@ locals {
 # -----------------------------------------------
 
 resource "aws_launch_template" "docker_workload" {
-  name_prefix            = "${var.solution_name}-${var.instance_name}-"
+  name                   = "${var.solution_name}-${var.instance_name}-template"
   image_id               = data.aws_ami.al2023.id
   instance_type          = var.instance_type
   vpc_security_group_ids = local.security_groups
@@ -395,7 +396,12 @@ resource "aws_autoscaling_group" "docker_workload" {
 
   depends_on = [
     aws_iam_role_policy.cloudwatch_logs,
-    aws_iam_role_policy_attachment.ssm_managed_instance_core
+    aws_iam_role_policy_attachment.ssm_managed_instance_core,
+    aws_iam_role_policy.ebs_volume_attachment,
+    aws_iam_role_policy.secrets_access,
+    aws_iam_role_policy.route53_registration,
+    aws_iam_role_policy.ecr_access,
+    aws_iam_role_policy_attachment.additional_policies
   ]
 }
 
@@ -404,6 +410,8 @@ resource "aws_autoscaling_group" "docker_workload" {
 # -----------------------------------------------
 # Create volumes that persist across instance termination
 # Only volumes with delete_on_termination = false are created here
+# Volumes are attached via user data script, not Terraform aws_volume_attachment
+# prevent_destroy ensures Terraform won't accidentally delete persistent data
 #tfsec:ignore:aws-ec2-volume-encryption-customer-key # AWS-managed encryption sufficient for persistent workload volumes
 resource "aws_ebs_volume" "persistent" {
   for_each = {
@@ -489,7 +497,7 @@ resource "aws_backup_vault" "docker_workload" {
   count         = var.enable_backup ? 1 : 0
   name          = "${var.solution_name}-${var.instance_name}-vault"
   kms_key_arn   = aws_kms_key.backup[0].arn
-  force_destroy = false
+  force_destroy = true
 
   tags = merge(
     local.common_tags,
@@ -522,8 +530,8 @@ resource "aws_kms_alias" "backup" {
 
 # IAM Role for AWS Backup Service
 resource "aws_iam_role" "backup_service_role" {
-  count       = var.enable_backup ? 1 : 0
-  name_prefix = "${var.solution_name}-${var.instance_name}-backup-"
+  count = var.enable_backup ? 1 : 0
+  name  = "${var.solution_name}-${var.instance_name}-backup-service-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -549,9 +557,9 @@ resource "aws_iam_role_policy_attachment" "backup_service_policy" {
 
 # Additional policy for EBS snapshot permissions
 resource "aws_iam_role_policy" "backup_ebs_policy" {
-  count       = var.enable_backup ? 1 : 0
-  name_prefix = "backup-ebs-"
-  role        = aws_iam_role.backup_service_role[0].id
+  count = var.enable_backup ? 1 : 0
+  name  = "${var.solution_name}-${var.instance_name}-backup-ebs"
+  role  = aws_iam_role.backup_service_role[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"

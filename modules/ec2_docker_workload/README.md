@@ -161,11 +161,110 @@ environment_variables = {
   "DATABASE_HOST"   = "postgres.example.com"
   "DATABASE_PORT"   = "5432"
   "LOG_LEVEL"       = "debug"
-  "API_KEY"         = "secret-key-here"  # Consider using Secrets Manager
+  "API_KEY"         = "secret-key-here"  # Consider using map_secrets instead
 }
 ```
 
-## AWS Backup Configuration
+## Secrets Management
+
+Inject secrets from AWS Secrets Manager or SSM Parameter Store as environment variables. Secrets are fetched at runtime during container startup and injected securely.
+
+### Using SSM Parameter Store
+
+Store secrets in SSM Parameter Store with SecureString type:
+
+```hcl
+# Create SSM Parameter with secret
+resource "aws_ssm_parameter" "db_password" {
+  name        = "/myapp/postgres/password"
+  description = "PostgreSQL password"
+  type        = "SecureString"
+  value       = var.postgres_password
+}
+
+# Reference in ec2_docker_workload
+module "postgres_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name = "myapp"
+  instance_name = "postgres"
+
+  # Regular environment variables
+  environment_variables = {
+    "POSTGRES_USER" = "appuser"
+    "POSTGRES_DB"   = "appdb"
+  }
+
+  # Secrets from SSM Parameter Store
+  map_secrets = {
+    "POSTGRES_PASSWORD" = aws_ssm_parameter.db_password.arn
+  }
+}
+```
+
+### Using AWS Secrets Manager
+
+Store secrets in Secrets Manager:
+
+```hcl
+# Create Secrets Manager secret
+resource "aws_secretsmanager_secret" "db_password" {
+  name_prefix = "myapp-postgres-password-"
+}
+
+resource "aws_secretsmanager_secret_version" "db_password" {
+  secret_id       = aws_secretsmanager_secret.db_password.id
+  secret_string   = var.postgres_password
+}
+
+# Reference in ec2_docker_workload
+module "postgres_docker" {
+  source = "./modules/ec2_docker_workload"
+
+  solution_name = "myapp"
+  instance_name = "postgres"
+
+  environment_variables = {
+    "POSTGRES_USER" = "appuser"
+    "POSTGRES_DB"   = "appdb"
+  }
+
+  # Secrets from Secrets Manager
+  map_secrets = {
+    "POSTGRES_PASSWORD" = aws_secretsmanager_secret.db_password.arn
+  }
+}
+```
+
+### Multiple Secrets
+
+Map multiple secrets to different environment variables:
+
+```hcl
+map_secrets = {
+  "POSTGRES_PASSWORD"  = aws_ssm_parameter.db_password.arn
+  "API_KEY"            = aws_secretsmanager_secret.api_key.arn
+  "JWT_SECRET"         = aws_ssm_parameter.jwt_secret.arn
+}
+```
+
+### How It Works
+
+1. **Runtime Fetching:** Secrets are fetched during container startup (in user data script)
+2. **Automatic Detection:** Script detects ARN type (SSM vs Secrets Manager) and fetches accordingly
+3. **Environment Injection:** Fetched values are injected as Docker environment variables
+4. **IAM Permissions:** Module automatically grants EC2 instance IAM role permissions to read secrets
+5. **Encryption:** Secrets remain encrypted in transit and at rest
+
+### Security Best Practices
+
+- **Never hardcode secrets** in `environment_variables` - use `map_secrets` instead
+- **Use SecureString type** for SSM parameters (encrypted at rest)
+- **Rotate secrets regularly** using AWS Secrets Manager rotation
+- **Audit access** via CloudTrail for compliance
+- **Limit IAM permissions** - module grants only necessary permissions
+
+
 
 Enable automated, scheduled backups for persistent EBS volumes using AWS Backup service:
 

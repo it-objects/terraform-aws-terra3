@@ -7,7 +7,7 @@
 # -----------------------------------------------
 
 resource "aws_iam_role" "docker_workload_role" {
-  name_prefix = "${var.solution_name}-${var.instance_name}-role"
+  name = "${var.solution_name}-${var.instance_name}-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -35,8 +35,8 @@ resource "aws_iam_role" "docker_workload_role" {
 # -----------------------------------------------
 
 resource "aws_iam_instance_profile" "docker_workload_profile" {
-  name_prefix = "${var.solution_name}-${var.instance_name}-"
-  role        = aws_iam_role.docker_workload_role.name
+  name = "${var.solution_name}-${var.instance_name}-profile"
+  role = aws_iam_role.docker_workload_role.name
 }
 
 # -----------------------------------------------
@@ -54,8 +54,8 @@ resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
 
 #tfsec:ignore:aws-iam-no-policy-wildcards # CloudWatch log group ARN requires :* for log stream operations
 resource "aws_iam_role_policy" "cloudwatch_logs" {
-  name_prefix = "cloudwatch-logs-"
-  role        = aws_iam_role.docker_workload_role.id
+  name = "${var.solution_name}-${var.instance_name}-cloudwatch-logs"
+  role = aws_iam_role.docker_workload_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -83,9 +83,9 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
 # -----------------------------------------------
 
 resource "aws_iam_role_policy" "ecr_access" {
-  count       = var.enable_ecr_access ? 1 : 0
-  name_prefix = "ecr-access-"
-  role        = aws_iam_role.docker_workload_role.id
+  count = var.enable_ecr_access ? 1 : 0
+  name  = "${var.solution_name}-${var.instance_name}-ecr-access"
+  role  = aws_iam_role.docker_workload_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -118,8 +118,8 @@ resource "aws_iam_role_policy" "ecr_access" {
 # -----------------------------------------------
 
 resource "aws_iam_role_policy" "ebs_volume_attachment" {
-  name_prefix = "ebs-attachment-"
-  role        = aws_iam_role.docker_workload_role.id
+  name = "${var.solution_name}-${var.instance_name}-ebs-attachment"
+  role = aws_iam_role.docker_workload_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -152,9 +152,9 @@ resource "aws_iam_role_policy" "ebs_volume_attachment" {
 # -----------------------------------------------
 
 resource "aws_iam_role_policy" "route53_registration" {
-  count       = var.enable_internal_dns ? 1 : 0
-  name_prefix = "route53-registration-"
-  role        = aws_iam_role.docker_workload_role.id
+  count = var.enable_internal_dns ? 1 : 0
+  name  = "${var.solution_name}-${var.instance_name}-route53-registration"
+  role  = aws_iam_role.docker_workload_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -170,6 +170,57 @@ resource "aws_iam_role_policy" "route53_registration" {
   })
 
   depends_on = [aws_iam_role.docker_workload_role]
+}
+
+# -----------------------------------------------
+# Secrets Access Policy (SSM Parameter Store & Secrets Manager)
+# -----------------------------------------------
+
+resource "aws_iam_role_policy" "secrets_access" {
+  count = length(var.map_secrets) > 0 ? 1 : 0
+  name  = "${var.solution_name}-${var.instance_name}-secrets-access"
+  role  = aws_iam_role.docker_workload_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = concat(
+      length(local.ssm_secret_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "ssm:GetParameter",
+            "ssm:GetParameters",
+            "ssm:DescribeParameters"
+          ]
+          Resource = local.ssm_secret_arns
+        }
+      ] : [],
+      length(local.ssm_secret_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "kms:Decrypt",
+            "kms:DescribeKey"
+          ]
+          Resource = "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+          Condition = {
+            StringEquals = {
+              "kms:ViaService" = "ssm.${data.aws_region.current.name}.amazonaws.com"
+            }
+          }
+        }
+      ] : [],
+      length(local.sm_secret_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "secretsmanager:GetSecretValue"
+          ]
+          Resource = local.sm_secret_arns
+        }
+      ] : []
+    )
+  })
 }
 
 # -----------------------------------------------

@@ -24,6 +24,14 @@ trap 'echo "[$(date)] ERROR: Script encountered an error at line $LINENO"' ERR
 AWS_REGION=$(ec2-metadata --availability-zone 2>/dev/null | cut -d' ' -f2 | sed 's/[a-z]$//' || echo "us-east-1")
 echo "[$(date)] AWS Region: $AWS_REGION"
 
+# Debug: Check AWS credentials and IAM role
+echo "[$(date)] DEBUG: Checking AWS credentials and IAM role..."
+if aws sts get-caller-identity --region "$AWS_REGION" 2>&1 | head -5; then
+  echo "[$(date)] DEBUG: AWS credentials are available"
+else
+  echo "[$(date)] WARNING: Could not verify AWS credentials"
+fi
+
 # -----------------------------------------------
 # 1. Update system packages
 # -----------------------------------------------
@@ -70,21 +78,31 @@ else
 
   # Find volumes tagged for this workload and attach them
   echo "[$(date)] Querying for persistent volumes tagged with WorkloadInstance=${instance_name}..."
+  echo "[$(date)] DEBUG: Running: aws ec2 describe-volumes --region \"$AWS_REGION\" --filters \"Name=tag:WorkloadInstance,Values=${instance_name}\" \"Name=tag:Persistent,Values=true\" --query 'Volumes[*].[VolumeId,Tags[?Key==\`DeviceName\`].Value|[0]]' --output text"
 
-  aws ec2 describe-volumes \
+  VOLUMES_OUTPUT=$(aws ec2 describe-volumes \
     --region "$AWS_REGION" \
     --filters "Name=tag:WorkloadInstance,Values=${instance_name}" \
              "Name=tag:Persistent,Values=true" \
     --query 'Volumes[*].[VolumeId,Tags[?Key==`DeviceName`].Value|[0]]' \
-    --output text 2>/dev/null | while read VOLUME_ID DEVICE_NAME; do
+    --output text 2>&1)
+
+  VOLUMES_EXIT_CODE=$?
+  echo "[$(date)] DEBUG: describe-volumes exit code: $VOLUMES_EXIT_CODE"
+  echo "[$(date)] DEBUG: Volumes output: $VOLUMES_OUTPUT"
+
+  echo "$VOLUMES_OUTPUT" | while read VOLUME_ID DEVICE_NAME; do
 
     # Skip if empty line
     if [ -z "$VOLUME_ID" ]; then
+      echo "[$(date)] DEBUG: Skipping empty volume entry"
       continue
     fi
 
     VOLUME_ID=$(echo "$VOLUME_ID" | xargs 2>/dev/null)
     DEVICE_NAME=$(echo "$DEVICE_NAME" | xargs 2>/dev/null)
+
+    echo "[$(date)] DEBUG: Processing volume - ID: $VOLUME_ID, Device: $DEVICE_NAME"
 
     if [ -n "$VOLUME_ID" ] && [ -n "$DEVICE_NAME" ]; then
       echo "[$(date)] Found volume $VOLUME_ID, attaching to $DEVICE_NAME..."
@@ -95,6 +113,8 @@ else
         --volume-ids "$VOLUME_ID" \
         --query 'Volumes[0].Attachments[0].InstanceId' \
         --output text 2>/dev/null)
+
+      echo "[$(date)] DEBUG: Volume $VOLUME_ID currently attached to: $ATTACHED_INSTANCE"
 
       if [ -n "$ATTACHED_INSTANCE" ] && [ "$ATTACHED_INSTANCE" != "None" ] && [ "$ATTACHED_INSTANCE" != "$INSTANCE_ID" ]; then
         echo "[$(date)] Volume $VOLUME_ID is still attached to instance $ATTACHED_INSTANCE, detaching first..."
@@ -111,6 +131,8 @@ else
             --query 'Volumes[0].State' \
             --output text 2>/dev/null)
 
+          echo "[$(date)] DEBUG: Volume state check $i/12: $STATE"
+
           if [ "$STATE" = "available" ]; then
             echo "[$(date)] Volume is now available"
             break
@@ -122,13 +144,18 @@ else
 
       # Now attach to this instance
       echo "[$(date)] Attaching $VOLUME_ID to $DEVICE_NAME..."
+      echo "[$(date)] DEBUG: Running: aws ec2 attach-volume --region \"$AWS_REGION\" --volume-id \"$VOLUME_ID\" --instance-id \"$INSTANCE_ID\" --device \"$DEVICE_NAME\""
+
       ATTACH_OUTPUT=$(aws ec2 attach-volume \
         --region "$AWS_REGION" \
         --volume-id "$VOLUME_ID" \
         --instance-id "$INSTANCE_ID" \
         --device "$DEVICE_NAME" 2>&1)
 
-      if [ $? -eq 0 ]; then
+      ATTACH_EXIT_CODE=$?
+      echo "[$(date)] DEBUG: attach-volume exit code: $ATTACH_EXIT_CODE"
+
+      if [ $ATTACH_EXIT_CODE -eq 0 ]; then
         echo "[$(date)] Attached $VOLUME_ID successfully"
         echo "[$(date)] Attachment details: $ATTACH_OUTPUT"
       else
@@ -229,22 +256,158 @@ for DEVICE in $ALL_DEVICES; do
 done
 
 # -----------------------------------------------
-# 6. Authenticate with ECR (if enabled)
+# 6. Fetch Secrets from SSM Parameter Store and Secrets Manager
 # -----------------------------------------------
+echo "[$(date)] Processing secrets from SSM Parameter Store and Secrets Manager..."
+
+SECRETS_JSON='${docker_secrets_json}'
+DOCKER_SECRET_ENV_VARS=""
+
+echo "[$(date)] DEBUG: SECRETS_JSON = $SECRETS_JSON"
+
+if [ "$SECRETS_JSON" != "{}" ] && [ -n "$SECRETS_JSON" ]; then
+  echo "[$(date)] Found secrets to fetch..."
+  echo "[$(date)] DEBUG: Checking IAM permissions..."
+
+  # Test IAM permissions by checking caller identity
+  CALLER_IDENTITY=$(aws sts get-caller-identity --region "$AWS_REGION" 2>&1)
+  CALLER_EXIT_CODE=$?
+  echo "[$(date)] DEBUG: Caller identity check exit code: $CALLER_EXIT_CODE"
+  if [ $CALLER_EXIT_CODE -eq 0 ]; then
+    echo "[$(date)] DEBUG: Caller identity: $CALLER_IDENTITY"
+  else
+    echo "[$(date)] DEBUG: Failed to get caller identity: $CALLER_IDENTITY"
+  fi
+
+  # Parse JSON and fetch each secret using process substitution to avoid subshell issues
+  # Format: {"ENV_VAR_NAME": "arn:aws:ssm:region:account:parameter/path"} or {"ENV_VAR_NAME": "arn:aws:secretsmanager:region:account:secret:name"}
+  while IFS='|' read -r ENV_VAR_NAME SECRET_ARN; do
+    if [ -z "$ENV_VAR_NAME" ] || [ -z "$SECRET_ARN" ]; then
+      echo "[$(date)] DEBUG: Skipping empty entry"
+      continue
+    fi
+
+    echo "[$(date)] Fetching secret for $ENV_VAR_NAME..."
+    echo "[$(date)] DEBUG: Secret ARN = $SECRET_ARN"
+
+    SECRET_VALUE=""
+
+    # Detect if it's SSM Parameter Store or Secrets Manager based on ARN
+    if echo "$SECRET_ARN" | grep -q "arn:aws:ssm:"; then
+      # SSM Parameter Store
+      echo "[$(date)] Detected SSM Parameter Store ARN"
+      PARAM_NAME=$(echo "$SECRET_ARN" | sed 's|.*:parameter||')
+      echo "[$(date)] DEBUG: Extracted parameter name: $PARAM_NAME"
+
+      echo "[$(date)] DEBUG: Running: aws ssm get-parameter --name \"$PARAM_NAME\" --with-decryption --region \"$AWS_REGION\" --query 'Parameter.Value' --output text"
+
+      SECRET_VALUE=$(aws ssm get-parameter \
+        --name "$PARAM_NAME" \
+        --with-decryption \
+        --region "$AWS_REGION" \
+        --query 'Parameter.Value' \
+        --output text 2>&1)
+
+      FETCH_EXIT_CODE=$?
+      echo "[$(date)] DEBUG: SSM get-parameter exit code: $FETCH_EXIT_CODE"
+
+      if [ $FETCH_EXIT_CODE -eq 0 ] && [ -n "$SECRET_VALUE" ]; then
+        echo "[$(date)] Successfully fetched SSM parameter for $ENV_VAR_NAME (length: $${#SECRET_VALUE})"
+      else
+        echo "[$(date)] ERROR: Failed to fetch SSM parameter for $ENV_VAR_NAME"
+        echo "[$(date)] DEBUG: AWS error output: $SECRET_VALUE"
+        echo "[$(date)] DEBUG: Checking if parameter exists..."
+        aws ssm describe-parameters --region "$AWS_REGION" --filters "Key=Name,Values=$PARAM_NAME" 2>&1 | head -20
+        continue
+      fi
+
+    elif echo "$SECRET_ARN" | grep -q "arn:aws:secretsmanager:"; then
+      # AWS Secrets Manager
+      echo "[$(date)] Detected Secrets Manager ARN"
+      SECRET_NAME=$(echo "$SECRET_ARN" | sed 's|.*:secret:||' | sed 's|-[A-Za-z0-9]*$||')
+      echo "[$(date)] DEBUG: Extracted secret name: $SECRET_NAME"
+
+      echo "[$(date)] DEBUG: Running: aws secretsmanager get-secret-value --secret-id \"$SECRET_NAME\" --region \"$AWS_REGION\" --query 'SecretString' --output text"
+
+      SECRET_JSON=$(aws secretsmanager get-secret-value \
+        --secret-id "$SECRET_NAME" \
+        --region "$AWS_REGION" \
+        --query 'SecretString' \
+        --output text 2>&1)
+
+      FETCH_EXIT_CODE=$?
+      echo "[$(date)] DEBUG: Secrets Manager get-secret-value exit code: $FETCH_EXIT_CODE"
+
+      if [ $FETCH_EXIT_CODE -eq 0 ] && [ -n "$SECRET_JSON" ]; then
+        # Try to parse as JSON first (for structured secrets)
+        if echo "$SECRET_JSON" | jq empty 2>/dev/null; then
+          # It's JSON, try to extract the value matching the env var name
+          SECRET_VALUE=$(echo "$SECRET_JSON" | jq -r ".$ENV_VAR_NAME // ." 2>/dev/null)
+          echo "[$(date)] DEBUG: Parsed as JSON, extracted value length: $${#SECRET_VALUE}"
+        else
+          # It's a plain string secret
+          SECRET_VALUE="$SECRET_JSON"
+          echo "[$(date)] DEBUG: Treated as plain string, length: $${#SECRET_VALUE}"
+        fi
+
+        if [ -n "$SECRET_VALUE" ]; then
+          echo "[$(date)] Successfully fetched Secrets Manager secret for $ENV_VAR_NAME (length: $${#SECRET_VALUE})"
+        else
+          echo "[$(date)] ERROR: Failed to extract value from Secrets Manager secret for $ENV_VAR_NAME"
+          echo "[$(date)] DEBUG: Raw secret JSON: $SECRET_JSON"
+          continue
+        fi
+      else
+        echo "[$(date)] ERROR: Failed to fetch Secrets Manager secret for $ENV_VAR_NAME"
+        echo "[$(date)] DEBUG: AWS error output: $SECRET_JSON"
+        continue
+      fi
+    else
+      echo "[$(date)] ERROR: Unknown secret ARN format for $ENV_VAR_NAME: $SECRET_ARN"
+      continue
+    fi
+
+    # Escape quotes and special characters in secret value for Docker command
+    ESCAPED_SECRET=$(echo "$SECRET_VALUE" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
+    DOCKER_SECRET_ENV_VARS="$DOCKER_SECRET_ENV_VARS -e $ENV_VAR_NAME=\"$ESCAPED_SECRET\""
+    echo "[$(date)] DEBUG: Added environment variable $ENV_VAR_NAME to Docker command"
+  done < <(echo "$SECRETS_JSON" | jq -r 'to_entries[] | "\(.key)|\(.value)"')
+else
+  echo "[$(date)] No secrets configured"
+fi
+
+echo "[$(date)] DEBUG: Final DOCKER_SECRET_ENV_VARS length: $${#DOCKER_SECRET_ENV_VARS}"
+
+# -----------------------------------------------
+# 7. Authenticate with ECR (if enabled)
+# -----------------------------------------------
+echo "[$(date)] DEBUG: enable_ecr_access = ${enable_ecr_access}"
+
 if [ "${enable_ecr_access}" = "true" ] || [ "${enable_ecr_access}" = "True" ]; then
   echo "[$(date)] ECR access enabled, authenticating with ECR..."
 
   # Extract registry URL from image URI (everything before first /)
   REGISTRY_URL=$(echo "${docker_image_uri}" | cut -d'/' -f1)
+  echo "[$(date)] DEBUG: Extracted registry URL: $REGISTRY_URL"
 
   if [[ "$REGISTRY_URL" =~ dkr\.ecr\. ]]; then
     echo "[$(date)] Detected ECR registry: $REGISTRY_URL"
+    echo "[$(date)] DEBUG: Running: aws ecr get-login-password --region \"$AWS_REGION\""
 
-    if aws ecr get-login-password --region "$AWS_REGION" 2>/dev/null | \
-       docker login --username AWS --password-stdin "$REGISTRY_URL" 2>/dev/null; then
-      echo "[$(date)] Successfully authenticated with ECR"
+    LOGIN_OUTPUT=$(aws ecr get-login-password --region "$AWS_REGION" 2>&1)
+    LOGIN_EXIT_CODE=$?
+    echo "[$(date)] DEBUG: get-login-password exit code: $LOGIN_EXIT_CODE"
+
+    if [ $LOGIN_EXIT_CODE -eq 0 ] && [ -n "$LOGIN_OUTPUT" ]; then
+      echo "[$(date)] DEBUG: Got login password, attempting docker login..."
+      if echo "$LOGIN_OUTPUT" | docker login --username AWS --password-stdin "$REGISTRY_URL" 2>&1 | head -5; then
+        echo "[$(date)] Successfully authenticated with ECR"
+      else
+        echo "[$(date)] ERROR: Failed to authenticate with ECR, but continuing..."
+      fi
     else
-      echo "[$(date)] ERROR: Failed to authenticate with ECR, but continuing..."
+      echo "[$(date)] ERROR: Failed to get ECR login password"
+      echo "[$(date)] DEBUG: AWS error: $LOGIN_OUTPUT"
     fi
   else
     echo "[$(date)] Image URI does not appear to be from ECR, skipping ECR authentication"
@@ -254,17 +417,27 @@ else
 fi
 
 # -----------------------------------------------
-# 7. Pull Docker image
+# 8. Pull Docker image
 # -----------------------------------------------
 echo "[$(date)] Pulling Docker image: ${docker_image_uri}..."
-if docker pull "${docker_image_uri}"; then
+echo "[$(date)] DEBUG: Running: docker pull \"${docker_image_uri}\""
+
+PULL_OUTPUT=$(docker pull "${docker_image_uri}" 2>&1)
+PULL_EXIT_CODE=$?
+
+echo "[$(date)] DEBUG: docker pull exit code: $PULL_EXIT_CODE"
+echo "[$(date)] DEBUG: docker pull output (last 20 lines):"
+echo "$PULL_OUTPUT" | tail -20
+
+if [ $PULL_EXIT_CODE -eq 0 ]; then
   echo "[$(date)] Docker image pulled successfully"
 else
   echo "[$(date)] WARNING: Failed to pull Docker image, attempting to run anyway..."
+  echo "[$(date)] DEBUG: Full pull error: $PULL_OUTPUT"
 fi
 
 # -----------------------------------------------
-# 8. Run Docker container
+# 9. Run Docker container
 # -----------------------------------------------
 echo "[$(date)] Starting Docker container..."
 
@@ -274,6 +447,7 @@ DOCKER_RUN_CMD="docker run \
   --restart=unless-stopped \
   ${docker_port_args} \
   ${docker_env_vars} \
+  $DOCKER_SECRET_ENV_VARS \
   ${docker_volume_mounts} \
   --detach \
   --log-driver=awslogs \
@@ -282,11 +456,34 @@ DOCKER_RUN_CMD="docker run \
   --log-opt awslogs-stream='container-$INSTANCE_NAME' \
   '${docker_image_uri}'"
 
+echo "[$(date)] DEBUG: Docker run command (sanitized):"
+# Print command with secrets masked
+echo "$DOCKER_RUN_CMD" | sed 's/-e [A-Z_]*="[^"]*"/-e REDACTED="***"/g'
+
+echo "[$(date)] DEBUG: Command components:"
+echo "[$(date)] DEBUG:   Instance name: $INSTANCE_NAME"
+echo "[$(date)] DEBUG:   Port args: ${docker_port_args}"
+echo "[$(date)] DEBUG:   Env vars: ${docker_env_vars}"
+echo "[$(date)] DEBUG:   Secret env vars count: $(echo "$DOCKER_SECRET_ENV_VARS" | grep -o '\-e' | wc -l)"
+echo "[$(date)] DEBUG:   Volume mounts: ${docker_volume_mounts}"
+echo "[$(date)] DEBUG:   Image URI: ${docker_image_uri}"
+
 # Execute the docker run command
-if eval "$DOCKER_RUN_CMD"; then
+echo "[$(date)] DEBUG: Executing docker run command..."
+RUN_OUTPUT=$(eval "$DOCKER_RUN_CMD" 2>&1)
+RUN_EXIT_CODE=$?
+
+echo "[$(date)] DEBUG: docker run exit code: $RUN_EXIT_CODE"
+echo "[$(date)] DEBUG: docker run output: $RUN_OUTPUT"
+
+if [ $RUN_EXIT_CODE -eq 0 ]; then
   echo "[$(date)] Docker container started successfully"
+  echo "[$(date)] DEBUG: Container ID: $RUN_OUTPUT"
 else
   echo "[$(date)] WARNING: Failed to start Docker container"
+  echo "[$(date)] DEBUG: Full error output: $RUN_OUTPUT"
+  echo "[$(date)] DEBUG: Checking Docker daemon status..."
+  docker ps 2>&1 | head -10
 fi
 
 # -----------------------------------------------
@@ -366,12 +563,27 @@ systemctl enable docker-shutdown.service
 echo "[$(date)] Waiting for container to be ready..."
 sleep 10
 
+echo "[$(date)] DEBUG: Checking running containers..."
+docker ps 2>&1 | head -20
+
 if docker ps | grep -q "$INSTANCE_NAME"; then
   echo "[$(date)] SUCCESS: Docker container is running!"
-  docker ps --filter "name=$INSTANCE_NAME"
+  echo "[$(date)] DEBUG: Container details:"
+  docker ps --filter "name=$INSTANCE_NAME" 2>&1
+
+  echo "[$(date)] DEBUG: Container logs (last 50 lines):"
+  docker logs "$INSTANCE_NAME" 2>&1 | tail -50
 else
   echo "[$(date)] ERROR: Docker container failed to start!"
-  docker logs "$INSTANCE_NAME" || true
+  echo "[$(date)] DEBUG: Attempting to get logs anyway..."
+  docker logs "$INSTANCE_NAME" 2>&1 || true
+
+  echo "[$(date)] DEBUG: Checking all containers:"
+  docker ps -a 2>&1
+
+  echo "[$(date)] DEBUG: Docker daemon status:"
+  systemctl status docker 2>&1 | head -20
+
   exit 1
 fi
 
