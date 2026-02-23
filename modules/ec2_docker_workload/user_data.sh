@@ -324,8 +324,20 @@ if [ "$SECRETS_JSON" != "{}" ] && [ -n "$SECRETS_JSON" ]; then
     elif echo "$SECRET_ARN" | grep -q "arn:aws:secretsmanager:"; then
       # AWS Secrets Manager
       echo "[$(date)] Detected Secrets Manager ARN"
-      SECRET_NAME=$(echo "$SECRET_ARN" | sed 's|.*:secret:||' | sed 's|-[A-Za-z0-9]*$||')
-      echo "[$(date)] DEBUG: Extracted secret name: $SECRET_NAME"
+
+      # Check for ECS-style JSON key extraction syntax: arn:aws:secretsmanager:...:secret:name:json_key::
+      JSON_KEY=""
+      if echo "$SECRET_ARN" | grep -q "::$"; then
+        # Extract JSON key from ARN (format: arn:...:secret:name:json_key::)
+        JSON_KEY=$(echo "$SECRET_ARN" | sed 's|.*:secret:[^:]*:||' | sed 's|::$||')
+        # Remove the JSON key part from the ARN for secret lookup
+        SECRET_NAME=$(echo "$SECRET_ARN" | sed 's|.*:secret:||' | sed 's|:[^:]*::$||' | sed 's|-[A-Za-z0-9]*$||')
+        echo "[$(date)] DEBUG: Extracted secret name: $SECRET_NAME, JSON key: $JSON_KEY"
+      else
+        # Standard ARN without JSON key extraction
+        SECRET_NAME=$(echo "$SECRET_ARN" | sed 's|.*:secret:||' | sed 's|-[A-Za-z0-9]*$||')
+        echo "[$(date)] DEBUG: Extracted secret name: $SECRET_NAME"
+      fi
 
       echo "[$(date)] DEBUG: Running: aws secretsmanager get-secret-value --secret-id \"$SECRET_NAME\" --region \"$AWS_REGION\" --query 'SecretString' --output text"
 
@@ -341,20 +353,33 @@ if [ "$SECRETS_JSON" != "{}" ] && [ -n "$SECRETS_JSON" ]; then
       if [ $FETCH_EXIT_CODE -eq 0 ] && [ -n "$SECRET_JSON" ]; then
         # Try to parse as JSON first (for structured secrets)
         if echo "$SECRET_JSON" | jq empty 2>/dev/null; then
-          # It's JSON, try to extract the value matching the env var name
-          SECRET_VALUE=$(echo "$SECRET_JSON" | jq -r ".$ENV_VAR_NAME // ." 2>/dev/null)
-          echo "[$(date)] DEBUG: Parsed as JSON, extracted value length: $${#SECRET_VALUE}"
+          # It's JSON
+          if [ -n "$JSON_KEY" ]; then
+            # Extract specific JSON key (ECS-style syntax)
+            SECRET_VALUE=$(echo "$SECRET_JSON" | jq -r ".$JSON_KEY" 2>/dev/null)
+            echo "[$(date)] DEBUG: Extracted JSON key '$JSON_KEY', value length: $${#SECRET_VALUE}"
+          else
+            # Try to extract the value matching the env var name
+            SECRET_VALUE=$(echo "$SECRET_JSON" | jq -r ".$ENV_VAR_NAME // ." 2>/dev/null)
+            echo "[$(date)] DEBUG: Parsed as JSON, extracted value length: $${#SECRET_VALUE}"
+          fi
         else
           # It's a plain string secret
+          if [ -n "$JSON_KEY" ]; then
+            echo "[$(date)] WARNING: JSON key specified but secret is not JSON, using entire secret value"
+          fi
           SECRET_VALUE="$SECRET_JSON"
           echo "[$(date)] DEBUG: Treated as plain string, length: $${#SECRET_VALUE}"
         fi
 
-        if [ -n "$SECRET_VALUE" ]; then
+        if [ -n "$SECRET_VALUE" ] && [ "$SECRET_VALUE" != "null" ]; then
           echo "[$(date)] Successfully fetched Secrets Manager secret for $ENV_VAR_NAME (length: $${#SECRET_VALUE})"
         else
           echo "[$(date)] ERROR: Failed to extract value from Secrets Manager secret for $ENV_VAR_NAME"
           echo "[$(date)] DEBUG: Raw secret JSON: $SECRET_JSON"
+          if [ -n "$JSON_KEY" ]; then
+            echo "[$(date)] DEBUG: Requested JSON key: $JSON_KEY"
+          fi
           continue
         fi
       else

@@ -84,6 +84,31 @@ resource "aws_ssm_parameter" "postgres_password" {
   }
 }
 
+# -----------------------------------------------
+# Store Test Secret in AWS Secrets Manager
+# -----------------------------------------------
+# Demonstrates Secrets Manager integration with ec2_docker_workload module
+# This is a test secret and does not correspond to any required PostgreSQL env vars
+
+#tfsec:ignore:aws-ssm-secret-use-customer-key
+resource "aws_secretsmanager_secret" "test_secret" {
+  name                    = "${local.solution_name}/postgres/test-secret"
+  description             = "Test secret for ec2_docker_workload Secrets Manager integration"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name    = "${local.solution_name}-test-secret"
+    Purpose = "Testing Secrets Manager integration"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "test_secret" {
+  secret_id = aws_secretsmanager_secret.test_secret.id
+  secret_string = jsonencode({
+    test_key = "test_value_from_secrets_manager"
+  })
+}
+
 # Grant ECS task execution role permission to read the parameter
 # (SSM parameters are accessible via IMDSv2 without VPC endpoints)
 
@@ -164,10 +189,15 @@ module "postgres_docker" {
     "PGDATA"        = "/var/lib/postgresql/data/db" # Subdirectory within mount
   }
 
-  # Secrets from SSM Parameter Store
+  # Secrets from SSM Parameter Store and Secrets Manager
   # Password is fetched at runtime and injected as environment variable
+  # Demonstrates two approaches:
+  # 1. ECS-style JSON key extraction: arn:aws:secretsmanager:...:secret:name:json_key::
+  # 2. Full secret value injection: arn:aws:secretsmanager:...:secret:name (without :json_key::)
   map_secrets = {
-    "POSTGRES_PASSWORD" = aws_ssm_parameter.postgres_password.arn
+    "POSTGRES_PASSWORD"      = aws_ssm_parameter.postgres_password.arn
+    "TEST_SECRET_VALUE"      = "${aws_secretsmanager_secret.test_secret.arn}:test_key::"
+    "TEST_SECRET_FULL_VALUE" = aws_secretsmanager_secret.test_secret.arn
   }
 
   # EBS Volume Configuration
@@ -195,7 +225,8 @@ module "postgres_docker" {
   # Explicit dependency to ensure VPC and subnets are created first
   depends_on = [
     module.terra3_examples,
-    aws_ssm_parameter.postgres_password
+    aws_ssm_parameter.postgres_password,
+    aws_secretsmanager_secret_version.test_secret
   ]
 }
 
