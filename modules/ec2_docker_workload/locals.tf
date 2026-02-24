@@ -25,8 +25,15 @@ locals {
   docker_secrets_json = jsonencode(var.map_secrets)
 
   # Separate secrets by type for IAM policies
-  ssm_secret_arns = [for arn in var.map_secrets : arn if can(regex("arn:aws:ssm:", arn))]
-  sm_secret_arns  = [for arn in var.map_secrets : arn if can(regex("arn:aws:secretsmanager:", arn))]
+  # For Secrets Manager, strip JSON key suffix (e.g., :json_key::) to get base secret ARN
+  # Use distinct() to avoid duplicate ARNs in the policy
+  ssm_secret_arns = distinct([for arn in var.map_secrets : arn if can(regex("arn:aws:ssm:", arn))])
+  sm_secret_arns = distinct([for arn in var.map_secrets :
+    can(regex("arn:aws:secretsmanager:", arn)) ?
+    regex("^(arn:aws:secretsmanager:[^:]+:[^:]+:secret:[^:]+)(?::[^:]+::)?$", arn)[0] :
+    ""
+    if can(regex("arn:aws:secretsmanager:", arn))
+  ])
 
   # Port mappings for Docker run command
   docker_port_args = join(" ", [
