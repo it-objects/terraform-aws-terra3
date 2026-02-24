@@ -19,10 +19,6 @@ terraform {
   }
 }
 
-provider "aws" {
-  region = var.aws_region
-}
-
 locals {
   solution_name = var.solution_name
 }
@@ -50,6 +46,8 @@ module "terra3_examples" {
   create_bastion_host = true
   enable_ecs_exec     = true # Required for app_components with enable_ecs_exec
 
+  enable_internal_service_dns = true
+
   # App component for testing PostgreSQL connectivity
   app_components = {
     psql_test = {
@@ -75,15 +73,40 @@ module "terra3_examples" {
 
 resource "aws_ssm_parameter" "postgres_password" {
   name        = "/${local.solution_name}/postgres/password"
-  description = "PostgreSQL password for ECS tasks"
+  description = "PostgreSQL password for EC2 Docker workload"
   type        = "SecureString"
   value       = var.postgres_password
   overwrite   = true
 
   tags = {
     Name    = "${local.solution_name}-postgres-password"
-    Purpose = "PostgreSQL password for ECS tasks"
+    Purpose = "PostgreSQL password for EC2 Docker workload"
   }
+}
+
+# -----------------------------------------------
+# Store Test Secret in AWS Secrets Manager
+# -----------------------------------------------
+# Demonstrates Secrets Manager integration with ec2_docker_workload module
+# This is a test secret and does not correspond to any required PostgreSQL env vars
+
+#tfsec:ignore:aws-ssm-secret-use-customer-key
+resource "aws_secretsmanager_secret" "test_secret" {
+  name                    = "${local.solution_name}/postgres/test-secret"
+  description             = "Test secret for ec2_docker_workload Secrets Manager integration"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name    = "${local.solution_name}-test-secret"
+    Purpose = "Testing Secrets Manager integration"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "test_secret" {
+  secret_id = aws_secretsmanager_secret.test_secret.id
+  secret_string = jsonencode({
+    test_key = "test_value_from_secrets_manager"
+  })
 }
 
 # Grant ECS task execution role permission to read the parameter
@@ -128,6 +151,8 @@ module "container_psql_test" {
   depends_on = [aws_ssm_parameter.postgres_password]
 }
 
+data "aws_caller_identity" "current" {}
+
 # -----------------------------------------------
 # EC2 Docker Workload - PostgreSQL Database
 # -----------------------------------------------
@@ -138,8 +163,10 @@ module "postgres_docker" {
   solution_name = local.solution_name
   instance_name = "postgres"
 
+  enable_ecr_access = true
+
   # Docker Configuration
-  docker_image_uri = "postgres:15-alpine"
+  docker_image_uri = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/postgres:17"
 
   # Port Mappings
   port_mappings = [
@@ -157,10 +184,20 @@ module "postgres_docker" {
   # Important: PGDATA uses a subdirectory to avoid "directory not empty" errors
   # when EBS volumes contain lost+found directory from formatting
   environment_variables = {
-    "POSTGRES_USER"     = var.postgres_user
-    "POSTGRES_PASSWORD" = var.postgres_password
-    "POSTGRES_DB"       = var.postgres_db
-    "PGDATA"            = "/var/lib/postgresql/data/db" # Subdirectory within mount
+    "POSTGRES_USER" = var.postgres_user
+    "POSTGRES_DB"   = var.postgres_db
+    "PGDATA"        = "/var/lib/postgresql/data/db" # Subdirectory within mount
+  }
+
+  # Secrets from SSM Parameter Store and Secrets Manager
+  # Password is fetched at runtime and injected as environment variable
+  # Demonstrates two approaches:
+  # 1. ECS-style JSON key extraction: arn:aws:secretsmanager:...:secret:name:json_key::
+  # 2. Full secret value injection: arn:aws:secretsmanager:...:secret:name (without :json_key::)
+  map_secrets = {
+    "POSTGRES_PASSWORD"      = aws_ssm_parameter.postgres_password.arn
+    "TEST_SECRET_VALUE"      = "${aws_secretsmanager_secret.test_secret.arn}:test_key::"
+    "TEST_SECRET_FULL_VALUE" = aws_secretsmanager_secret.test_secret.arn
   }
 
   # EBS Volume Configuration
@@ -186,7 +223,11 @@ module "postgres_docker" {
   # This module automatically creates DNS A records for service discovery
 
   # Explicit dependency to ensure VPC and subnets are created first
-  depends_on = [module.terra3_examples]
+  depends_on = [
+    module.terra3_examples,
+    aws_ssm_parameter.postgres_password,
+    aws_secretsmanager_secret_version.test_secret
+  ]
 }
 
 module "nginx_docker" {
