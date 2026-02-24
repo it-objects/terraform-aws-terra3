@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.63.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.62.0...v1.63.0) (2026-02-24)
+
+
+### Features
+
+* **ec2_docker_workload:** add deep secret key rerence and show use in example ([bf85058](https://github.com/it-objects/terraform-aws-terra3/commit/bf8505857dd170d1ebbfcf874da96782a3ae3cf5))
+* **ec2_docker_workload:** add ECR authentication support to user data script ([32cabbd](https://github.com/it-objects/terraform-aws-terra3/commit/32cabbdc3458e7e0e630531a30d719b46be6c726))
+* **ec2_docker_workload:** add missing ecr auth and secrets mapping ([a4f1ac1](https://github.com/it-objects/terraform-aws-terra3/commit/a4f1ac18702bbcf1de3af121553f64c09faa1473))
+* **ec2_docker_workload:** make ECR image URI dynamic using caller identity ([823c8b8](https://github.com/it-objects/terraform-aws-terra3/commit/823c8b827432a554b127a86d946d66f82f9e2add))
+* **ec2_docker_workload:** move postgres password to SSM Parameter Store ([d6ce926](https://github.com/it-objects/terraform-aws-terra3/commit/d6ce92686875b04f9c661b2a7a48268a00d8b639))
+
 ## [1.62.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.61.1...v1.62.0) (2026-02-16)
 
 
