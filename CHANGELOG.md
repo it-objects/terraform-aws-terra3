@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.64.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.63.0...v1.64.0) (2026-02-24)
+
+
+### Features
+
+* **ec2_docker_workload:** improve secret ARN handling with deduplication and key suffix stripping ([85499c4](https://github.com/it-objects/terraform-aws-terra3/commit/85499c47a773da889801e11847115d964abc0574))
+
 ## [1.63.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.62.0...v1.63.0) (2026-02-24)
 
 
