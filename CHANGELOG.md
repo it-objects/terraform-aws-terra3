@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.65.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.64.0...v1.65.0) (2026-02-27)
+
+
+### Features
+
+* add Lambda Function URL permissions and CloudFront integration for hibernation module ([#66](https://github.com/it-objects/terraform-aws-terra3/issues/66)) ([7de9670](https://github.com/it-objects/terraform-aws-terra3/commit/7de96703057272f95352184bce73951d32d49b62))
+
 ## [1.64.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.63.0...v1.64.0) (2026-02-24)
 
 
