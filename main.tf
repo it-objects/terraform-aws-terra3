@@ -354,6 +354,10 @@ module "cloudfront_cdn" {
 
   s3_admin_website_url                         = try(module.global_scale_down[0].s3_admin_website_url, "")
   enable_environment_hibernation_admin_website = var.enable_environment_hibernation_sleep_schedule
+
+  scale_up_lambda_function_url   = try(module.global_scale_down[0].scale_up_lambda_function_url, "")
+  scale_down_lambda_function_url = try(module.global_scale_down[0].scale_down_lambda_function_url, "")
+  status_lambda_function_url     = try(module.global_scale_down[0].status_lambda_function_url, "")
 }
 
 module "lambda_at_edge" {

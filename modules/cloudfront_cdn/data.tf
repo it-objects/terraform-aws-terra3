@@ -10,6 +10,10 @@ data "aws_cloudfront_origin_request_policy" "ManagedCORSS3Origin" {
   name = "Managed-CORS-S3Origin"
 }
 
+data "aws_cloudfront_origin_request_policy" "ManagedAllViewerExceptHostHeader" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Canonical user ID for the effective account in which Terraform is working.
 # ---------------------------------------------------------------------------------------------------------------------

@@ -76,7 +76,52 @@ locals {
     }
   }
 
-  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins, local.s3_admin_website, local.s3_static_website_origins_with_oac, local.s3_solution_bucket_origins_with_oac)
+  lambda_scale_up_origin = var.enable_environment_hibernation_admin_website != true || var.scale_up_lambda_function_url == "" ? {} : {
+    lambda_scale_up = {
+      domain_name              = replace(replace(var.scale_up_lambda_function_url, "https://", ""), "/", "")
+      origin_access_control_id = aws_cloudfront_origin_access_control.lambda_oac[0].id
+      custom_origin_config = {
+        http_port                = 80
+        https_port               = 443
+        origin_protocol_policy   = "https-only"
+        origin_ssl_protocols     = ["TLSv1.2"]
+        origin_keepalive_timeout = 5
+        origin_read_timeout      = 60
+      }
+    }
+  }
+
+  lambda_scale_down_origin = var.enable_environment_hibernation_admin_website != true || var.scale_down_lambda_function_url == "" ? {} : {
+    lambda_scale_down = {
+      domain_name              = replace(replace(var.scale_down_lambda_function_url, "https://", ""), "/", "")
+      origin_access_control_id = aws_cloudfront_origin_access_control.lambda_oac[0].id
+      custom_origin_config = {
+        http_port                = 80
+        https_port               = 443
+        origin_protocol_policy   = "https-only"
+        origin_ssl_protocols     = ["TLSv1.2"]
+        origin_keepalive_timeout = 5
+        origin_read_timeout      = 60
+      }
+    }
+  }
+
+  lambda_status_origin = var.enable_environment_hibernation_admin_website != true || var.status_lambda_function_url == "" ? {} : {
+    lambda_status = {
+      domain_name              = replace(replace(var.status_lambda_function_url, "https://", ""), "/", "")
+      origin_access_control_id = aws_cloudfront_origin_access_control.lambda_oac[0].id
+      custom_origin_config = {
+        http_port                = 80
+        https_port               = 443
+        origin_protocol_policy   = "https-only"
+        origin_ssl_protocols     = ["TLSv1.2"]
+        origin_keepalive_timeout = 5
+        origin_read_timeout      = 60
+      }
+    }
+  }
+
+  all_origins = merge(local.alb_origins, local.s3_static_website_origins, local.s3_solution_bucket_origins, local.s3_admin_website, local.s3_static_website_origins_with_oac, local.s3_solution_bucket_origins_with_oac, local.lambda_scale_up_origin, local.lambda_scale_down_origin, local.lambda_status_origin)
 
   # -------------------------------------------------------------------------------------------------------------------
   # Define behaviours either with or without ALB
@@ -108,6 +153,57 @@ locals {
         trusted_key_groups = var.enable_cloudfront_url_signing_for_solution_bucket ? [aws_cloudfront_key_group.cf_keygroup[0].id] : []
       }
     ],
+    !var.enable_environment_hibernation_admin_website || var.scale_up_lambda_function_url == "" ? [] : [{
+      path_pattern           = "/admin-terra3/api/scale-up"
+      target_origin_id       = "lambda_scale_up"
+      viewer_protocol_policy = "redirect-to-https"
+
+      allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods  = ["GET", "HEAD"]
+      compress        = true
+
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+
+      use_forwarded_values     = false
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewerExceptHostHeader.id
+      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+    }],
+    !var.enable_environment_hibernation_admin_website || var.scale_down_lambda_function_url == "" ? [] : [{
+      path_pattern           = "/admin-terra3/api/scale-down"
+      target_origin_id       = "lambda_scale_down"
+      viewer_protocol_policy = "redirect-to-https"
+
+      allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods  = ["GET", "HEAD"]
+      compress        = true
+
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+
+      use_forwarded_values     = false
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewerExceptHostHeader.id
+      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+    }],
+    !var.enable_environment_hibernation_admin_website || var.status_lambda_function_url == "" ? [] : [{
+      path_pattern           = "/admin-terra3/api/status"
+      target_origin_id       = "lambda_status"
+      viewer_protocol_policy = "redirect-to-https"
+
+      allowed_methods = ["GET", "HEAD", "OPTIONS"]
+      cached_methods  = ["GET", "HEAD"]
+      compress        = true
+
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+
+      use_forwarded_values     = false
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewerExceptHostHeader.id
+      cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
+    }],
     !var.enable_environment_hibernation_admin_website ? [] : [{
       path_pattern           = "/admin-terra3/*"
       target_origin_id       = "s3_mini_admin_website_bucket"
@@ -995,6 +1091,16 @@ resource "aws_cloudfront_origin_access_control" "s3_admin_website" {
   name                              = "${var.solution_name} OCA for s3 admin website"
   description                       = "OCA for s3 admin website"
   origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_origin_access_control" "lambda_oac" {
+  count = var.enable_environment_hibernation_admin_website ? 1 : 0
+
+  name                              = "${var.solution_name}-lambda-oac"
+  description                       = "OAC for Lambda Function URL origins"
+  origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }

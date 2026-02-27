@@ -27,10 +27,6 @@ locals {
   hibernation_state   = "/${var.solution_name}/global_scale_down/hibernation_state"
   token               = "/${var.solution_name}/global_scale_down/token"
 
-  scale_down_api_endpoint = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_down_lambda_function_url[0].function_url : ""
-  scale_up_api_endpoint   = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.scale_up_lambda_function_url[0].function_url : ""
-  status_api_endpoint     = var.enable_environment_hibernation_sleep_schedule ? aws_lambda_function_url.status_lambda_function_url[0].function_url : ""
-
   json_data = jsonencode({
     user_token = var.enable_environment_hibernation_sleep_schedule ? random_string.s3-admin-website-auth-token[0].result : ""
     api_token  = var.enable_environment_hibernation_sleep_schedule ? random_string.api-auth-token[0].result : ""
@@ -74,7 +70,7 @@ resource "aws_lambda_function_url" "scale_up_lambda_function_url" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   function_name      = module.lambda_scale_up[0].lambda_function_name
-  authorization_type = "NONE" #"AWS_IAM"
+  authorization_type = "AWS_IAM"
 
   cors {
     allow_credentials = false
@@ -82,6 +78,27 @@ resource "aws_lambda_function_url" "scale_up_lambda_function_url" {
     allow_methods     = ["GET", "POST"]
     max_age           = 86400
   }
+}
+
+resource "aws_lambda_permission" "scale_up_lambda_invoke_permission" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  statement_id           = "AllowCloudFrontInvokeScaleUpUrl"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = module.lambda_scale_up[0].lambda_function_name
+  principal              = "cloudfront.amazonaws.com"
+  source_arn             = var.cloudfront_arn
+  function_url_auth_type = "AWS_IAM"
+}
+
+resource "aws_lambda_permission" "scale_up_lambda_invoke_function_permission" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  statement_id  = "AllowCloudFrontInvokeScaleUp"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_scale_up[0].lambda_function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = var.cloudfront_arn
 }
 
 module "eventbridge_up" {
@@ -153,7 +170,7 @@ resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   function_name      = module.lambda_scale_down[0].lambda_function_name
-  authorization_type = "NONE" #"AWS_IAM"
+  authorization_type = "AWS_IAM"
 
   cors {
     allow_credentials = false
@@ -161,6 +178,27 @@ resource "aws_lambda_function_url" "scale_down_lambda_function_url" {
     allow_methods     = ["GET", "POST"]
     max_age           = 86400
   }
+}
+
+resource "aws_lambda_permission" "scale_down_lambda_invoke_permission" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  statement_id           = "AllowCloudFrontInvokeScaleDownUrl"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = module.lambda_scale_down[0].lambda_function_name
+  principal              = "cloudfront.amazonaws.com"
+  source_arn             = var.cloudfront_arn
+  function_url_auth_type = "AWS_IAM"
+}
+
+resource "aws_lambda_permission" "scale_down_lambda_invoke_function_permission" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  statement_id  = "AllowCloudFrontInvokeScaleDown"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_scale_down[0].lambda_function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = var.cloudfront_arn
 }
 
 module "eventbridge_down" {
@@ -219,7 +257,7 @@ resource "aws_lambda_function_url" "status_lambda_function_url" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   function_name      = module.global_scale_status[0].lambda_function_name
-  authorization_type = "NONE" #"AWS_IAM"
+  authorization_type = "AWS_IAM"
 
   cors {
     allow_credentials = false
@@ -227,6 +265,27 @@ resource "aws_lambda_function_url" "status_lambda_function_url" {
     allow_methods     = ["GET", "POST"]
     max_age           = 86400
   }
+}
+
+resource "aws_lambda_permission" "status_lambda_invoke_permission" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  statement_id           = "AllowCloudFrontInvokeStatusUrl"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = module.global_scale_status[0].lambda_function_name
+  principal              = "cloudfront.amazonaws.com"
+  source_arn             = var.cloudfront_arn
+  function_url_auth_type = "AWS_IAM"
+}
+
+resource "aws_lambda_permission" "status_lambda_invoke_function_permission" {
+  count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
+
+  statement_id  = "AllowCloudFrontInvokeStatus"
+  action        = "lambda:InvokeFunction"
+  function_name = module.global_scale_status[0].lambda_function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = var.cloudfront_arn
 }
 
 #tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
@@ -262,10 +321,7 @@ resource "aws_s3_object" "object" {
   key          = "admin-terra3/index.html"
   content_type = "text/html"
   content = templatefile("${path.module}/index.tpl", {
-    scale_down_api_endpoint = local.scale_down_api_endpoint
-    scale_up_api_endpoint   = local.scale_up_api_endpoint
-    status_api_endpoint     = local.status_api_endpoint
-    solution_name           = var.solution_name
+    solution_name = var.solution_name
   })
 }
 
