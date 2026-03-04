@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.66.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.65.0...v1.66.0) (2026-03-04)
+
+
+### Features
+
+* add options to enable major rds database upgrades and parameter group variables ([48f5a4b](https://github.com/it-objects/terraform-aws-terra3/commit/48f5a4ba1e40f7b52c3c2eeae48dfe4cbaced1f3))
+
 ## [1.65.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.64.0...v1.65.0) (2026-02-27)
 
 
