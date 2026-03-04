@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.66.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.0...v1.66.1) (2026-03-04)
+
+
+### Bug Fixes
+
+* default parameter group needs to be explicitly set ([65a16e7](https://github.com/it-objects/terraform-aws-terra3/commit/65a16e7b2bbd4bb6fc63067b3801856081a0aa31))
+
 ## [1.66.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.65.0...v1.66.0) (2026-03-04)
 
 
