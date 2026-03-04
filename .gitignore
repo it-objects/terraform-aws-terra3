@@ -9,6 +9,8 @@
 # tfvars containing actual creds
 *.auto.tfvars.json
 
+.vitepress
+
 # terraform build
 builds
 
