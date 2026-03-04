@@ -64,8 +64,10 @@ resource "aws_db_instance" "db" {
   publicly_accessible             = var.rds_cluster_publicly_accessible
   db_subnet_group_name            = var.db_subnet_group_name
   vpc_security_group_ids          = var.rds_cluster_security_group_ids
-  parameter_group_name            = var.database == "mysql" ? aws_db_parameter_group.mysql_logbin_parameter_group[0].name : null
+  parameter_group_name            = var.database == "mysql" && var.rds_cluster_allow_stored_functions_or_triggers ? aws_db_parameter_group.mysql_logbin_parameter_group[0].name : null
   auto_minor_version_upgrade      = var.rds_cluster_auto_minor_version_upgrade
+  allow_major_version_upgrade     = var.rds_cluster_allow_major_version_upgrade
+  apply_immediately               = var.rds_cluster_apply_immediately
 
   ca_cert_identifier = var.ca_cert_identifier
 
@@ -128,10 +130,10 @@ data "aws_iam_policy_document" "rds_enhanced_monitoring" {
 # set apply_method temporarily to "immediate" for non-prod environments
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_db_parameter_group" "mysql_logbin_parameter_group" {
-  count = var.database == "mysql" ? 1 : 0
+  count = var.database == "mysql" && var.rds_cluster_allow_stored_functions_or_triggers ? 1 : 0
 
   name        = "${var.solution_name}-mysql-logbin-parameters"
-  family      = (split(".", var.rds_cluster_engine_version)[0] == "8") ? "mysql8.0" : "mysql5.7"
+  family      = "mysql${join(".", slice(split(".", var.rds_cluster_engine_version), 0, 2))}"
   description = "RDS parameter group for ${var.solution_name} allowing stored procedures."
 
   parameter {

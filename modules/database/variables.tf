@@ -56,6 +56,24 @@ variable "rds_cluster_auto_minor_version_upgrade" {
   default     = true
 }
 
+variable "rds_cluster_allow_major_version_upgrade" {
+  description = "Allow major version upgrades. Required when upgrading to a new major engine version."
+  type        = bool
+  default     = false
+}
+
+variable "rds_cluster_allow_stored_functions_or_triggers" {
+  description = "Creates a custom parameter group enabling stored functions and triggers (log_bin_trust_function_creators). Set to false temporarily when upgrading major versions to avoid parameter group family conflicts."
+  type        = bool
+  default     = true
+}
+
+variable "rds_cluster_apply_immediately" {
+  description = "Apply changes immediately instead of during the next maintenance window."
+  type        = bool
+  default     = false
+}
+
 variable "rds_cluster_engine" {
   description = "Engine to use for the cluster"
   type        = string
