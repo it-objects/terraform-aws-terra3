@@ -92,11 +92,14 @@ module "vpc" {
   public_subnets  = var.public_subnets_cidr_blocks
   private_subnets = var.private_subnets_cidr_blocks
 
+  default_security_group_ingress = []
+  default_security_group_egress  = []
+
   # to stay backwards compatible
   map_public_ip_on_launch       = true
   manage_default_network_acl    = false
   manage_default_route_table    = false
-  manage_default_security_group = false
+  manage_default_security_group = true
 
   public_subnet_tags = var.set_cluster_name_for_k8s_subnet_tagging == "" ? {
     Tier = "public"
