@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.66.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.3...v1.66.4) (2026-03-05)
+
+
+### Bug Fixes
+
+* **security-hub:** block public sharing of SSM documents to resolve SSM.7 ([3bb1b03](https://github.com/it-objects/terraform-aws-terra3/commit/3bb1b03dd7716fcb7c7075c7679dfee2d8818535))
+
 ### [1.66.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.2...v1.66.3) (2026-03-05)
 
 
