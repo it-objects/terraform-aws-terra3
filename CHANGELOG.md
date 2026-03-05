@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.66.3](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.2...v1.66.3) (2026-03-05)
+
+
+### Bug Fixes
+
+* **security-hub:** block public access for EBS snapshots to resolve EC2.182 ([afe830e](https://github.com/it-objects/terraform-aws-terra3/commit/afe830efe4a899dd8502bc9ef0eb3950fb51f2f3))
+
 ### [1.66.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.1...v1.66.2) (2026-03-05)
 
 
