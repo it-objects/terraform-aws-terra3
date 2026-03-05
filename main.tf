@@ -382,6 +382,9 @@ module "account" {
   count = var.enable_account_best_practices && var.enable_account_level_resources ? 1 : 0
 
   source = "./modules/account"
+
+  enable_account_wide_block_public_s3_access = var.enable_account_wide_block_public_s3_access
+  enable_account_wide_ebs_encryption         = var.enable_account_wide_ebs_encryption
 }
 
 module "cluster" {

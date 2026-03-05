@@ -26,6 +26,18 @@ variable "enable_account_level_resources" {
   default     = false
 }
 
+variable "enable_account_wide_block_public_s3_access" {
+  description = "Block public access for all S3 buckets account-wide."
+  type        = bool
+  default     = true
+}
+
+variable "enable_account_wide_ebs_encryption" {
+  description = "Enable default EBS encryption account-wide."
+  type        = bool
+  default     = true
+}
+
 variable "enable_cloudfront_url_signing_for_solution_bucket" {
   description = "Setups Cloudfront requests signing."
   type        = bool
