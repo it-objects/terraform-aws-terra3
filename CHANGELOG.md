@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.66.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.1...v1.66.2) (2026-03-05)
+
+
+### Bug Fixes
+
+* **security-hub:** restrict all traffic on default VPC security group to resolve Security Hub finding ([41aba31](https://github.com/it-objects/terraform-aws-terra3/commit/41aba31ce3671e07243b89591376bf68d4f3db7e))
+
 ### [1.66.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.0...v1.66.1) (2026-03-04)
 
 
