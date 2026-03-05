@@ -13,3 +13,9 @@ resource "aws_ebs_encryption_by_default" "enable_ebs_account_level_encryption" {
 
   enabled = true
 }
+
+resource "aws_ebs_snapshot_block_public_access" "block_public_access" {
+  count = var.enable_account_wide_ebs_snapshot_block_public_access ? 1 : 0
+
+  state = "block-all-sharing"
+}

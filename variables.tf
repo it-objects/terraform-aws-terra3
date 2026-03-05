@@ -38,6 +38,12 @@ variable "enable_account_wide_ebs_encryption" {
   default     = true
 }
 
+variable "enable_account_wide_ebs_snapshot_block_public_access" {
+  description = "Block public access for EBS snapshots account-wide. Resolves EC2.182."
+  type        = bool
+  default     = true
+}
+
 variable "enable_cloudfront_url_signing_for_solution_bucket" {
   description = "Setups Cloudfront requests signing."
   type        = bool
