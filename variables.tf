@@ -44,6 +44,12 @@ variable "enable_account_wide_ebs_snapshot_block_public_access" {
   default     = true
 }
 
+variable "enable_account_wide_ssm_document_block_public_sharing" {
+  description = "Block public sharing of SSM documents account-wide. Resolves SSM.7."
+  type        = bool
+  default     = true
+}
+
 variable "enable_cloudfront_url_signing_for_solution_bucket" {
   description = "Setups Cloudfront requests signing."
   type        = bool

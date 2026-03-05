@@ -15,3 +15,9 @@ variable "enable_account_wide_ebs_snapshot_block_public_access" {
   default     = true
   description = "By default all EBS snapshots are blocked from being publicly accessible. Resolves EC2.182."
 }
+
+variable "enable_account_wide_ssm_document_block_public_sharing" {
+  type        = bool
+  default     = true
+  description = "By default SSM documents are blocked from being publicly shared. Resolves SSM.7."
+}

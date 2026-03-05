@@ -383,9 +383,10 @@ module "account" {
 
   source = "./modules/account"
 
-  enable_account_wide_block_public_s3_access           = var.enable_account_wide_block_public_s3_access
-  enable_account_wide_ebs_encryption                   = var.enable_account_wide_ebs_encryption
-  enable_account_wide_ebs_snapshot_block_public_access = var.enable_account_wide_ebs_snapshot_block_public_access
+  enable_account_wide_block_public_s3_access            = var.enable_account_wide_block_public_s3_access
+  enable_account_wide_ebs_encryption                    = var.enable_account_wide_ebs_encryption
+  enable_account_wide_ebs_snapshot_block_public_access  = var.enable_account_wide_ebs_snapshot_block_public_access
+  enable_account_wide_ssm_document_block_public_sharing = var.enable_account_wide_ssm_document_block_public_sharing
 
 }
 
