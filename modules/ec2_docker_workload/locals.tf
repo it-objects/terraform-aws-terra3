@@ -64,9 +64,10 @@ locals {
   # Persistent volumes (those that should NOT be deleted on termination)
   persistent_volumes = [for vol in var.ebs_volumes : vol if vol.delete_on_termination == false]
 
-  # Get first AZ from private subnets (for volume creation)
+  # Get AZ for volume creation
   # Volumes must be created in the same AZ as the instance
-  volume_az = try(data.aws_subnet.private_first.availability_zone, "")
+  # This is required to prevent EBS volume replacement on re-apply
+  volume_az = var.ebs_volume_availability_zone
 
   # Extract ECR repository name from docker_image_uri if it's an ECR image
   # ECR format: 123456789.dkr.ecr.us-east-1.amazonaws.com/repo-name:tag

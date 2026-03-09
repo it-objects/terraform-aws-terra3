@@ -210,6 +210,9 @@ module "postgres_docker" {
     }
   ]
 
+  # Required: Explicitly specify AZ for EBS volumes to prevent replacement on re-apply
+  ebs_volume_availability_zone = "<tbd>"
+
   # CloudWatch Logs
   log_retention_days = 7
 

@@ -86,6 +86,7 @@ module "postgres_docker" {
 | `security_group_ids` | list(string) | `[]` | Custom security groups. If empty, module creates default. |
 | `environment_variables` | map(string) | `{}` | Environment variables passed to container |
 | `ebs_volumes` | list(object) | `[]` | EBS volumes: `{device_name, size, volume_type, mount_path, delete_on_termination}` |
+| `ebs_volume_availability_zone` | string | (required) | Availability zone for EBS volume creation. Must match the AZ where the EC2 instance will be launched. Required to prevent EBS volume replacement on re-apply. |
 | `instance_type` | string | `"t4g.nano"` | EC2 instance type (ARM-based) |
 | `root_volume_size` | number | `50` | Root volume size in GB |
 | `root_volume_type` | string | `"gp3"` | Root volume type |

@@ -129,6 +129,11 @@ variable "ebs_volumes" {
   }
 }
 
+variable "ebs_volume_availability_zone" {
+  description = "Availability zone for EBS volume creation. Must match the AZ where the EC2 instance will be launched. Required to prevent EBS volume replacement on re-apply."
+  type        = string
+}
+
 # -----------------------------------------------
 # Instance Configuration
 # -----------------------------------------------
