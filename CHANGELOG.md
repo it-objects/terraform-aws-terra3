@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.66.5](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.4...v1.66.5) (2026-03-09)
+
+
+### Bug Fixes
+
+* **ec2_docker_workload:** Make ebs_volume_availability_zone a required variable to prevent EBS volume replacement on re-apply. ([03265a1](https://github.com/it-objects/terraform-aws-terra3/commit/03265a1effb68253dfc5d00073d30866bf077a32))
+
 ### [1.66.4](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.3...v1.66.4) (2026-03-05)
 
 
