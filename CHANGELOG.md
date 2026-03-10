@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.66.6](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.5...v1.66.6) (2026-03-10)
+
+
+### Bug Fixes
+
+* **oidc_role:** add backup service permissions to infra deployment policy ([b3f337b](https://github.com/it-objects/terraform-aws-terra3/commit/b3f337bdb51578172baf4d1670c823a50a7fd5ca))
+
 ### [1.66.5](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.4...v1.66.5) (2026-03-09)
 
 
