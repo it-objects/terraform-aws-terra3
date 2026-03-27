@@ -21,7 +21,11 @@ locals {
   security_groups_as_string = jsonencode(local.security_groups)
 
   # convert string to list
-  private_subnets           = split(",", data.aws_ssm_parameter.private_subnets.value)
+  private_subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
+
+  # When EBS volumes are used, pin to single AZ
+  effective_subnets = length(var.ebs_volumes) > 0 ? data.aws_subnets.private_in_az[0].ids : local.private_subnets
+
   private_subnets_as_string = jsonencode(local.private_subnets)
 
   # configure dependent options in case of cronjob mode
@@ -51,7 +55,7 @@ resource "aws_ecs_service" "ecs_service" {
   enable_execute_command = var.enable_ecs_exec
 
   network_configuration {
-    subnets = local.private_subnets
+    subnets = local.effective_subnets
     # if security groups are given, then overwrite default, otherwise take default (ecs_default + mysql_marker)
     security_groups = local.security_groups
   }
@@ -65,6 +69,33 @@ resource "aws_ecs_service" "ecs_service" {
     }
   }
 
+  dynamic "service_registries" {
+    for_each = var.enable_service_discovery ? [true] : []
+    content {
+      registry_arn   = aws_service_discovery_service.this[0].arn
+      container_name = var.cluster_type == "EC2" ? var.container[0].name : null
+      container_port = var.cluster_type == "EC2" ? var.service_port : null
+    }
+  }
+
+  dynamic "volume_configuration" {
+    for_each = var.ebs_volumes
+    content {
+      name = volume_configuration.value.name
+      managed_ebs_volume {
+        role_arn         = aws_iam_role.ecs_ebs_infrastructure[0].arn
+        size_in_gb       = volume_configuration.value.size_in_gb
+        volume_type      = volume_configuration.value.volume_type
+        iops             = volume_configuration.value.iops
+        throughput       = volume_configuration.value.throughput
+        snapshot_id      = var.enable_ebs_snapshot_lifecycle && !contains(["none", "failed"], aws_ssm_parameter.ebs_latest_snapshot[0].value) ? aws_ssm_parameter.ebs_latest_snapshot[0].value : volume_configuration.value.snapshot_id
+        encrypted        = volume_configuration.value.encrypted
+        kms_key_id       = volume_configuration.value.kms_key_id
+        file_system_type = volume_configuration.value.file_system_type
+      }
+    }
+  }
+
   deployment_circuit_breaker {
     enable   = true
     rollback = true
@@ -73,6 +104,16 @@ resource "aws_ecs_service" "ecs_service" {
   # Ignored desired count changes live, permitting schedulers to update this value without terraform reverting
   lifecycle {
     ignore_changes = [desired_count]
+
+    precondition {
+      condition     = length(var.ebs_volumes) == 0 || var.ebs_volume_availability_zone != null
+      error_message = "ebs_volume_availability_zone must be set when ebs_volumes is non-empty."
+    }
+
+    precondition {
+      condition     = !var.enable_ebs_snapshot_lifecycle || aws_ssm_parameter.ebs_latest_snapshot[0].value != "failed"
+      error_message = "EBS snapshot lifecycle failed for this component. Check CloudWatch logs and SNS alerts. Set SSM parameter '${var.enable_ebs_snapshot_lifecycle ? aws_ssm_parameter.ebs_latest_snapshot[0].name : "n/a"}' to a valid snapshot ID or 'none' to proceed."
+    }
   }
 }
 
@@ -101,6 +142,14 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   }
 
   container_definitions = local.json_map
+
+  dynamic "volume" {
+    for_each = var.ebs_volumes
+    content {
+      name                = volume.value.name
+      configure_at_launch = true
+    }
+  }
 
   tags = {
     Name = "${var.name}-task-def"
@@ -581,13 +630,23 @@ locals {
     # If nothing provided, default to empty set
     [],
   )
+
+  # Find all SSM parameter ARNs and output as a list
+  execution_iam_ssm_parameters = try(
+    flatten([
+      for permission_type, permission_targets in var.execution_iam_access : permission_targets
+      if permission_type == "ssm_parameters"
+    ]),
+    # If nothing provided, default to empty set
+    [],
+  )
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Construct the secrets policy
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "ecs_secrets_access" {
-  count = local.execution_iam_secrets == [] ? 0 : 1
+  count = contains(keys(var.execution_iam_access), "secrets") ? 1 : 0
   statement {
     sid = "EcsSecretAccess"
     #effect = "Allow"
@@ -603,7 +662,7 @@ data "aws_iam_policy_document" "ecs_secrets_access" {
 # Build role policy using data, link to role
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role_policy" "ecs_secrets_access_role_policy" {
-  count  = local.execution_iam_secrets == [] ? 0 : 1
+  count  = contains(keys(var.execution_iam_access), "secrets") ? 1 : 0
   name   = "EcsSecretExecutionRolePolicy"
   role   = aws_iam_role.ExecutionRole.id
   policy = data.aws_iam_policy_document.ecs_secrets_access[0].json
@@ -613,7 +672,7 @@ resource "aws_iam_role_policy" "ecs_secrets_access_role_policy" {
 # Construct the S3 bucket list policy
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "s3_bucket_list_access" {
-  count = local.execution_iam_s3_buckets == [] ? 0 : 1
+  count = contains(keys(var.execution_iam_access), "s3_buckets") ? 1 : 0
   statement {
     sid       = "S3ListBucketAccess"
     effect    = "Allow"
@@ -628,7 +687,7 @@ data "aws_iam_policy_document" "s3_bucket_list_access" {
 # Build role policy using data, link to role
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role_policy" "ecs_s3_bucket_list_access_role_policy" {
-  count  = local.execution_iam_s3_buckets == [] ? 0 : 1
+  count  = contains(keys(var.execution_iam_access), "s3_buckets") ? 1 : 0
   name   = "EcsS3BucketListExecutionRolePolicy"
   role   = aws_iam_role.ExecutionRole.id
   policy = data.aws_iam_policy_document.s3_bucket_list_access[0].json
@@ -638,7 +697,7 @@ resource "aws_iam_role_policy" "ecs_s3_bucket_list_access_role_policy" {
 # Construct the S3 bucket object policy
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "s3_bucket_object_access" {
-  count = local.execution_iam_s3_buckets_object_access == [] ? 0 : 1
+  count = contains(keys(var.execution_iam_access), "s3_buckets") ? 1 : 0
   statement {
     sid       = "S3BucketObjectAccess"
     effect    = "Allow"
@@ -655,7 +714,7 @@ data "aws_iam_policy_document" "s3_bucket_object_access" {
 # Build role policy using data, link to role
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role_policy" "ecs_s3_bucket_object_access_role_policy" {
-  count  = local.execution_iam_s3_buckets_object_access == [] ? 0 : 1
+  count  = contains(keys(var.execution_iam_access), "s3_buckets") ? 1 : 0
   name   = "EcsS3BucketObjectAccessExecutionRolePolicy"
   role   = aws_iam_role.ExecutionRole.id
   policy = data.aws_iam_policy_document.s3_bucket_object_access[0].json
@@ -665,7 +724,7 @@ resource "aws_iam_role_policy" "ecs_s3_bucket_object_access_role_policy" {
 # Construct the S3 bucket object policy
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "kms_cmk_access" {
-  count = local.execution_iam_kms_cmk == [] ? 0 : 1
+  count = contains(keys(var.execution_iam_access), "kms_cmk") ? 1 : 0
   statement {
     sid       = "KmsCmkAccess"
     effect    = "Allow"
@@ -680,10 +739,35 @@ data "aws_iam_policy_document" "kms_cmk_access" {
 # Build role policy using data, link to role
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role_policy" "ecs_kms_cmk_access_role_policy" {
-  count  = local.execution_iam_kms_cmk == [] ? 0 : 1
+  count  = contains(keys(var.execution_iam_access), "kms_cmk") ? 1 : 0
   name   = "EcsKmsCmkAccessExecutionRolePolicy"
   role   = aws_iam_role.ExecutionRole.id
   policy = data.aws_iam_policy_document.kms_cmk_access[0].json
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Construct the SSM parameter access policy
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_iam_policy_document" "ssm_parameter_access" {
+  count = contains(keys(var.execution_iam_access), "ssm_parameters") ? 1 : 0
+  statement {
+    sid       = "SsmParameterAccess"
+    effect    = "Allow"
+    resources = local.execution_iam_ssm_parameters
+    actions = [
+      "ssm:GetParameters"
+    ]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Build role policy using data, link to role
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role_policy" "ecs_ssm_parameter_access_role_policy" {
+  count  = contains(keys(var.execution_iam_access), "ssm_parameters") ? 1 : 0
+  name   = "EcsSsmParameterAccessExecutionRolePolicy"
+  role   = aws_iam_role.ExecutionRole.id
+  policy = data.aws_iam_policy_document.ssm_parameter_access[0].json
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -991,4 +1075,94 @@ resource "aws_sfn_state_machine" "state_machine" {
 EOF
 
   role_arn = aws_iam_role.state_machine_role[0].arn
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# IAM Infrastructure Role for ECS-managed EBS volumes
+# Required for Fargate tasks with attached EBS volumes
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role" "ecs_ebs_infrastructure" {
+  count = length(var.ebs_volumes) > 0 ? 1 : 0
+
+  name = "${var.name}-ecs-ebs-infra-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+
+  tags = {
+    Name = "${var.name}-ecs-ebs-infra-role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_ebs_infrastructure" {
+  count = length(var.ebs_volumes) > 0 ? 1 : 0
+
+  role       = aws_iam_role.ecs_ebs_infrastructure[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRolePolicyForVolumes"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# SSM Parameter for EBS snapshot lifecycle (seeded here, updated by Lambda)
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_ssm_parameter" "ebs_latest_snapshot" {
+  count = var.enable_ebs_snapshot_lifecycle ? 1 : 0
+
+  name      = "/${var.solution_name}/ebs_snapshot/${var.name}/latest_snapshot_id"
+  type      = "String"
+  value     = "none"
+  overwrite = true
+
+  tags = {
+    Name = "${var.name}-ebs-latest-snapshot"
+  }
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Allow bastion host access to ECS tasks on the service port
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_security_group_rule" "bastion_ingress" {
+  count = var.enable_bastion_access ? 1 : 0
+
+  type                     = "ingress"
+  from_port                = var.service_port
+  to_port                  = var.service_port
+  protocol                 = "tcp"
+  source_security_group_id = data.aws_security_group.bastion_host_ssm_sg[0].id
+  security_group_id        = data.aws_security_group.ecs_default_sg.id
+  description              = "Allow inbound traffic from bastion host on port ${var.service_port}/tcp"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Cloud Map service discovery for ECS services
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_service_discovery_service" "this" {
+  count = var.enable_service_discovery ? 1 : 0
+
+  name = coalesce(var.service_discovery_dns_name, var.name)
+
+  dns_config {
+    namespace_id = data.aws_ssm_parameter.cloud_map_namespace_id[0].value
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
 }

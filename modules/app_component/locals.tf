@@ -20,6 +20,8 @@ locals {
 
       essential = single_container.essential
 
+      mountPoints = single_container.mount_points
+
       readonlyRootFilesystem = single_container.readonlyRootFilesystem
 
       logConfiguration = single_container.log_configuration

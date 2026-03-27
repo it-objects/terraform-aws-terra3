@@ -49,3 +49,7 @@ output "log_configuration" {
 output "firelens_configuration" {
   value = var.firelens_configuration
 }
+
+output "mount_points" {
+  value = var.mount_points
+}

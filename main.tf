@@ -646,7 +646,7 @@ module "app_components" {
   ecs_autoscaling_target_value = var.ecs_autoscaling_target_value
 
   # needed because for the ability to run separately, this module relies on querying information via data fields
-  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
+  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, module.internal_service_dns, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
 }
 
 locals {

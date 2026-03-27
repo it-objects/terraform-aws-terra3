@@ -87,6 +87,16 @@ variable "log_configuration" {
   default     = null
 }
 
+variable "mount_points" {
+  description = "Mount points for the container (used with EBS volumes on Fargate)"
+  type = list(object({
+    sourceVolume  = string
+    containerPath = string
+    readOnly      = optional(bool, false)
+  }))
+  default = []
+}
+
 variable "enable_firelens_container" {
   description = "Select true to enable firelens container."
   type        = bool

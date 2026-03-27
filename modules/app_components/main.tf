@@ -92,6 +92,13 @@ module "app_components" {
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
+  ebs_volumes                   = lookup(each.value, "ebs_volumes", [])
+  ebs_volume_availability_zone  = lookup(each.value, "ebs_volume_availability_zone", null)
+  enable_ebs_snapshot_lifecycle = lookup(each.value, "enable_ebs_snapshot_lifecycle", false)
+  enable_bastion_access         = lookup(each.value, "enable_bastion_access", false)
+  enable_service_discovery      = lookup(each.value, "enable_service_discovery", false)
+  service_discovery_dns_name    = lookup(each.value, "service_discovery_dns_name", null)
+
   # get custom_domain setting from parameter store in case of a two_states_approach
   enable_custom_domain = var.two_states_approach ? data.aws_ssm_parameter.enable_custom_domain.value : var.enable_custom_domain
 }
