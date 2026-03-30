@@ -2,26 +2,8 @@
 # Internal Service DNS Module - Main
 # -----------------------------------------------
 
-# Route53 private hosted zone for internal service discovery
-# This zone is created once at the VPC level and shared by all Docker workloads
-resource "aws_route53_zone" "internal" {
-  count = var.enable ? 1 : 0
-  name  = local.zone_name
-
-  vpc {
-    vpc_id = var.vpc_id
-  }
-
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.solution_name}-internal-zone"
-    }
-  )
-}
-
 # AWS Cloud Map namespace for ECS service discovery
-# Shares the same DNS name as the Route53 zone
+# This automatically creates a Route53 private hosted zone for the domain
 resource "aws_service_discovery_private_dns_namespace" "internal" {
   count = var.enable ? 1 : 0
 
@@ -42,7 +24,7 @@ resource "aws_ssm_parameter" "zone_id" {
   count     = var.enable ? 1 : 0
   name      = "/${var.solution_name}/internal_service_dns/zone_id"
   type      = "String"
-  value     = aws_route53_zone.internal[0].zone_id
+  value     = aws_service_discovery_private_dns_namespace.internal[0].hosted_zone
   overwrite = true
 
   tags = var.tags
@@ -53,7 +35,7 @@ resource "aws_ssm_parameter" "zone_name" {
   count     = var.enable ? 1 : 0
   name      = "/${var.solution_name}/internal_service_dns/zone_name"
   type      = "String"
-  value     = aws_route53_zone.internal[0].name
+  value     = local.zone_name
   overwrite = true
 
   tags = var.tags

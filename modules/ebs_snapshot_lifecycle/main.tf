@@ -114,7 +114,7 @@ module "snapshot_lambda" {
   description   = "Snapshots EBS volumes on ECS task stop for ${var.solution_name}/${var.app_component_name}"
   handler       = "snapshot.handler"
   runtime       = "nodejs22.x"
-  timeout       = 120
+  timeout       = 600
 
   source_path = "${path.module}/snapshot.mjs"
 

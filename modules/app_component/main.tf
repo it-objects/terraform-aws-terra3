@@ -101,6 +101,9 @@ resource "aws_ecs_service" "ecs_service" {
     rollback = true
   }
 
+  # Ensure the EBS infrastructure role and its policy are fully propagated before ECS tries to assume it
+  depends_on = [aws_iam_role_policy_attachment.ecs_ebs_infrastructure]
+
   # Ignored desired count changes live, permitting schedulers to update this value without terraform reverting
   lifecycle {
     ignore_changes = [desired_count]
