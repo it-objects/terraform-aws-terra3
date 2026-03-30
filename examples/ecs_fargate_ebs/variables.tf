@@ -40,7 +40,7 @@ variable "postgres_db" {
 }
 
 variable "ebs_volume_availability_zone" {
-  description = "Availability zone for EBS volumes. Must match one of the private subnet AZs."
+  description = "Optional. Pin EBS tasks to a single AZ. Leave null for multi-AZ placement."
   type        = string
-  default     = "eu-central-1a"
+  default     = null
 }

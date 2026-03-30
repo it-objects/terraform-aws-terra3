@@ -23,8 +23,8 @@ locals {
   # convert string to list
   private_subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
 
-  # When EBS volumes are used, pin to single AZ
-  effective_subnets = length(var.ebs_volumes) > 0 ? data.aws_subnets.private_in_az[0].ids : local.private_subnets
+  # When an explicit AZ is set, pin to subnets in that AZ; otherwise use all private subnets
+  effective_subnets = var.ebs_volume_availability_zone != null ? data.aws_subnets.private_in_az[0].ids : local.private_subnets
 
   private_subnets_as_string = jsonencode(local.private_subnets)
 
@@ -96,6 +96,12 @@ resource "aws_ecs_service" "ecs_service" {
     }
   }
 
+  # When snapshot lifecycle is active, use stop-before-start to ensure the old task's
+  # volume is snapshotted before the new task launches with a fresh snapshot.
+  # Otherwise, use default rolling update (no downtime).
+  deployment_minimum_healthy_percent = var.enable_ebs_snapshot_lifecycle ? 0 : 100
+  deployment_maximum_percent         = var.enable_ebs_snapshot_lifecycle ? 100 : 200
+
   deployment_circuit_breaker {
     enable   = true
     rollback = true
@@ -109,8 +115,8 @@ resource "aws_ecs_service" "ecs_service" {
     ignore_changes = [desired_count]
 
     precondition {
-      condition     = length(var.ebs_volumes) == 0 || var.ebs_volume_availability_zone != null
-      error_message = "ebs_volume_availability_zone must be set when ebs_volumes is non-empty."
+      condition     = !var.enable_ebs_snapshot_lifecycle || var.instances <= 1
+      error_message = "enable_ebs_snapshot_lifecycle requires instances = 1. The snapshot lifecycle assumes a single task per service."
     }
 
     precondition {

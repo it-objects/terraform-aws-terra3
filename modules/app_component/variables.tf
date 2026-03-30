@@ -391,7 +391,7 @@ variable "enable_custom_domain" {
 }
 
 variable "ebs_volumes" {
-  description = "EBS volumes to attach to Fargate tasks. Requires single-AZ deployment via ebs_volume_availability_zone."
+  description = "EBS volumes to attach to Fargate tasks. Optionally pin to a single AZ via ebs_volume_availability_zone."
   type = list(object({
     name             = string
     size_in_gb       = number
@@ -413,7 +413,7 @@ variable "enable_ebs_snapshot_lifecycle" {
 }
 
 variable "ebs_volume_availability_zone" {
-  description = "AZ for EBS volumes. Required when ebs_volumes is non-empty. Pins the service to a single subnet in this AZ."
+  description = "Optional. When set, pins the ECS service to subnets in this AZ. When null (default), tasks can be placed in any AZ. Snapshots are regional and restore cross-AZ."
   type        = string
   default     = null
 }

@@ -82,7 +82,7 @@ module "terra3_examples" {
         }
       ]
 
-      ebs_volume_availability_zone = var.ebs_volume_availability_zone
+      # ebs_volume_availability_zone = var.ebs_volume_availability_zone  # Optional: set to pin to single AZ
 
       # Restore from latest snapshot on task launch
       enable_ebs_snapshot_lifecycle = true
