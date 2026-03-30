@@ -77,11 +77,8 @@ module "terra3_examples" {
       # EBS volume configuration
       ebs_volumes = [
         {
-          name             = "postgres-data"
-          size_in_gb       = 50
-          volume_type      = "gp3"
-          encrypted        = true
-          file_system_type = "ext4"
+          name       = "postgres-data"
+          size_in_gb = 5
         }
       ]
 
