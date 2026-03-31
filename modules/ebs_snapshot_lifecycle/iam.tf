@@ -45,6 +45,8 @@ resource "aws_iam_policy" "lambda_ebs_snapshot" {
           "ecs:UpdateService",
           "ecs:DescribeTaskDefinition",
           "ecs:TagResource",
+          "ecs:ListTasks",
+          "ecs:DescribeTasks",
         ]
         Resource = "*"
         Condition = {

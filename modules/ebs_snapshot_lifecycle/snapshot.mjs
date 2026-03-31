@@ -2,11 +2,11 @@
 // Automatically snapshots EBS volumes when ECS Fargate tasks are stopping
 // and updates the ECS service volume config with the new snapshot.
 //
-// Flow:
-// 1. Task enters STOPPING → EventBridge triggers this Lambda
-// 2. Pause service (desiredCount=0) to prevent replacement with old snapshot
-// 3. Create snapshot, wait for completion, store in SSM
-// 4. Single UpdateService: new volume config + restore desiredCount (one deployment)
+// Supports two trigger modes:
+// 1. Task stop (EventBridge ECS task state change):
+//    Pause service → snapshot → update service with new snapshot
+// 2. Scheduled backup (EventBridge cron):
+//    Discover running task → live snapshot → no service changes
 //
 // Safety features:
 // - DynamoDB idempotency: prevents concurrent invocations from racing
@@ -17,7 +17,7 @@
 
 import { EC2Client, CreateSnapshotCommand, DescribeSnapshotsCommand, DeleteSnapshotCommand } from "@aws-sdk/client-ec2";
 import { SSMClient, PutParameterCommand } from "@aws-sdk/client-ssm";
-import { ECSClient, DescribeServicesCommand, UpdateServiceCommand } from "@aws-sdk/client-ecs";
+import { ECSClient, DescribeServicesCommand, UpdateServiceCommand, ListTasksCommand, DescribeTasksCommand } from "@aws-sdk/client-ecs";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
@@ -38,16 +38,27 @@ const {
   DYNAMODB_TABLE_NAME,
   SNS_TOPIC_ARN,
   FILE_SYSTEM_TYPE,
+  BACKUP_RETENTION_COUNT,
 } = process.env;
 
 const SNAPSHOT_POLL_INTERVAL_MS = 10000;
 const SNAPSHOT_POLL_TIMEOUT_MS = 540000;
 const MANAGED_BY_TAG = "managed-by";
 const MANAGED_BY_VALUE = "terra3-ebs-snapshot-lifecycle";
+const SNAPSHOT_TYPE_TAG = "snapshot-type";
+const SNAPSHOT_TYPE_LIFECYCLE = "lifecycle";
+const SNAPSHOT_TYPE_BACKUP = "backup";
 
 export const handler = async (event) => {
   console.log("Received event:", JSON.stringify(event, null, 2));
 
+  // Scheduled backup: discover running task's volume and snapshot live
+  if (event.source === "aws.events" && event["detail-type"] === "Scheduled Event") {
+    await handleScheduledBackup();
+    return;
+  }
+
+  // Task stop: existing lifecycle flow
   const { attachments, group, taskArn } = event.detail;
 
   // Only process events for our app component's service
@@ -178,27 +189,31 @@ export const handler = async (event) => {
   }
 };
 
-async function createSnapshot(volumeId) {
+async function createSnapshot(volumeId, snapshotType = SNAPSHOT_TYPE_LIFECYCLE) {
+  const typeLabel = snapshotType === SNAPSHOT_TYPE_BACKUP ? "backup" : "auto";
   try {
     const snapshot = await ec2.send(new CreateSnapshotCommand({
       VolumeId: volumeId,
-      Description: `Auto-snapshot for ${SOLUTION_NAME}/${APP_COMPONENT_NAME}`,
+      Description: `${typeLabel === "backup" ? "Scheduled backup" : "Auto-snapshot"} for ${SOLUTION_NAME}/${APP_COMPONENT_NAME}`,
       TagSpecifications: [{
         ResourceType: "snapshot",
         Tags: [
-          { Key: "Name", Value: `${SOLUTION_NAME}-${APP_COMPONENT_NAME}-auto` },
+          { Key: "Name", Value: `${SOLUTION_NAME}-${APP_COMPONENT_NAME}-${typeLabel}` },
           { Key: "solution_name", Value: SOLUTION_NAME },
           { Key: "app_component", Value: APP_COMPONENT_NAME },
           { Key: MANAGED_BY_TAG, Value: MANAGED_BY_VALUE },
+          { Key: SNAPSHOT_TYPE_TAG, Value: snapshotType },
         ]
       }]
     }));
-    console.log(`Snapshot created: ${snapshot.SnapshotId}`);
+    console.log(`Snapshot created (${snapshotType}): ${snapshot.SnapshotId}`);
     return snapshot;
   } catch (err) {
     if (err.name === "IncorrectState") {
       console.error(`SNAPSHOT_FAILED: Volume ${volumeId} in IncorrectState`);
-      await handleFailure(volumeId, volumeId, `Volume ${volumeId} in IncorrectState`);
+      if (snapshotType === SNAPSHOT_TYPE_LIFECYCLE) {
+        await handleFailure(volumeId, volumeId, `Volume ${volumeId} in IncorrectState`);
+      }
       return null;
     }
     throw err;
@@ -348,19 +363,103 @@ async function cleanupSnapshots() {
     ]
   }));
 
+  // Only clean up lifecycle snapshots (or untagged legacy ones)
   const completed = (existing.Snapshots || [])
     .filter(s => s.State === "completed")
+    .filter(s => {
+      const typeTag = s.Tags?.find(t => t.Key === SNAPSHOT_TYPE_TAG)?.Value;
+      return !typeTag || typeTag === SNAPSHOT_TYPE_LIFECYCLE;
+    })
     .sort((a, b) => new Date(b.StartTime) - new Date(a.StartTime));
 
   const toDelete = completed.slice(retentionCount).filter(s => !protectedSnapshots.has(s.SnapshotId));
   for (const snap of toDelete) {
     try {
       await ec2.send(new DeleteSnapshotCommand({ SnapshotId: snap.SnapshotId }));
-      console.log(`Deleted old snapshot: ${snap.SnapshotId}`);
+      console.log(`Deleted old lifecycle snapshot: ${snap.SnapshotId}`);
     } catch (err) {
       console.warn(`Failed to delete snapshot ${snap.SnapshotId}: ${err.message}`);
     }
   }
 
-  console.log(`Cleanup: kept ${Math.min(completed.length, retentionCount)}, deleted ${toDelete.length}`);
+  console.log(`Lifecycle cleanup: kept ${Math.min(completed.length, retentionCount)}, deleted ${toDelete.length}`);
+}
+
+// -----------------------------------------------
+// Scheduled Backup
+// -----------------------------------------------
+
+async function handleScheduledBackup() {
+  console.log("Scheduled backup triggered");
+
+  // Discover running task and its EBS volume
+  const listResp = await ecs.send(new ListTasksCommand({
+    cluster: ECS_CLUSTER_ARN,
+    serviceName: ECS_SERVICE_NAME,
+    desiredStatus: "RUNNING",
+  }));
+
+  if (!listResp.taskArns?.length) {
+    console.log("No running tasks found, skipping scheduled backup");
+    return;
+  }
+
+  const descResp = await ecs.send(new DescribeTasksCommand({
+    cluster: ECS_CLUSTER_ARN,
+    tasks: [listResp.taskArns[0]],
+  }));
+
+  const task = descResp.tasks?.[0];
+  const ebsAttachment = task?.attachments?.find(a =>
+    a.type === "amazonebs" || a.type === "AmazonElasticBlockStorage"
+  );
+  const volumeId = ebsAttachment?.details?.find(d => d.name === "volumeId")?.value;
+
+  if (!volumeId) {
+    console.log("No EBS volume found on running task, skipping");
+    return;
+  }
+
+  console.log(`Creating scheduled backup for volume ${volumeId}`);
+
+  const snapshot = await createSnapshot(volumeId, SNAPSHOT_TYPE_BACKUP);
+  if (!snapshot) return;
+
+  const completed = await waitForSnapshotCompletion(snapshot.SnapshotId);
+  if (!completed) {
+    console.error(`Scheduled backup snapshot ${snapshot.SnapshotId} did not complete within timeout`);
+    return;
+  }
+
+  console.log(`Scheduled backup completed: ${snapshot.SnapshotId}`);
+  await cleanupBackupSnapshots();
+}
+
+async function cleanupBackupSnapshots() {
+  const retentionCount = Number.parseInt(BACKUP_RETENTION_COUNT, 10) || 7;
+
+  const existing = await ec2.send(new DescribeSnapshotsCommand({
+    Filters: [
+      { Name: "tag:solution_name", Values: [SOLUTION_NAME] },
+      { Name: "tag:app_component", Values: [APP_COMPONENT_NAME] },
+      { Name: `tag:${MANAGED_BY_TAG}`, Values: [MANAGED_BY_VALUE] },
+      { Name: `tag:${SNAPSHOT_TYPE_TAG}`, Values: [SNAPSHOT_TYPE_BACKUP] },
+    ]
+  }));
+
+  const completed = (existing.Snapshots || [])
+    .filter(s => s.State === "completed")
+    .sort((a, b) => new Date(b.StartTime) - new Date(a.StartTime));
+
+  const toDelete = completed.slice(retentionCount);
+  for (const snap of toDelete) {
+    try {
+      await ec2.send(new DeleteSnapshotCommand({ SnapshotId: snap.SnapshotId }));
+      console.log(`Deleted old backup snapshot: ${snap.SnapshotId}`);
+    } catch (err) {
+      console.warn(`Failed to delete backup snapshot ${snap.SnapshotId}: ${err.message}`);
+    }
+  }
+
+  console.log(`Backup cleanup: kept ${Math.min(completed.length, retentionCount)}, deleted ${toDelete.length}`);
 }

@@ -87,6 +87,26 @@ module "terra3_examples" {
       # Restore from latest snapshot on task launch
       enable_ebs_snapshot_lifecycle = true
     }
+
+    # PostgreSQL client for testing connectivity
+    psql_test = {
+      instances    = 1
+      total_cpu    = 256
+      total_memory = 512
+
+      enable_ecs_exec = true
+
+      container = [
+        module.container_psql_test
+      ]
+
+      internal_service                 = true
+      enable_target_group_health_check = false
+
+      execution_iam_access = {
+        ssm_parameters = [aws_ssm_parameter.postgres_password.arn]
+      }
+    }
   }
 }
 
@@ -108,6 +128,11 @@ module "ebs_snapshot_lifecycle" {
   ecs_service_name         = "postgresService"
   volume_name              = "postgres-data"
   snapshot_retention_count = 3
+
+  # Scheduled backups (daily at 2 AM UTC)
+  enable_scheduled_backup = true
+  backup_schedule         = "cron(0 2 ? * * *)"
+  backup_retention_count  = 7
 }
 
 # -----------------------------------------------
@@ -165,6 +190,41 @@ module "container_postgres" {
       readOnly      = false
     }
   ]
+
+  readonlyRootFilesystem = false
+
+  depends_on = [aws_ssm_parameter.postgres_password]
+}
+
+# -----------------------------------------------
+# Container Definition for PostgreSQL Client (psql)
+# -----------------------------------------------
+
+module "container_psql_test" {
+  source = "../../modules/container"
+
+  name = "psql-test"
+
+  container_image  = "alpine:latest"
+  container_cpu    = 256
+  container_memory = 512
+
+  # Install psql client and keep running for ECS exec testing:
+  # psql (all connection params injected via env vars and secrets)
+  command = ["sh", "-c", "apk add --no-cache postgresql-client && sleep infinity"]
+
+  port_mappings = []
+
+  map_environment = {
+    "PGHOST"     = "postgres.internal.${local.solution_name}.local"
+    "PGPORT"     = "5432"
+    "PGUSER"     = var.postgres_user
+    "PGDATABASE" = var.postgres_db
+  }
+
+  map_secrets = {
+    "PGPASSWORD" = aws_ssm_parameter.postgres_password.arn
+  }
 
   readonlyRootFilesystem = false
 

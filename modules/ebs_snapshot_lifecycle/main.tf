@@ -121,16 +121,17 @@ module "snapshot_lambda" {
   tracing_mode = "Active"
 
   environment_variables = {
-    SSM_PARAM_NAME      = local.ssm_param_name
-    SOLUTION_NAME       = var.solution_name
-    APP_COMPONENT_NAME  = var.app_component_name
-    RETENTION_COUNT     = tostring(var.snapshot_retention_count)
-    ECS_CLUSTER_ARN     = var.cluster_arn
-    ECS_SERVICE_NAME    = var.ecs_service_name
-    VOLUME_NAME         = var.volume_name
-    DYNAMODB_TABLE_NAME = aws_dynamodb_table.lifecycle.name
-    SNS_TOPIC_ARN       = local.sns_topic_arn
-    FILE_SYSTEM_TYPE    = var.file_system_type
+    SSM_PARAM_NAME         = local.ssm_param_name
+    SOLUTION_NAME          = var.solution_name
+    APP_COMPONENT_NAME     = var.app_component_name
+    RETENTION_COUNT        = tostring(var.snapshot_retention_count)
+    ECS_CLUSTER_ARN        = var.cluster_arn
+    ECS_SERVICE_NAME       = var.ecs_service_name
+    VOLUME_NAME            = var.volume_name
+    DYNAMODB_TABLE_NAME    = aws_dynamodb_table.lifecycle.name
+    SNS_TOPIC_ARN          = local.sns_topic_arn
+    FILE_SYSTEM_TYPE       = var.file_system_type
+    BACKUP_RETENTION_COUNT = tostring(var.backup_retention_count)
   }
 
   attach_policies    = true
@@ -176,4 +177,31 @@ resource "aws_lambda_permission" "eventbridge" {
   function_name = module.snapshot_lambda.lambda_function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.ecs_task_stopped.arn
+}
+
+# -----------------------------------------------
+# Scheduled Backup (optional cron-based snapshots)
+# -----------------------------------------------
+
+resource "aws_cloudwatch_event_rule" "scheduled_backup" {
+  count               = var.enable_scheduled_backup ? 1 : 0
+  name                = "${var.solution_name}-${var.app_component_name}-ebs-backup"
+  description         = "Scheduled EBS backup for ${var.app_component_name}"
+  schedule_expression = var.backup_schedule
+  tags                = var.tags
+}
+
+resource "aws_cloudwatch_event_target" "scheduled_backup" {
+  count = var.enable_scheduled_backup ? 1 : 0
+  rule  = aws_cloudwatch_event_rule.scheduled_backup[0].name
+  arn   = module.snapshot_lambda.lambda_function_arn
+}
+
+resource "aws_lambda_permission" "scheduled_backup" {
+  count         = var.enable_scheduled_backup ? 1 : 0
+  statement_id  = "AllowScheduledBackupInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = module.snapshot_lambda.lambda_function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.scheduled_backup[0].arn
 }

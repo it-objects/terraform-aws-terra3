@@ -50,3 +50,25 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# -----------------------------------------------
+# Scheduled Backup Configuration
+# -----------------------------------------------
+
+variable "enable_scheduled_backup" {
+  description = "Enable scheduled EBS snapshots while the task is running (in addition to snapshots on task stop)."
+  type        = bool
+  default     = false
+}
+
+variable "backup_schedule" {
+  description = "Cron or rate expression for scheduled backups (e.g., 'cron(0 2 ? * * *)' for daily at 2 AM UTC)."
+  type        = string
+  default     = "cron(0 2 ? * * *)"
+}
+
+variable "backup_retention_count" {
+  description = "Number of scheduled backup snapshots to retain."
+  type        = number
+  default     = 7
+}
