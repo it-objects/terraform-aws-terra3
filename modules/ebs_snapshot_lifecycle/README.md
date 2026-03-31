@@ -27,61 +27,46 @@ ECS Fargate managed EBS volumes are ephemeral -- they're created per task and de
                                                     |
                                                     v
                                       +----------------------------+
-                                      | Lambda: Safety checks      |
-                                      | - Correct service?         |
-                                      | - Multiple deployments?    |
-                                      |   (skip if yes)            |
-                                      | - DynamoDB idempotency     |
+                                      | Phase 1 Lambda:            |
+                                      | - Safety checks            |
+                                      |   (service, deployments,   |
+                                      |    DynamoDB idempotency)   |
+                                      | - Pause service            |
+                                      |   (desiredCount = 0)       |
+                                      | - Create snapshot          |
+                                      | - Store pending state      |
+                                      |   in DynamoDB              |
+                                      | - Return (~3s)             |
                                       +-------------+--------------+
                                                     |
                                                     v
                                       +----------------------------+
-                                      | Lambda: Pause service      |
-                                      | desiredCount = 0           |
-                                      | (prevents ECS from         |
-                                      |  launching replacement     |
-                                      |  with stale snapshot)      |
+                                      | AWS creates snapshot       |
+                                      | (seconds to minutes,       |
+                                      |  no timeout constraint)    |
                                       +-------------+--------------+
                                                     |
                                                     v
                                       +----------------------------+
-                                      | Lambda: Create snapshot    |
-                                      | from EBS volume            |
-                                      | (regional -- works in      |
-                                      |  any AZ on restore)        |
-                                      +-------------+--------------+
-                                                    |
-                                                    v
-                                      +----------------------------+
-                                      | Lambda: Wait for snapshot  |
-                                      | completion (polls every    |
-                                      | 10s, timeout 9min)         |
+                                      | EventBridge fires          |
+                                      | "EBS Snapshot Notification"|
+                                      | result = succeeded/failed  |
                                       +-------------+--------------+
                                                     |
                                         +-----------+-----------+
                                         |                       |
-                                   Completed                 Failed
+                                   Succeeded                 Failed
                                         |                       |
                                         v                       v
                               +------------------+   +---------------------+
-                              | Store snapshot   |   | SSM = "failed"      |
-                              | ID in SSM        |   | desiredCount = 0    |
-                              +--------+---------+   | SNS alert sent      |
-                                       |             | (manual recovery    |
-                                       v             |  required)          |
-                              +------------------+   +---------------------+
-                              | UpdateService:   |
-                              | - new snapshot   |
-                              | - desiredCount=1 |
-                              | (single deploy)  |
-                              +--------+---------+
-                                       |
-                                       v
-                              +------------------+
-                              | Cleanup old      |
-                              | snapshots        |
-                              | (keep N recent,  |
-                              |  protect in-use) |
+                              | Phase 2 Lambda:  |   | SSM = "failed"      |
+                              | - Store snapshot |   | desiredCount = 0    |
+                              |   ID in SSM      |   | SNS alert sent      |
+                              | - UpdateService: |   | (manual recovery    |
+                              |   new snapshot + |   |  required)          |
+                              |   desiredCount=1 |   +---------------------+
+                              | - Cleanup old    |
+                              |   snapshots      |
                               +--------+---------+
                                        |
                                        v
@@ -117,21 +102,25 @@ For stateful workloads, the service should use stop-before-start deployment to a
   Time ------>
 
   Old task:    [====== RUNNING ======][STOPPING]
-  Lambda:                              [pause][snapshot...wait...][update service]
-  New task:                                                        [== RUNNING ==]
-                                       ^                           ^
-                                       |                           |
-                                  brief downtime             fresh snapshot
-                                  (~30-60s typical)
+  Phase 1:                            [pause][snapshot]  (~3s)
+  AWS:                                        [... snapshot completing ...]
+  Phase 2:                                                [update service]  (~10s)
+  New task:                                                [== RUNNING ==]
+                                       ^                   ^
+                                       |                   |
+                                  brief downtime      fresh snapshot
+                                  (depends on snapshot
+                                   completion time)
 ```
 
 ## Components
 
 | Resource | Purpose |
 |----------|---------|
-| Lambda function | Snapshots volume on task stop, updates ECS service |
-| EventBridge rule | Triggers Lambda on `ECS Task State Change` (STOPPING) |
-| DynamoDB table | Idempotency tracking (prevents concurrent processing) |
+| Lambda function | Phase 1: snapshots volume on task stop. Phase 2: updates ECS service on snapshot completion |
+| EventBridge rule (ECS) | Triggers Phase 1 on `ECS Task State Change` (STOPPING) |
+| EventBridge rule (EBS) | Triggers Phase 2 on `EBS Snapshot Notification` (succeeded/failed) |
+| DynamoDB table | Idempotency tracking + Phase 1→2 handoff (GSI on snapshotId) |
 | SSM Parameter | Stores latest snapshot ID (`/{solution}/ebs_snapshot/{component}/latest_snapshot_id`) |
 | CloudWatch alarm | Alerts on snapshot failures via SNS |
 | SNS topic | Failure notifications (created if not provided) |
@@ -221,6 +210,6 @@ aws ecs update-service --cluster <cluster> --service <service> --desired-count 1
 ## Constraints
 
 - Requires `instances = 1` on the app component (Lambda assumes single task per service)
-- Brief downtime during snapshot cycle (~30-60s depending on volume size)
-- Snapshot timeout: 9 minutes. Volumes larger than ~100 GB may need the Lambda timeout increased
+- Brief downtime during snapshot cycle (depends on snapshot completion time — typically seconds for incremental snapshots)
+- Scheduled backups use synchronous polling (9-minute timeout) but this is non-critical since they don't pause the service
 - Lambda memory: 128 MB (sufficient for API calls, no data processing)

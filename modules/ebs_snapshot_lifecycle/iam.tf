@@ -82,8 +82,13 @@ resource "aws_iam_policy" "lambda_ebs_snapshot" {
         Action = [
           "dynamodb:PutItem",
           "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:Query",
         ]
-        Resource = "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.solution_name}-${var.app_component_name}-ebs-lifecycle"
+        Resource = [
+          "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.solution_name}-${var.app_component_name}-ebs-lifecycle",
+          "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.solution_name}-${var.app_component_name}-ebs-lifecycle/index/snapshotId-index",
+        ]
       },
       {
         Sid    = "SNSPublish"

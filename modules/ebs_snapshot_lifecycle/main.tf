@@ -38,6 +38,17 @@ resource "aws_dynamodb_table" "lifecycle" {
     type = "S"
   }
 
+  attribute {
+    name = "snapshotId"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "snapshotId-index"
+    hash_key        = "snapshotId"
+    projection_type = "ALL"
+  }
+
   ttl {
     attribute_name = "expiresAt"
     enabled        = true
@@ -204,4 +215,37 @@ resource "aws_lambda_permission" "scheduled_backup" {
   function_name = module.snapshot_lambda.lambda_function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.scheduled_backup[0].arn
+}
+
+# -----------------------------------------------
+# EventBridge rule: EBS Snapshot completion (Phase 2)
+# -----------------------------------------------
+
+resource "aws_cloudwatch_event_rule" "ebs_snapshot_complete" {
+  name        = "${var.solution_name}-${var.app_component_name}-ebs-snap-done"
+  description = "Trigger on EBS snapshot completion for ${var.app_component_name}"
+
+  event_pattern = jsonencode({
+    source      = ["aws.ec2"]
+    detail-type = ["EBS Snapshot Notification"]
+    detail = {
+      event  = ["createSnapshot"]
+      result = ["succeeded", "failed"]
+    }
+  })
+
+  tags = var.tags
+}
+
+resource "aws_cloudwatch_event_target" "snapshot_complete" {
+  rule = aws_cloudwatch_event_rule.ebs_snapshot_complete.name
+  arn  = module.snapshot_lambda.lambda_function_arn
+}
+
+resource "aws_lambda_permission" "snapshot_complete" {
+  statement_id  = "AllowEBSSnapshotNotificationInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = module.snapshot_lambda.lambda_function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.ebs_snapshot_complete.arn
 }

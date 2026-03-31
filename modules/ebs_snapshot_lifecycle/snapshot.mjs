@@ -2,23 +2,25 @@
 // Automatically snapshots EBS volumes when ECS Fargate tasks are stopping
 // and updates the ECS service volume config with the new snapshot.
 //
-// Supports two trigger modes:
-// 1. Task stop (EventBridge ECS task state change):
-//    Pause service → snapshot → update service with new snapshot
-// 2. Scheduled backup (EventBridge cron):
-//    Discover running task → live snapshot → no service changes
+// Supports three trigger modes:
+// 1. Task stop — Phase 1 (EventBridge ECS task state change):
+//    Pause service → create snapshot → store pending state → return
+// 2. Snapshot completion — Phase 2 (EventBridge EBS Snapshot Notification):
+//    Lookup pending record → update SSM → update service → cleanup
+// 3. Scheduled backup (EventBridge cron):
+//    Discover running task → live snapshot (synchronous) → no service changes
 //
 // Safety features:
 // - DynamoDB idempotency: prevents concurrent invocations from racing
 // - Loop prevention: skips events when service has multiple active deployments
 // - Failure blocking: sets SSM to "failed" and desiredCount=0 on snapshot failure
-// - Snapshot completion wait: polls until snapshot is complete before updating service
+// - Async completion: no polling timeout — works for any volume size
 // - Cleanup protects snapshots still referenced by the service
 
 import { EC2Client, CreateSnapshotCommand, DescribeSnapshotsCommand, DeleteSnapshotCommand } from "@aws-sdk/client-ec2";
 import { SSMClient, PutParameterCommand } from "@aws-sdk/client-ssm";
 import { ECSClient, DescribeServicesCommand, UpdateServiceCommand, ListTasksCommand, DescribeTasksCommand } from "@aws-sdk/client-ecs";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, UpdateItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
 const ec2 = new EC2Client();
@@ -58,7 +60,13 @@ export const handler = async (event) => {
     return;
   }
 
-  // Task stop: existing lifecycle flow
+  // Phase 2: EBS Snapshot completion (async, triggered by EventBridge)
+  if (event.source === "aws.ec2" && event["detail-type"] === "EBS Snapshot Notification") {
+    await handleSnapshotCompletion(event.detail);
+    return;
+  }
+
+  // Phase 1: Task stop — create snapshot and return (no polling)
   const { attachments, group, taskArn } = event.detail;
 
   // Only process events for our app component's service
@@ -143,45 +151,23 @@ export const handler = async (event) => {
     const snapshot = await createSnapshot(volumeId);
     if (!snapshot) return; // handleFailure already called
 
-    // Wait for completion
-    const completed = await waitForSnapshotCompletion(snapshot.SnapshotId);
-    if (!completed) {
-      console.error(`SNAPSHOT_FAILED: Snapshot ${snapshot.SnapshotId} did not complete within timeout`);
-      await handleFailure(volumeId, taskArn, `Snapshot ${snapshot.SnapshotId} timed out after ${SNAPSHOT_POLL_TIMEOUT_MS}ms`);
-      return;
-    }
-
-    console.log(`Snapshot ${snapshot.SnapshotId} completed`);
-
-    // Store in SSM
-    await ssm.send(new PutParameterCommand({
-      Name: SSM_PARAM_NAME,
-      Value: snapshot.SnapshotId,
-      Type: "String",
-      Overwrite: true,
-    }));
-
-    // Record success
-    await ddb.send(new PutItemCommand({
+    // Store pending record with snapshotId for Phase 2 pickup
+    await ddb.send(new UpdateItemCommand({
       TableName: DYNAMODB_TABLE_NAME,
-      Item: {
+      Key: {
         volumeId: { S: volumeId },
         taskArn: { S: taskArn },
-        status: { S: "success" },
-        snapshotId: { S: snapshot.SnapshotId },
-        timestamp: { S: new Date().toISOString() },
-        expiresAt: { N: String(Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60) },
+      },
+      UpdateExpression: "SET snapshotId = :sid, originalDesiredCount = :dc, #s = :status",
+      ExpressionAttributeNames: { "#s": "status" },
+      ExpressionAttributeValues: {
+        ":sid": { S: snapshot.SnapshotId },
+        ":dc": { N: String(originalDesiredCount) },
+        ":status": { S: "pending_completion" },
       },
     }));
 
-    console.log(`Stored ${snapshot.SnapshotId} in SSM: ${SSM_PARAM_NAME}`);
-
-    // --- Single UpdateService: new volume config + restore desiredCount ---
-    // This creates exactly ONE new deployment with the correct snapshot.
-    await updateServiceWithSnapshot(service, snapshot.SnapshotId, originalDesiredCount);
-
-    // Cleanup old snapshots (protects in-use snapshots)
-    await cleanupSnapshots();
+    console.log(`Phase 1 complete: snapshot ${snapshot.SnapshotId} created, awaiting EventBridge completion event`);
   } catch (err) {
     console.error(`SNAPSHOT_FAILED: Unexpected error for volume ${volumeId}: ${err.message}`);
     await handleFailure(volumeId, taskArn, `Unexpected error: ${err.message}`);
@@ -216,6 +202,121 @@ async function createSnapshot(volumeId, snapshotType = SNAPSHOT_TYPE_LIFECYCLE) 
       }
       return null;
     }
+    throw err;
+  }
+}
+
+// -----------------------------------------------
+// Phase 2: Snapshot Completion (EventBridge EBS Snapshot Notification)
+// -----------------------------------------------
+
+async function handleSnapshotCompletion(detail) {
+  // EventBridge sends ARNs (arn:aws:ec2::region:snapshot/snap-xxx), extract bare IDs
+  const snapshotId = detail.snapshot_id?.split("/").pop();
+  const result = detail.result;
+  const volumeId = detail.source?.split("/").pop();
+  console.log(`Snapshot notification: ${snapshotId}, result=${result}, volume=${volumeId}`);
+
+  // Look up pending record by snapshotId via GSI
+  const queryResp = await ddb.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    IndexName: "snapshotId-index",
+    KeyConditionExpression: "snapshotId = :sid",
+    ExpressionAttributeValues: { ":sid": { S: snapshotId } },
+  }));
+
+  const record = queryResp.Items?.[0];
+  if (!record) {
+    console.log(`No pending record for snapshot ${snapshotId}, ignoring (not ours)`);
+    return;
+  }
+
+  if (record.status?.S !== "pending_completion") {
+    console.log(`Record for ${snapshotId} has status=${record.status?.S}, skipping (already processed)`);
+    return;
+  }
+
+  const taskArn = record.taskArn.S;
+  const recVolumeId = record.volumeId.S;
+  const originalDesiredCount = Number(record.originalDesiredCount?.N || "1");
+
+  // Idempotency: conditional update to claim this record
+  try {
+    await ddb.send(new UpdateItemCommand({
+      TableName: DYNAMODB_TABLE_NAME,
+      Key: {
+        volumeId: { S: recVolumeId },
+        taskArn: { S: taskArn },
+      },
+      UpdateExpression: "SET #s = :completing",
+      ConditionExpression: "#s = :pending",
+      ExpressionAttributeNames: { "#s": "status" },
+      ExpressionAttributeValues: {
+        ":completing": { S: "completing" },
+        ":pending": { S: "pending_completion" },
+      },
+    }));
+  } catch (err) {
+    if (err.name === "ConditionalCheckFailedException") {
+      console.log(`Record already being processed for ${snapshotId}, skipping (idempotency)`);
+      return;
+    }
+    throw err;
+  }
+
+  // Handle snapshot failure
+  if (result !== "succeeded") {
+    console.error(`SNAPSHOT_FAILED: Snapshot ${snapshotId} result=${result}`);
+    await handleFailure(recVolumeId, taskArn, `Snapshot ${snapshotId} ${result}`);
+    return;
+  }
+
+  try {
+    // Store in SSM
+    await ssm.send(new PutParameterCommand({
+      Name: SSM_PARAM_NAME,
+      Value: snapshotId,
+      Type: "String",
+      Overwrite: true,
+    }));
+
+    // Get current service state for volume config
+    const descResp = await ecs.send(new DescribeServicesCommand({
+      cluster: ECS_CLUSTER_ARN,
+      services: [ECS_SERVICE_NAME],
+    }));
+    const service = descResp.services?.[0];
+    if (!service) {
+      throw new Error(`Service ${ECS_SERVICE_NAME} not found`);
+    }
+
+    // Update service with new snapshot and restore desiredCount
+    await updateServiceWithSnapshot(service, snapshotId, originalDesiredCount);
+
+    // Record success
+    await ddb.send(new UpdateItemCommand({
+      TableName: DYNAMODB_TABLE_NAME,
+      Key: {
+        volumeId: { S: recVolumeId },
+        taskArn: { S: taskArn },
+      },
+      UpdateExpression: "SET #s = :success, completedAt = :ts",
+      ExpressionAttributeNames: { "#s": "status" },
+      ExpressionAttributeValues: {
+        ":success": { S: "success" },
+        ":ts": { S: new Date().toISOString() },
+      },
+    }));
+
+    console.log(`Stored ${snapshotId} in SSM: ${SSM_PARAM_NAME}`);
+
+    // Cleanup old snapshots (protects in-use snapshots)
+    await cleanupSnapshots();
+
+    console.log(`Phase 2 complete: service updated with snapshot ${snapshotId}`);
+  } catch (err) {
+    console.error(`SNAPSHOT_FAILED: Phase 2 error for ${snapshotId}: ${err.message}`);
+    await handleFailure(recVolumeId, taskArn, `Phase 2 error: ${err.message}`);
     throw err;
   }
 }
