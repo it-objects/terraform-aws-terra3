@@ -331,6 +331,7 @@ module "cloudfront_cdn" {
   cf_origin_access_mode  = var.cf_origin_access_mode
 
   enable_s3_for_static_website                                   = var.enable_s3_for_static_website
+  custom_s3_static_website_cf_path_pattern                       = var.custom_s3_static_website_cf_path_pattern
   s3_static_website_bucket_cf_function_arn                       = var.s3_static_website_bucket_cf_function_arn
   s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn  = local.enable_s3_static_website_bucket_cf_lambda_at_edge_origin_request
   s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn  = var.s3_static_website_bucket_cf_lambda_at_edge_viewer_request_arn
