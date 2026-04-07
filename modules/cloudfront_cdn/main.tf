@@ -126,7 +126,7 @@ locals {
   # -------------------------------------------------------------------------------------------------------------------
   # Define behaviours either with or without ALB
   # -------------------------------------------------------------------------------------------------------------------
-  all_behaviors = flatten([
+  all_behaviors_unsorted = flatten([
     length(var.s3_solution_bucket_cf_behaviours) == 0 ? [] : [
       for behaviour in var.s3_solution_bucket_cf_behaviours :
       {
@@ -245,7 +245,7 @@ locals {
         cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
     }],
     !var.enable_s3_for_static_website ? [] : [{
-      path_pattern           = "/*"
+      path_pattern           = var.custom_s3_static_website_cf_path_pattern
       target_origin_id       = "s3_static_website"
       viewer_protocol_policy = "redirect-to-https"
 
@@ -275,6 +275,12 @@ locals {
 
     }]
   ])
+
+  # Ensure catch-all "/*" patterns are always last so more specific paths are matched first
+  all_behaviors = concat(
+    [for b in local.all_behaviors_unsorted : b if b.path_pattern != "/*"],
+    [for b in local.all_behaviors_unsorted : b if b.path_pattern == "/*"]
+  )
 
   all_certificates = flatten([var.certificate_arn == null ? [
     {
@@ -320,7 +326,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   retain_on_delete    = false
   wait_for_deployment = false
 
-  default_root_object = var.enable_s3_for_static_website ? "index.html" : ""
+  default_root_object = var.enable_s3_for_static_website && var.custom_s3_static_website_cf_path_pattern == "/*" ? "index.html" : ""
 
   web_acl_id = var.cf_web_acl_id
 
@@ -456,9 +462,9 @@ resource "aws_cloudfront_distribution" "general_distribution" {
   }
 
   default_cache_behavior {
-    allowed_methods  = var.enable_s3_for_static_website ? ["GET", "HEAD", "OPTIONS"] : ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    allowed_methods  = var.enable_s3_for_static_website && var.custom_s3_static_website_cf_path_pattern == "/*" ? ["GET", "HEAD", "OPTIONS"] : ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = var.enable_s3_for_static_website ? "s3_static_website" : "elb"
+    target_origin_id = var.enable_s3_for_static_website && var.custom_s3_static_website_cf_path_pattern == "/*" ? "s3_static_website" : "elb"
 
     min_ttl                = 0
     default_ttl            = 0
@@ -466,7 +472,7 @@ resource "aws_cloudfront_distribution" "general_distribution" {
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
-    origin_request_policy_id = var.enable_s3_for_static_website ? data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id : data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
+    origin_request_policy_id = var.enable_s3_for_static_website && var.custom_s3_static_website_cf_path_pattern == "/*" ? data.aws_cloudfront_origin_request_policy.ManagedCORSS3Origin.id : data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
     cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
   }
 
