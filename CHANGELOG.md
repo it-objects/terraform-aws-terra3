@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.67.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.6...v1.67.0) (2026-04-07)
+
+
+### Features
+
+* **cloudfront_cdn:** add custom_s3_static_website_cf_path_pattern variable to configure static website CloudFront path ([#67](https://github.com/it-objects/terraform-aws-terra3/issues/67)) ([ee38b7f](https://github.com/it-objects/terraform-aws-terra3/commit/ee38b7f18873ff0c6d86217431a9b72690fdf2a2))
+
 ### [1.66.6](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.5...v1.66.6) (2026-03-10)
 
 
