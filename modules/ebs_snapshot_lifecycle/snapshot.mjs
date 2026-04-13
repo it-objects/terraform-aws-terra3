@@ -377,6 +377,7 @@ async function updateServiceWithSnapshot(service, snapshotId, desiredCount) {
     desiredCount,
     propagateTags: "SERVICE",
     enableExecuteCommand: service.enableExecuteCommand,
+    forceNewDeployment: true,
   }));
 
   console.log(`Updated service: snapshot=${snapshotId}, desiredCount=${desiredCount}`);
