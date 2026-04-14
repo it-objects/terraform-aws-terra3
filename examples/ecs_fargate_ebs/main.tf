@@ -114,6 +114,14 @@ module "terra3_examples" {
 # EBS Snapshot Lifecycle (auto-snapshot on task stop)
 # -----------------------------------------------
 
+data "aws_region" "current" {}
+
+#tfsec:ignore:aws-cloudwatch-log-group-customer-key -- AWS managed encryption is sufficient for example logs
+resource "aws_cloudwatch_log_group" "postgres" {
+  name              = "/ecs/${local.solution_name}/postgres"
+  retention_in_days = 14
+}
+
 data "aws_ecs_cluster" "this" {
   cluster_name = "${local.solution_name}-cluster"
   depends_on   = [module.terra3_examples]
@@ -171,6 +179,11 @@ module "container_postgres" {
     }
   ]
 
+  # Fast shutdown on SIGTERM: immediately disconnect all clients and stop accepting connections.
+  # Without this, PostgreSQL does a "smart shutdown" (waits for clients to disconnect),
+  # allowing new writes during the ECS stop grace period that won't be captured in the snapshot.
+  command = ["sh", "-c", "trap 'pg_ctl stop -m fast -D \"$PGDATA\" 2>/dev/null; exit 0' SIGTERM; docker-entrypoint.sh postgres & wait $!"]
+
   map_environment = {
     "POSTGRES_USER" = var.postgres_user
     "POSTGRES_DB"   = var.postgres_db
@@ -190,6 +203,15 @@ module "container_postgres" {
       readOnly      = false
     }
   ]
+
+  log_configuration = {
+    logDriver = "awslogs"
+    options = {
+      "awslogs-group"         = aws_cloudwatch_log_group.postgres.name
+      "awslogs-region"        = data.aws_region.current.name
+      "awslogs-stream-prefix" = "postgres"
+    }
+  }
 
   readonlyRootFilesystem = false
 
