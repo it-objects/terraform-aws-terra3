@@ -123,6 +123,11 @@ resource "aws_ecs_service" "ecs_service" {
       condition     = !var.enable_ebs_snapshot_lifecycle || try(aws_ssm_parameter.ebs_latest_snapshot[0].value, "none") != "failed"
       error_message = "EBS snapshot lifecycle failed for this component. Check CloudWatch logs and SNS alerts. Set SSM parameter '${try(aws_ssm_parameter.ebs_latest_snapshot[0].name, "n/a")}' to a valid snapshot ID or 'none' to proceed."
     }
+
+    precondition {
+      condition     = !var.enable_ebs_snapshot_lifecycle || length(var.ebs_volumes) == 1
+      error_message = "enable_ebs_snapshot_lifecycle requires exactly one EBS volume per app_component."
+    }
   }
 }
 
