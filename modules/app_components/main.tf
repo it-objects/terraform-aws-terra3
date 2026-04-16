@@ -125,6 +125,4 @@ module "ebs_snapshot_lifecycle" {
   enable_scheduled_backup  = lookup(each.value, "enable_scheduled_backup", false)
   backup_schedule          = lookup(each.value, "backup_schedule", "cron(0 2 ? * * *)")
   backup_retention_count   = lookup(each.value, "backup_retention_count", 7)
-
-  depends_on = [module.app_components]
 }
