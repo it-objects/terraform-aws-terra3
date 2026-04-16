@@ -12,6 +12,10 @@
 locals {
   launch_type = var.cluster_type == "FARGATE" || var.cluster_type == "FARGATE_SPOT" ? "FARGATE" : "EC2"
 
+  has_ebs_volume             = var.ebs_volume != null
+  ebs_volume_name            = local.has_ebs_volume ? coalesce(var.ebs_volume.name, "${var.name}-data") : null
+  snapshot_lifecycle_enabled = try(var.ebs_volume.snapshot_lifecycle_enabled, false)
+
   security_groups = length(var.service_sg) == 0 ? [
     data.aws_security_group.ecs_default_sg.id,
     data.aws_security_group.mysql_marker_sg.id,
@@ -24,7 +28,7 @@ locals {
   private_subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
 
   # When an explicit AZ is set, pin to subnets in that AZ; otherwise use all private subnets
-  effective_subnets = var.ebs_volume_availability_zone != null ? data.aws_subnets.private_in_az[0].ids : local.private_subnets
+  effective_subnets = try(var.ebs_volume.availability_zone, null) != null ? data.aws_subnets.private_in_az[0].ids : local.private_subnets
 
   private_subnets_as_string = jsonencode(local.private_subnets)
 
@@ -79,16 +83,16 @@ resource "aws_ecs_service" "ecs_service" {
   }
 
   dynamic "volume_configuration" {
-    for_each = var.ebs_volumes
+    for_each = local.has_ebs_volume ? [var.ebs_volume] : []
     content {
-      name = volume_configuration.value.name
+      name = local.ebs_volume_name
       managed_ebs_volume {
         role_arn         = aws_iam_role.ecs_ebs_infrastructure[0].arn
         size_in_gb       = volume_configuration.value.size_in_gb
         volume_type      = volume_configuration.value.volume_type
         iops             = volume_configuration.value.iops
         throughput       = volume_configuration.value.throughput
-        snapshot_id      = var.enable_ebs_snapshot_lifecycle && !contains(["none", "failed"], aws_ssm_parameter.ebs_latest_snapshot[0].value) ? aws_ssm_parameter.ebs_latest_snapshot[0].value : volume_configuration.value.snapshot_id
+        snapshot_id      = local.snapshot_lifecycle_enabled && !contains(["none", "failed"], aws_ssm_parameter.ebs_latest_snapshot[0].value) ? aws_ssm_parameter.ebs_latest_snapshot[0].value : volume_configuration.value.snapshot_id
         encrypted        = volume_configuration.value.encrypted
         kms_key_id       = volume_configuration.value.kms_key_id
         file_system_type = volume_configuration.value.file_system_type
@@ -99,8 +103,8 @@ resource "aws_ecs_service" "ecs_service" {
   # When snapshot lifecycle is active, use stop-before-start to ensure the old task's
   # volume is snapshotted before the new task launches with a fresh snapshot.
   # Otherwise, use default rolling update (no downtime).
-  deployment_minimum_healthy_percent = var.enable_ebs_snapshot_lifecycle ? 0 : 100
-  deployment_maximum_percent         = var.enable_ebs_snapshot_lifecycle ? 100 : 200
+  deployment_minimum_healthy_percent = local.snapshot_lifecycle_enabled ? 0 : 100
+  deployment_maximum_percent         = local.snapshot_lifecycle_enabled ? 100 : 200
 
   deployment_circuit_breaker {
     enable   = true
@@ -115,18 +119,13 @@ resource "aws_ecs_service" "ecs_service" {
     ignore_changes = [desired_count]
 
     precondition {
-      condition     = !var.enable_ebs_snapshot_lifecycle || var.instances <= 1
-      error_message = "enable_ebs_snapshot_lifecycle requires instances = 1. The snapshot lifecycle assumes a single task per service."
+      condition     = !local.snapshot_lifecycle_enabled || var.instances <= 1
+      error_message = "Snapshot lifecycle requires instances = 1. The snapshot lifecycle assumes a single task per service."
     }
 
     precondition {
-      condition     = !var.enable_ebs_snapshot_lifecycle || try(aws_ssm_parameter.ebs_latest_snapshot[0].value, "none") != "failed"
+      condition     = !local.snapshot_lifecycle_enabled || try(aws_ssm_parameter.ebs_latest_snapshot[0].value, "none") != "failed"
       error_message = "EBS snapshot lifecycle failed for this component. Check CloudWatch logs and SNS alerts. Set SSM parameter '${try(aws_ssm_parameter.ebs_latest_snapshot[0].name, "n/a")}' to a valid snapshot ID or 'none' to proceed."
-    }
-
-    precondition {
-      condition     = !var.enable_ebs_snapshot_lifecycle || length(var.ebs_volumes) == 1
-      error_message = "enable_ebs_snapshot_lifecycle requires exactly one EBS volume per app_component."
     }
   }
 }
@@ -158,9 +157,9 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   container_definitions = local.json_map
 
   dynamic "volume" {
-    for_each = var.ebs_volumes
+    for_each = local.has_ebs_volume ? [var.ebs_volume] : []
     content {
-      name                = volume.value.name
+      name                = local.ebs_volume_name
       configure_at_launch = true
     }
   }
@@ -1096,7 +1095,7 @@ EOF
 # Required for Fargate tasks with attached EBS volumes
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role" "ecs_ebs_infrastructure" {
-  count = length(var.ebs_volumes) > 0 ? 1 : 0
+  count = local.has_ebs_volume ? 1 : 0
 
   name = "${var.name}-ecs-ebs-infra-role"
   assume_role_policy = jsonencode({
@@ -1116,7 +1115,7 @@ resource "aws_iam_role" "ecs_ebs_infrastructure" {
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_ebs_infrastructure" {
-  count = length(var.ebs_volumes) > 0 ? 1 : 0
+  count = local.has_ebs_volume ? 1 : 0
 
   role       = aws_iam_role.ecs_ebs_infrastructure[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRolePolicyForVolumes"
@@ -1126,7 +1125,7 @@ resource "aws_iam_role_policy_attachment" "ecs_ebs_infrastructure" {
 # SSM Parameter for EBS snapshot lifecycle (seeded here, updated by Lambda)
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_ssm_parameter" "ebs_latest_snapshot" {
-  count = var.enable_ebs_snapshot_lifecycle ? 1 : 0
+  count = local.snapshot_lifecycle_enabled ? 1 : 0
 
   name      = "/${var.solution_name}/ebs_snapshot/${var.name}/latest_snapshot_id"
   type      = "String"
@@ -1146,7 +1145,7 @@ resource "aws_ssm_parameter" "ebs_latest_snapshot" {
 # EBS Snapshot Lifecycle (auto-snapshot on task stop, restore on next launch)
 # ---------------------------------------------------------------------------------------------------------------------
 module "ebs_snapshot_lifecycle" {
-  count = var.enable_ebs_snapshot_lifecycle ? 1 : 0
+  count = local.snapshot_lifecycle_enabled ? 1 : 0
 
   source = "../ebs_snapshot_lifecycle"
 
@@ -1154,12 +1153,12 @@ module "ebs_snapshot_lifecycle" {
   app_component_name = var.name
   cluster_arn        = data.aws_ecs_cluster.selected.arn
   ecs_service_name   = "${var.name}Service"
-  volume_name        = var.ebs_volumes[0].name
+  volume_name        = local.ebs_volume_name
 
-  snapshot_retention_count = var.snapshot_retention_count
-  enable_scheduled_backup  = var.enable_scheduled_backup
-  backup_schedule          = var.backup_schedule
-  backup_retention_count   = var.backup_retention_count
+  snapshot_retention_count = var.ebs_volume.snapshot_retention_count
+  enable_scheduled_backup  = var.ebs_volume.backup_enabled
+  backup_schedule          = var.ebs_volume.backup_schedule
+  backup_retention_count   = var.ebs_volume.backup_retention_count
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

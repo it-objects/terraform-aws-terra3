@@ -81,7 +81,7 @@ data "aws_kms_key" "solution_key" {
 # Lookup private subnets in the specified AZ when EBS volumes are used
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_subnets" "private_in_az" {
-  count = var.ebs_volume_availability_zone != null ? 1 : 0
+  count = try(var.ebs_volume.availability_zone, null) != null ? 1 : 0
 
   filter {
     name   = "subnet-id"
@@ -90,7 +90,7 @@ data "aws_subnets" "private_in_az" {
 
   filter {
     name   = "availability-zone"
-    values = [var.ebs_volume_availability_zone]
+    values = [var.ebs_volume.availability_zone]
   }
 }
 

@@ -390,56 +390,26 @@ variable "enable_custom_domain" {
   default = false
 }
 
-variable "ebs_volumes" {
-  description = "EBS volumes to attach to Fargate tasks. Optionally pin to a single AZ via ebs_volume_availability_zone."
-  type = list(object({
-    name             = string
-    size_in_gb       = number
-    volume_type      = optional(string, "gp3")
-    iops             = optional(number, null)
-    throughput       = optional(number, null)
-    snapshot_id      = optional(string, null)
-    encrypted        = optional(bool, true)
-    kms_key_id       = optional(string, null)
-    file_system_type = optional(string, "ext4")
-  }))
-  default = []
-}
-
-variable "enable_ebs_snapshot_lifecycle" {
-  description = "Enable automatic EBS snapshot on task stop and restore from latest snapshot on next launch."
-  type        = bool
-  default     = false
-}
-
-variable "snapshot_retention_count" {
-  description = "Number of most recent snapshots to keep per volume."
-  type        = number
-  default     = 3
-}
-
-variable "enable_scheduled_backup" {
-  description = "Enable scheduled EBS snapshots while the task is running."
-  type        = bool
-  default     = false
-}
-
-variable "backup_schedule" {
-  description = "Cron or rate expression for scheduled backups."
-  type        = string
-  default     = "cron(0 2 ? * * *)"
-}
-
-variable "backup_retention_count" {
-  description = "Number of scheduled backup snapshots to retain."
-  type        = number
-  default     = 7
-}
-
-variable "ebs_volume_availability_zone" {
-  description = "Optional. When set, pins the ECS service to subnets in this AZ. When null (default), tasks can be placed in any AZ. Snapshots are regional and restore cross-AZ."
-  type        = string
-  default     = null
+variable "ebs_volume" {
+  description = "EBS volume to attach to Fargate tasks. Only one volume per service is supported. Includes optional snapshot lifecycle and scheduled backup config. Volume name defaults to '{app_component_name}-data' — use this as sourceVolume in container mount_points."
+  type = object({
+    name                       = optional(string, null)
+    size_in_gb                 = number
+    volume_type                = optional(string, "gp3")
+    iops                       = optional(number, null)
+    throughput                 = optional(number, null)
+    snapshot_id                = optional(string, null)
+    encrypted                  = optional(bool, true)
+    kms_key_id                 = optional(string, null)
+    file_system_type           = optional(string, "ext4")
+    availability_zone          = optional(string, null)
+    snapshot_lifecycle_enabled = optional(bool, false)
+    snapshot_retention_count   = optional(number, 3)
+    backup_enabled             = optional(bool, false)
+    backup_schedule            = optional(string, "cron(0 2 ? * * *)")
+    backup_retention_count     = optional(number, 7)
+  })
+  default = null
 }
 
 variable "enable_bastion_access" {

@@ -92,16 +92,10 @@ module "app_components" {
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
 
-  ebs_volumes                   = lookup(each.value, "ebs_volumes", [])
-  ebs_volume_availability_zone  = lookup(each.value, "ebs_volume_availability_zone", null)
-  enable_ebs_snapshot_lifecycle = lookup(each.value, "enable_ebs_snapshot_lifecycle", false)
-  snapshot_retention_count      = lookup(each.value, "snapshot_retention_count", 3)
-  enable_scheduled_backup       = lookup(each.value, "enable_scheduled_backup", false)
-  backup_schedule               = lookup(each.value, "backup_schedule", "cron(0 2 ? * * *)")
-  backup_retention_count        = lookup(each.value, "backup_retention_count", 7)
-  enable_bastion_access         = lookup(each.value, "enable_bastion_access", false)
-  enable_service_discovery      = lookup(each.value, "enable_service_discovery", false)
-  service_discovery_dns_name    = lookup(each.value, "service_discovery_dns_name", null)
+  ebs_volume                 = lookup(each.value, "ebs_volume", null)
+  enable_bastion_access      = lookup(each.value, "enable_bastion_access", false)
+  enable_service_discovery   = lookup(each.value, "enable_service_discovery", false)
+  service_discovery_dns_name = lookup(each.value, "service_discovery_dns_name", null)
 
   # get custom_domain setting from parameter store in case of a two_states_approach
   enable_custom_domain = var.two_states_approach ? data.aws_ssm_parameter.enable_custom_domain.value : var.enable_custom_domain

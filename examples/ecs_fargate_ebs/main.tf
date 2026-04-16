@@ -75,21 +75,15 @@ module "terra3_examples" {
       }
 
       # EBS volume configuration
-      ebs_volumes = [
-        {
-          name       = "postgres-data"
-          size_in_gb = 5
-        }
-      ]
+      ebs_volume = {
+        size_in_gb = 5
 
-      # ebs_volume_availability_zone = var.ebs_volume_availability_zone  # Optional: set to pin to single AZ
-
-      # Restore from latest snapshot on task launch
-      enable_ebs_snapshot_lifecycle = true
-      snapshot_retention_count      = 3
-      enable_scheduled_backup       = true
-      backup_schedule               = "cron(0 2 ? * * *)"
-      backup_retention_count        = 7
+        snapshot_lifecycle_enabled = true
+        snapshot_retention_count   = 3
+        backup_enabled             = true
+        backup_schedule            = "cron(0 2 ? * * *)"
+        backup_retention_count     = 7
+      }
     }
 
     # PostgreSQL client for testing connectivity
