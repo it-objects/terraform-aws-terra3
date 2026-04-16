@@ -86,6 +86,10 @@ module "terra3_examples" {
 
       # Restore from latest snapshot on task launch
       enable_ebs_snapshot_lifecycle = true
+      snapshot_retention_count      = 3
+      enable_scheduled_backup       = true
+      backup_schedule               = "cron(0 2 ? * * *)"
+      backup_retention_count        = 7
     }
 
     # PostgreSQL client for testing connectivity
@@ -110,37 +114,12 @@ module "terra3_examples" {
   }
 }
 
-# -----------------------------------------------
-# EBS Snapshot Lifecycle (auto-snapshot on task stop)
-# -----------------------------------------------
-
 data "aws_region" "current" {}
 
 #tfsec:ignore:aws-cloudwatch-log-group-customer-key -- AWS managed encryption is sufficient for example logs
 resource "aws_cloudwatch_log_group" "postgres" {
   name              = "/ecs/${local.solution_name}/postgres"
   retention_in_days = 14
-}
-
-data "aws_ecs_cluster" "this" {
-  cluster_name = "${local.solution_name}-cluster"
-  depends_on   = [module.terra3_examples]
-}
-
-module "ebs_snapshot_lifecycle" {
-  source = "../../modules/ebs_snapshot_lifecycle"
-
-  solution_name            = local.solution_name
-  app_component_name       = "postgres"
-  cluster_arn              = data.aws_ecs_cluster.this.arn
-  ecs_service_name         = "postgresService"
-  volume_name              = "postgres-data"
-  snapshot_retention_count = 3
-
-  # Scheduled backups (daily at 2 AM UTC)
-  enable_scheduled_backup = true
-  backup_schedule         = "cron(0 2 ? * * *)"
-  backup_retention_count  = 7
 }
 
 # -----------------------------------------------
