@@ -102,3 +102,29 @@ module "app_components" {
   # get custom_domain setting from parameter store in case of a two_states_approach
   enable_custom_domain = var.two_states_approach ? data.aws_ssm_parameter.enable_custom_domain.value : var.enable_custom_domain
 }
+
+# -----------------------------------------------
+# EBS Snapshot Lifecycle (auto-snapshot on task stop)
+# Automatically wired for app_components with enable_ebs_snapshot_lifecycle = true
+# -----------------------------------------------
+module "ebs_snapshot_lifecycle" {
+  for_each = {
+    for k, v in var.app_components : k => v
+    if lookup(v, "enable_ebs_snapshot_lifecycle", false)
+  }
+
+  source = "../ebs_snapshot_lifecycle"
+
+  solution_name      = var.solution_name
+  app_component_name = each.key
+  cluster_arn        = data.aws_ecs_cluster.selected.arn
+  ecs_service_name   = "${each.key}Service"
+  volume_name        = lookup(each.value, "ebs_volumes", [{}])[0].name
+
+  snapshot_retention_count = lookup(each.value, "snapshot_retention_count", 3)
+  enable_scheduled_backup  = lookup(each.value, "enable_scheduled_backup", false)
+  backup_schedule          = lookup(each.value, "backup_schedule", "cron(0 2 ? * * *)")
+  backup_retention_count   = lookup(each.value, "backup_retention_count", 7)
+
+  depends_on = [module.app_components]
+}
