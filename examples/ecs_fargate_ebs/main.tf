@@ -169,6 +169,7 @@ module "container_postgres" {
   }
 
   # Mount the EBS volume into the container
+  # sourceVolume must match the ebs_volume name, which defaults to "{component_name}-data"
   mount_points = [
     {
       sourceVolume  = "postgres-data"
