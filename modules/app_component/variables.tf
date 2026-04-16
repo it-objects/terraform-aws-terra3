@@ -412,6 +412,30 @@ variable "enable_ebs_snapshot_lifecycle" {
   default     = false
 }
 
+variable "snapshot_retention_count" {
+  description = "Number of most recent snapshots to keep per volume."
+  type        = number
+  default     = 3
+}
+
+variable "enable_scheduled_backup" {
+  description = "Enable scheduled EBS snapshots while the task is running."
+  type        = bool
+  default     = false
+}
+
+variable "backup_schedule" {
+  description = "Cron or rate expression for scheduled backups."
+  type        = string
+  default     = "cron(0 2 ? * * *)"
+}
+
+variable "backup_retention_count" {
+  description = "Number of scheduled backup snapshots to retain."
+  type        = number
+  default     = 7
+}
+
 variable "ebs_volume_availability_zone" {
   description = "Optional. When set, pins the ECS service to subnets in this AZ. When null (default), tasks can be placed in any AZ. Snapshots are regional and restore cross-AZ."
   type        = string

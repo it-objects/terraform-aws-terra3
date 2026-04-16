@@ -1143,6 +1143,26 @@ resource "aws_ssm_parameter" "ebs_latest_snapshot" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# EBS Snapshot Lifecycle (auto-snapshot on task stop, restore on next launch)
+# ---------------------------------------------------------------------------------------------------------------------
+module "ebs_snapshot_lifecycle" {
+  count = var.enable_ebs_snapshot_lifecycle ? 1 : 0
+
+  source = "../ebs_snapshot_lifecycle"
+
+  solution_name      = var.solution_name
+  app_component_name = var.name
+  cluster_arn        = data.aws_ecs_cluster.selected.arn
+  ecs_service_name   = "${var.name}Service"
+  volume_name        = var.ebs_volumes[0].name
+
+  snapshot_retention_count = var.snapshot_retention_count
+  enable_scheduled_backup  = var.enable_scheduled_backup
+  backup_schedule          = var.backup_schedule
+  backup_retention_count   = var.backup_retention_count
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Allow bastion host access to ECS tasks on the service port
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_security_group_rule" "bastion_ingress" {
