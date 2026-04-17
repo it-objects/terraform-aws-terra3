@@ -176,6 +176,17 @@ variable "enable_ecr_access" {
   default     = false
 }
 
+variable "ecr_source_account_id" {
+  description = "AWS account ID to allow ECR image pulls from. If empty, defaults to the current account ID."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.ecr_source_account_id == "" || can(regex("^\\d{12}$", var.ecr_source_account_id))
+    error_message = "Account ID must be a 12-digit number."
+  }
+}
+
 variable "additional_iam_policy_arns" {
   description = "List of additional IAM policy ARNs to attach to the instance role."
   type        = list(string)
