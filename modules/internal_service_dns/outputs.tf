@@ -3,8 +3,8 @@
 # -----------------------------------------------
 
 output "zone_id" {
-  value       = try(aws_service_discovery_private_dns_namespace.internal[0].hosted_zone, "")
-  description = "Route53 private zone ID (created by Cloud Map)"
+  value       = try(aws_route53_zone.internal[0].zone_id, "")
+  description = "Route53 private zone ID for direct record management (EC2 workloads)"
 }
 
 output "zone_name" {

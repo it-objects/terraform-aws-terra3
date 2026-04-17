@@ -58,7 +58,7 @@ module "app_components" {
   firelens_container_cpu    = lookup(each.value, "firelens_container_cpu", 20)
   firelens_container_memory = lookup(each.value, "firelens_container_memory", 50)
 
-  execution_iam_access = lookup(each.value, "execution_iam_access", null)
+  execution_iam_access = lookup(each.value, "execution_iam_access", {})
 
   # if true the next block's variables are ignored internally
   internal_service = lookup(each.value, "internal_service", false)

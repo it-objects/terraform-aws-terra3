@@ -289,10 +289,11 @@ module "internal_service_dns" {
 
   source = "./modules/internal_service_dns"
 
-  enable        = var.enable_internal_service_dns
-  vpc_id        = local.vpc_id
-  solution_name = var.solution_name
-  zone_name     = var.internal_service_dns_zone_name != "" ? var.internal_service_dns_zone_name : ""
+  enable           = var.enable_internal_service_dns
+  enable_cloud_map = anytrue([for k, v in var.app_components : lookup(v, "enable_service_discovery", false)])
+  vpc_id           = local.vpc_id
+  solution_name    = var.solution_name
+  zone_name        = var.internal_service_dns_zone_name != "" ? var.internal_service_dns_zone_name : ""
   tags = {
     ManagedBy = "Terraform"
     Solution  = var.solution_name
@@ -646,7 +647,7 @@ module "app_components" {
   ecs_autoscaling_target_value = var.ecs_autoscaling_target_value
 
   # needed because for the ability to run separately, this module relies on querying information via data fields
-  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, module.internal_service_dns, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn]
+  depends_on = [module.l7_loadbalancer, module.security_groups, module.cluster, module.internal_service_dns, aws_ssm_parameter.enable_custom_domain, aws_ssm_parameter.environment_alb_arn, aws_ssm_parameter.vpc_id, aws_ssm_parameter.private_subnets, aws_ssm_parameter.domain_name, aws_ssm_parameter.sns_alerts_topic_arn]
 }
 
 locals {

@@ -212,7 +212,7 @@ module "container_psql_test" {
   port_mappings = []
 
   map_environment = {
-    "PGHOST"     = "postgres.internal.${local.solution_name}.local"
+    "PGHOST"     = "postgres.svc.internal.${local.solution_name}.local"
     "PGPORT"     = "5432"
     "PGUSER"     = var.postgres_user
     "PGDATABASE" = var.postgres_db

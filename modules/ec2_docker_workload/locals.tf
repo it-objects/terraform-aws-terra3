@@ -67,7 +67,7 @@ locals {
   # Get AZ for volume creation
   # Volumes must be created in the same AZ as the instance
   # This is required to prevent EBS volume replacement on re-apply
-  volume_az = var.ebs_volume_availability_zone
+  volume_az = coalesce(var.ebs_volume_availability_zone, data.aws_subnet.private_first.availability_zone)
 
   # Extract ECR repository name from docker_image_uri if it's an ECR image
   # ECR format: 123456789.dkr.ecr.us-east-1.amazonaws.com/repo-name:tag
