@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.68.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.67.0...v1.68.0) (2026-04-19)
+
+
+### Features
+
+* **ec2_docker_workload:** add ecr_source_account_id to allow EC2 role to pull images from cross-account ECR ([#69](https://github.com/it-objects/terraform-aws-terra3/issues/69)) ([3c79cd4](https://github.com/it-objects/terraform-aws-terra3/commit/3c79cd41e53299be51a63efd3a8ff6ab4306c38c))
+
 ## [1.67.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.66.6...v1.67.0) (2026-04-07)
 
 
