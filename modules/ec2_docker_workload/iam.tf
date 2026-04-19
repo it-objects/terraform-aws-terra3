@@ -104,9 +104,9 @@ resource "aws_iam_role_policy" "ecr_access" {
           "ecr:GetDownloadUrlForLayer"
         ]
         Resource = local.is_ecr_image ? [
-          "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${local.ecr_repo_name}"
+          "arn:aws:ecr:${data.aws_region.current.name}:${var.ecr_source_account_id != "" ? var.ecr_source_account_id : data.aws_caller_identity.current.account_id}:repository/${local.ecr_repo_name}"
           ] : [
-          "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
+          "arn:aws:ecr:${data.aws_region.current.name}:${var.ecr_source_account_id != "" ? var.ecr_source_account_id : data.aws_caller_identity.current.account_id}:repository/*"
         ]
       }
     ]
