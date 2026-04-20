@@ -6,6 +6,10 @@ locals {
   # Security groups: use provided or create default
   security_groups = length(var.security_group_ids) > 0 ? var.security_group_ids : [aws_security_group.default[0].id]
 
+  # VPC ID from SSM — nonsensitive so Terraform can diff it and avoid forcing SG replacement
+  vpc_id          = nonsensitive(data.aws_ssm_parameter.vpc_id.value)
+  private_subnets = split(",", nonsensitive(data.aws_ssm_parameter.private_subnets.value))
+
   # Docker volume mount string for user data
   # Converts ebs_volumes list to Docker -v bind mount arguments
   docker_volume_mounts = join(" ", [
@@ -56,8 +60,8 @@ locals {
   ssm_param_prefix = "/${var.solution_name}/ec2_docker_workload/${var.instance_name}"
 
   # Internal DNS configuration (zone managed by base module, read from SSM)
-  internal_dns_zone_id       = try(data.aws_ssm_parameter.internal_dns_zone_id[0].value, "")
-  internal_dns_zone_name     = try(data.aws_ssm_parameter.internal_dns_zone_name[0].value, "")
+  internal_dns_zone_id       = try(nonsensitive(data.aws_ssm_parameter.internal_dns_zone_id[0].value), "")
+  internal_dns_zone_name     = try(nonsensitive(data.aws_ssm_parameter.internal_dns_zone_name[0].value), "")
   internal_dns_workload_name = var.internal_dns_workload_name != "" ? var.internal_dns_workload_name : var.instance_name
   internal_dns_record_name   = var.enable_internal_dns ? "${local.internal_dns_workload_name}.${local.internal_dns_zone_name}" : ""
 
@@ -84,14 +88,14 @@ locals {
   use_https_listener = (
     var.enable_load_balancer &&
     !var.internal_service &&
-    try(data.aws_ssm_parameter.alb_listener_443_arn[0].value != "-", false)
+    try(nonsensitive(data.aws_ssm_parameter.alb_listener_443_arn[0].value) != "-", false)
   )
 
   # Select the appropriate listener ARN based on HTTPS availability
   alb_listener_arn = (
     local.use_https_listener ?
-    try(data.aws_ssm_parameter.alb_listener_443_arn[0].value, "") :
-    try(data.aws_ssm_parameter.alb_listener_80_arn[0].value, "")
+    try(nonsensitive(data.aws_ssm_parameter.alb_listener_443_arn[0].value), "") :
+    try(nonsensitive(data.aws_ssm_parameter.alb_listener_80_arn[0].value), "")
   )
 
   # Get the host port from the first port_mapping (for health checks and target group)

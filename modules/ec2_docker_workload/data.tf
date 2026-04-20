@@ -128,7 +128,7 @@ data "aws_ssm_parameter" "alb_listener_80_arn" {
 # Get ALB details to check if it's HTTPS-enabled
 data "aws_lb" "alb" {
   count = var.enable_load_balancer && !var.internal_service ? 1 : 0
-  arn   = data.aws_ssm_parameter.alb_arn[0].value
+  arn   = nonsensitive(data.aws_ssm_parameter.alb_arn[0].value)
 }
 
 
@@ -149,5 +149,5 @@ data "aws_ssm_parameter" "internal_dns_zone_name" {
 # Get Route53 Zone Details
 data "aws_route53_zone" "internal" {
   count   = var.enable_internal_dns ? 1 : 0
-  zone_id = try(data.aws_ssm_parameter.internal_dns_zone_id[0].value, "")
+  zone_id = local.internal_dns_zone_id
 }

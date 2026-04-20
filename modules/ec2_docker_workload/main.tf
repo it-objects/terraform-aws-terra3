@@ -10,7 +10,7 @@ resource "aws_security_group" "default" {
   count       = length(var.security_group_ids) == 0 ? 1 : 0
   name        = "${var.solution_name}-${var.instance_name}-sg"
   description = "Security group for ${var.solution_name} ${var.instance_name} Docker workload"
-  vpc_id      = data.aws_ssm_parameter.vpc_id.value
+  vpc_id      = local.vpc_id
 
   tags = merge(
     local.common_tags,
@@ -372,7 +372,7 @@ resource "aws_autoscaling_group" "docker_workload" {
   max_size         = 1
   min_size         = 1
 
-  vpc_zone_identifier = split(",", data.aws_ssm_parameter.private_subnets.value)
+  vpc_zone_identifier = local.private_subnets
 
   launch_template {
     id      = aws_launch_template.docker_workload.id
@@ -455,7 +455,7 @@ resource "aws_ebs_volume" "persistent" {
 # DNS A record pointing to the current running instance
 resource "aws_route53_record" "workload" {
   count   = var.enable_internal_dns ? 1 : 0
-  zone_id = try(data.aws_ssm_parameter.internal_dns_zone_id[0].value, "")
+  zone_id = local.internal_dns_zone_id
   name    = local.internal_dns_record_name
   type    = "A"
   ttl     = 60
