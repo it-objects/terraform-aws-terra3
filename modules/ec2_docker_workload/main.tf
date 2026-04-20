@@ -436,6 +436,13 @@ resource "aws_ebs_volume" "persistent" {
       WorkloadInstance = var.instance_name
     }
   )
+
+  lifecycle {
+    precondition {
+      condition     = var.ebs_volume_availability_zone != null
+      error_message = "ebs_volume_availability_zone is required when ebs_volumes contains persistent volumes (delete_on_termination = false)."
+    }
+  }
 }
 
 # -----------------------------------------------

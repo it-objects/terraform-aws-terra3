@@ -58,7 +58,7 @@ module "app_components" {
   firelens_container_cpu    = lookup(each.value, "firelens_container_cpu", 20)
   firelens_container_memory = lookup(each.value, "firelens_container_memory", 50)
 
-  execution_iam_access = lookup(each.value, "execution_iam_access", null)
+  execution_iam_access = lookup(each.value, "execution_iam_access", {})
 
   # if true the next block's variables are ignored internally
   internal_service = lookup(each.value, "internal_service", false)
@@ -91,6 +91,11 @@ module "app_components" {
   autoscale_down_event              = lookup(each.value, "autoscale_down_event", "cron(0 18 ? * * *)")
 
   s3_solution_bucket_access = lookup(each.value, "s3_solution_bucket_access", false)
+
+  ebs_volume                 = lookup(each.value, "ebs_volume", null)
+  enable_bastion_access      = lookup(each.value, "enable_bastion_access", false)
+  enable_service_discovery   = lookup(each.value, "enable_service_discovery", false)
+  service_discovery_dns_name = lookup(each.value, "service_discovery_dns_name", null)
 
   # get custom_domain setting from parameter store in case of a two_states_approach
   enable_custom_domain = var.two_states_approach ? data.aws_ssm_parameter.enable_custom_domain.value : var.enable_custom_domain

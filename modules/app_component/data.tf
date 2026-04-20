@@ -76,3 +76,38 @@ data "aws_kms_key" "solution_key" {
   count  = var.enable_ecs_exec ? 1 : 0
   key_id = data.aws_ssm_parameter.ssm_container_runtime_kms_key_id[0].value
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Lookup private subnets in the specified AZ when EBS volumes are used
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_subnets" "private_in_az" {
+  count = try(var.ebs_volume.availability_zone, null) != null ? 1 : 0
+
+  filter {
+    name   = "subnet-id"
+    values = split(",", data.aws_ssm_parameter.private_subnets.value)
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = [var.ebs_volume.availability_zone]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Bastion host security group (for allowing bastion access to service port)
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_security_group" "bastion_host_ssm_sg" {
+  count = var.enable_bastion_access ? 1 : 0
+
+  name = "${var.solution_name}_bastion_host_ssm_sg"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Cloud Map namespace for ECS service discovery
+# ---------------------------------------------------------------------------------------------------------------------
+data "aws_ssm_parameter" "cloud_map_namespace_id" {
+  count = var.enable_service_discovery ? 1 : 0
+
+  name = "/${var.solution_name}/internal_service_dns/cloud_map_namespace_id"
+}

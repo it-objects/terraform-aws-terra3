@@ -8,6 +8,12 @@ variable "enable" {
   default     = true
 }
 
+variable "enable_cloud_map" {
+  description = "Create Cloud Map namespace for ECS service discovery. Only needed when app_components use enable_service_discovery."
+  type        = bool
+  default     = false
+}
+
 variable "vpc_id" {
   description = "VPC ID where the internal zone will be deployed"
   type        = string

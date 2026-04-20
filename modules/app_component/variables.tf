@@ -389,3 +389,43 @@ variable "enable_custom_domain" {
   type    = bool
   default = false
 }
+
+variable "ebs_volume" {
+  description = "EBS volume to attach to Fargate tasks. Only one volume per service is supported. Includes optional snapshot lifecycle and scheduled backup config. Volume name defaults to '{app_component_name}-data' — use this as sourceVolume in container mount_points."
+  type = object({
+    name                       = optional(string, null)
+    size_in_gb                 = number
+    volume_type                = optional(string, "gp3")
+    iops                       = optional(number, null)
+    throughput                 = optional(number, null)
+    snapshot_id                = optional(string, null)
+    encrypted                  = optional(bool, true)
+    kms_key_id                 = optional(string, null)
+    file_system_type           = optional(string, "ext4")
+    availability_zone          = optional(string, null)
+    snapshot_lifecycle_enabled = optional(bool, false)
+    snapshot_retention_count   = optional(number, 3)
+    backup_enabled             = optional(bool, false)
+    backup_schedule            = optional(string, "cron(0 2 ? * * *)")
+    backup_retention_count     = optional(number, 7)
+  })
+  default = null
+}
+
+variable "enable_bastion_access" {
+  description = "Allow inbound traffic from bastion host security group on the service port."
+  type        = bool
+  default     = false
+}
+
+variable "enable_service_discovery" {
+  description = "Register the ECS service with Cloud Map for DNS-based service discovery. Requires enable_internal_service_dns on the root module."
+  type        = bool
+  default     = false
+}
+
+variable "service_discovery_dns_name" {
+  description = "DNS name for service discovery (e.g. 'postgres'). The FQDN will be {name}.internal.{solution_name}.local"
+  type        = string
+  default     = null
+}

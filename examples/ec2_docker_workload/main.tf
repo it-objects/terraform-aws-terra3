@@ -166,7 +166,9 @@ module "postgres_docker" {
   enable_ecr_access = true
 
   # Docker Configuration
-  docker_image_uri = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/postgres:17"
+  docker_image_uri = "postgres:17-alpine"
+  # or for images from the same account's ECR
+  # docker_image_uri = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/postgres:17"
 
   # Port Mappings
   port_mappings = [

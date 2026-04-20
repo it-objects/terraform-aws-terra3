@@ -130,8 +130,9 @@ variable "ebs_volumes" {
 }
 
 variable "ebs_volume_availability_zone" {
-  description = "Availability zone for EBS volume creation. Must match the AZ where the EC2 instance will be launched. Required to prevent EBS volume replacement on re-apply."
+  description = "Availability zone for EBS volume creation. Must match the AZ where the EC2 instance will be launched. Required when ebs_volumes contains persistent volumes (delete_on_termination = false) to prevent EBS volume replacement on re-apply."
   type        = string
+  default     = null
 }
 
 # -----------------------------------------------
