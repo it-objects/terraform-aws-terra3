@@ -399,6 +399,12 @@ variable "enable_s3_for_static_website" {
   default     = true
 }
 
+variable "custom_s3_static_website_cf_path_pattern" {
+  type        = string
+  description = "CloudFront path pattern for the S3 static website bucket. Defaults to '/*' which serves the static website at the root."
+  default     = "/*"
+}
+
 variable "s3_static_website_bucket_cf_function_arn" {
   type        = string
   description = "String that defines Cloudfront function for static website bucket."
