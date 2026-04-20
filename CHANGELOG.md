@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.69.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.68.0...v1.69.0) (2026-04-20)
+
+
+### Features
+
+* add option to attach ebs volume with life-cycling to app_component ([3e43e99](https://github.com/it-objects/terraform-aws-terra3/commit/3e43e99b44f5a46d20f6a75963d4685e46703789))
+
 ## [1.68.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.67.0...v1.68.0) (2026-04-19)
 
 
