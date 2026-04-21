@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.70.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.69.0...v1.70.0) (2026-04-21)
+
+
+### Features
+
+* **ec2_docker_workload:** use nonsensitive() for SSM parameters to prevent unnecessary resource replacement ([4fce93c](https://github.com/it-objects/terraform-aws-terra3/commit/4fce93c8ed9700203580a03e33a566bd7218512d))
+
 ## [1.69.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.68.0...v1.69.0) (2026-04-20)
 
 
