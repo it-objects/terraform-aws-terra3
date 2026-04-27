@@ -848,3 +848,45 @@ module "app_components" {
 ```
 
 Result: All services auto-discover each other via internal DNS names!
+
+## Upgrading
+
+### Removing Terraform-managed Route53 record (migration guide)
+
+As of this version, the Route53 A record for internal DNS is no longer managed by Terraform. It is created and maintained exclusively by the instance's startup script (`user_data`), which re-registers the record on every boot with the current private IP.
+
+**Why:** The Terraform-managed record caused phantom drift on every `terraform plan` because it queried the running instance IP dynamically. The startup script is the correct owner since it runs on every instance replacement.
+
+**One-time migration step after upgrading:**
+
+If you have an existing deployment, Terraform will attempt to destroy the old record on the next apply. Before applying, manually create the record so there is no DNS gap:
+
+```bash
+# Get the hosted zone ID
+ZONE_ID=$(aws ssm get-parameter \
+  --name "/<solution_name>/internal_service_dns/zone_id" \
+  --query 'Parameter.Value' --output text)
+
+# Get the current instance private IP
+INSTANCE_IP=$(aws ec2 describe-instances \
+  --filters "Name=tag:aws:autoscaling:groupName,Values=<solution_name>-<instance_name>-asg" \
+            "Name=instance-state-name,Values=running" \
+  --query 'Reservations[0].Instances[0].PrivateIpAddress' --output text)
+
+# Create/update the A record
+aws route53 change-resource-record-sets \
+  --hosted-zone-id "$ZONE_ID" \
+  --change-batch "{
+    \"Changes\": [{
+      \"Action\": \"UPSERT\",
+      \"ResourceRecordSet\": {
+        \"Name\": \"<instance_name>.internal.<solution_name>.local\",
+        \"Type\": \"A\",
+        \"TTL\": 60,
+        \"ResourceRecords\": [{\"Value\": \"$INSTANCE_IP\"}]
+      }
+    }]
+  }"
+```
+
+After this, run `terraform apply` — it will remove the record from state. The startup script will keep the record up to date from that point on.

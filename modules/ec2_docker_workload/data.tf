@@ -80,6 +80,19 @@ data "aws_subnet" "private_first" {
   id = element(split(",", nonsensitive(data.aws_ssm_parameter.private_subnets.value)), 0)
 }
 
+# Filter private subnets to only those in the target AZ (for EBS volume co-location)
+data "aws_subnets" "private_in_az" {
+  filter {
+    name   = "subnet-id"
+    values = split(",", nonsensitive(data.aws_ssm_parameter.private_subnets.value))
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = [local.volume_az]
+  }
+}
+
 # -----------------------------------------------
 # Get Current AWS Region and Account ID
 # -----------------------------------------------

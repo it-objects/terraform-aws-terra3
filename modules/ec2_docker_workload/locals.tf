@@ -60,8 +60,8 @@ locals {
   ssm_param_prefix = "/${var.solution_name}/ec2_docker_workload/${var.instance_name}"
 
   # Internal DNS configuration (zone managed by base module, read from SSM)
-  internal_dns_zone_id       = try(nonsensitive(data.aws_ssm_parameter.internal_dns_zone_id[0].value), "")
-  internal_dns_zone_name     = try(nonsensitive(data.aws_ssm_parameter.internal_dns_zone_name[0].value), "")
+  internal_dns_zone_id       = var.enable_internal_dns ? nonsensitive(data.aws_ssm_parameter.internal_dns_zone_id[0].value) : ""
+  internal_dns_zone_name     = var.enable_internal_dns ? nonsensitive(data.aws_ssm_parameter.internal_dns_zone_name[0].value) : ""
   internal_dns_workload_name = var.internal_dns_workload_name != "" ? var.internal_dns_workload_name : var.instance_name
   internal_dns_record_name   = var.enable_internal_dns ? "${local.internal_dns_workload_name}.${local.internal_dns_zone_name}" : ""
 
