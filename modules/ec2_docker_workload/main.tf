@@ -18,6 +18,10 @@ resource "aws_security_group" "default" {
       Name = "${var.solution_name}-${var.instance_name}-sg"
     }
   )
+
+  lifecycle {
+    ignore_changes = [vpc_id]
+  }
 }
 
 # -----------------------------------------------
@@ -61,6 +65,7 @@ resource "aws_security_group_rule" "bastion_ingress" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes        = [source_security_group_id, security_group_id]
   }
 }
 
@@ -84,6 +89,7 @@ resource "aws_security_group_rule" "ecs_ingress" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes        = [source_security_group_id, security_group_id]
   }
 }
 
@@ -107,6 +113,7 @@ resource "aws_security_group_rule" "bastion_egress" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes        = [source_security_group_id, security_group_id]
   }
 }
 
@@ -130,6 +137,7 @@ resource "aws_security_group_rule" "ecs_egress" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes        = [source_security_group_id, security_group_id]
   }
 }
 
@@ -281,19 +289,20 @@ locals {
   volume_device_names = [for vol in var.ebs_volumes : trimprefix(vol.device_name, "/dev/")]
 
   user_data_script = base64gzip(templatefile("${path.module}/user_data.sh", {
-    docker_image_uri     = var.docker_image_uri
-    docker_env_vars      = local.docker_env_vars
-    docker_port_args     = local.docker_port_args
-    docker_volume_mounts = local.docker_volume_mounts
-    docker_secrets_json  = local.docker_secrets_json
-    instance_name        = var.instance_name
-    log_group_name       = aws_cloudwatch_log_group.docker_logs.name
-    solution_name        = var.solution_name
-    aws_region           = data.aws_region.current.name
-    expected_devices     = join(" ", local.volume_device_names)
-    route53_zone_id      = local.internal_dns_zone_id
-    route53_record_name  = local.internal_dns_record_name
-    enable_ecr_access    = var.enable_ecr_access
+    docker_image_uri          = var.docker_image_uri
+    docker_env_vars           = local.docker_env_vars
+    docker_port_args          = local.docker_port_args
+    docker_volume_mounts      = local.docker_volume_mounts
+    docker_secrets_json       = local.docker_secrets_json
+    instance_name             = var.instance_name
+    log_group_name            = aws_cloudwatch_log_group.docker_logs.name
+    solution_name             = var.solution_name
+    aws_region                = data.aws_region.current.name
+    expected_devices          = join(" ", local.volume_device_names)
+    enable_ecr_access         = var.enable_ecr_access
+    enable_internal_dns       = var.enable_internal_dns
+    route53_zone_id_ssm_param = var.enable_internal_dns ? "/${var.solution_name}/internal_service_dns/zone_id" : ""
+    route53_record_name       = local.internal_dns_record_name
   }))
 }
 
@@ -372,7 +381,8 @@ resource "aws_autoscaling_group" "docker_workload" {
   max_size         = 1
   min_size         = 1
 
-  vpc_zone_identifier = local.private_subnets
+  // Pin ASG to subnets in the same AZ as the EBS volume
+  vpc_zone_identifier = data.aws_subnets.private_in_az.ids
 
   launch_template {
     id      = aws_launch_template.docker_workload.id
@@ -443,24 +453,6 @@ resource "aws_ebs_volume" "persistent" {
       error_message = "ebs_volume_availability_zone is required when ebs_volumes contains persistent volumes (delete_on_termination = false)."
     }
   }
-}
-
-# -----------------------------------------------
-# Route53 Internal DNS for Service Discovery
-# -----------------------------------------------
-
-# Private hosted zone for internal service discovery
-# Create zone if internal DNS is enabled and no zone ID is provided
-# Once created, the zone persists and is reused by other workloads
-# DNS A record pointing to the current running instance
-resource "aws_route53_record" "workload" {
-  count   = var.enable_internal_dns ? 1 : 0
-  zone_id = local.internal_dns_zone_id
-  name    = local.internal_dns_record_name
-  type    = "A"
-  ttl     = 60
-  # Points to the current running instance IP
-  records = [try(data.aws_instances.docker_workload.private_ips[0], "127.0.0.1")]
 }
 
 # -----------------------------------------------

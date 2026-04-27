@@ -20,7 +20,7 @@ resource "aws_route53_zone" "internal" {
   tags = merge(
     var.tags,
     {
-      Name = "${var.solution_name}-internal-dns"
+      Name = "${var.solution_name}-internal-zone"
     }
   )
 }

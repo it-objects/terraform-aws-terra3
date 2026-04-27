@@ -5,7 +5,7 @@
 
 INSTANCE_NAME="${instance_name}"
 LOG_GROUP_NAME="${log_group_name}"
-ROUTE53_ZONE_ID="${route53_zone_id}"
+ROUTE53_ZONE_ID_SSM_PARAM="${route53_zone_id_ssm_param}"
 ROUTE53_RECORD_NAME="${route53_record_name}"
 
 echo "Starting EC2 Docker Workload initialization..."
@@ -514,8 +514,19 @@ fi
 # -----------------------------------------------
 # 9. Register with Route53 (for internal DNS service discovery)
 # -----------------------------------------------
-if [ -n "$ROUTE53_ZONE_ID" ] && [ -n "$ROUTE53_RECORD_NAME" ]; then
+if [ -n "$ROUTE53_ZONE_ID_SSM_PARAM" ] && [ -n "$ROUTE53_RECORD_NAME" ]; then
   echo "[$(date)] Registering instance with Route53..."
+
+  # Fetch zone ID from SSM at runtime (avoids sensitive value injection via user_data)
+  ROUTE53_ZONE_ID=$(aws ssm get-parameter \
+    --name "$ROUTE53_ZONE_ID_SSM_PARAM" \
+    --region "$AWS_REGION" \
+    --query 'Parameter.Value' \
+    --output text 2>/dev/null || echo "")
+
+  if [ -z "$ROUTE53_ZONE_ID" ]; then
+    echo "[$(date)] WARNING: Could not fetch Route53 zone ID from SSM ($ROUTE53_ZONE_ID_SSM_PARAM)"
+  fi
 
   # Get private IP address from IMDSv2
   PRIVATE_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/local-ipv4" 2>/dev/null || echo "")

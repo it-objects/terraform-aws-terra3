@@ -89,12 +89,12 @@ output "backup_enabled" {
 
 output "internal_dns_fqdn" {
   description = "Fully qualified domain name for accessing this workload internally"
-  value       = try(aws_route53_record.workload[0].fqdn, null)
+  value       = var.enable_internal_dns ? local.internal_dns_record_name : null
 }
 
 output "internal_dns_hostname" {
   description = "Internal hostname for this workload (without FQDN)"
-  value       = try(aws_route53_record.workload[0].name, null)
+  value       = var.enable_internal_dns ? local.internal_dns_workload_name : null
 }
 
 output "persistent_volume_ids" {
