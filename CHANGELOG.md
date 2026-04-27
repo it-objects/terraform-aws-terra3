@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.70.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.70.0...v1.70.1) (2026-04-27)
+
+
+### Bug Fixes
+
+* **ec2_docker_workload:** update EBS volume AZ alignment and improve DNS configuration ([21c179a](https://github.com/it-objects/terraform-aws-terra3/commit/21c179ae1f8e7c508e7161918335225d02941909))
+
 ## [1.70.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.69.0...v1.70.0) (2026-04-21)
 
 
