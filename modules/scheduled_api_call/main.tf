@@ -37,7 +37,7 @@ module "lambda" {
   function_name = "${var.solution_name}-scheduled-https-api-call"
   description   = "scheduled https api call"
   handler       = "api_call.handler"
-  runtime       = "nodejs24.x"
+  runtime       = "nodejs20.x"
   source_path   = "${path.module}/api_call.js"
 
   create_current_version_allowed_triggers = false

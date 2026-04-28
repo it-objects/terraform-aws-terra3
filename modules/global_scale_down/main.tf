@@ -42,7 +42,7 @@ module "lambda_scale_up" {
   function_name = "${var.solution_name}-global-scale-up"
   description   = "Performs global scale up"
   handler       = "scale_up.handler"
-  runtime       = "nodejs24.x"
+  runtime       = "nodejs22.x"
   source_path   = "${path.module}/scale_up.mjs"
   timeout       = 900
 
@@ -142,7 +142,7 @@ module "lambda_scale_down" {
   function_name = "${var.solution_name}-global-scale-down"
   description   = "Performs global scale down"
   handler       = "scale_down.handler"
-  runtime       = "nodejs24.x"
+  runtime       = "nodejs22.x"
   source_path   = "${path.module}/scale_down.mjs"
   timeout       = 900
 
@@ -233,7 +233,7 @@ module "global_scale_status" {
   function_name = "${var.solution_name}-global-scale-status"
   description   = "Shows the current status of deployment."
   handler       = "status.handler"
-  runtime       = "nodejs24.x"
+  runtime       = "nodejs22.x"
   source_path   = "${path.module}/status.mjs"
   timeout       = 900
 
