@@ -37,7 +37,7 @@ resource "aws_route53_record" "mx_send_mail_from" {
   name    = var.mail_from_domain
   type    = "MX"
   ttl     = "600"
-  records = ["10 feedback-smtp.${data.aws_region.current_region.name}.amazonses.com"]
+  records = ["10 feedback-smtp.${data.aws_region.current_region.id}.amazonses.com"]
 }
 
 # Receiving MX Record
@@ -47,7 +47,7 @@ resource "aws_route53_record" "mx_receive" {
   zone_id = data.aws_route53_zone.main.zone_id
   type    = "MX"
   ttl     = "600"
-  records = ["10 inbound-smtp.${data.aws_region.current_region.name}.amazonaws.com"]
+  records = ["10 inbound-smtp.${data.aws_region.current_region.id}.amazonaws.com"]
 }
 
 # SES DKIM Verification
@@ -123,12 +123,12 @@ data "aws_iam_policy_document" "send_mail" {
 locals {
   initial_value = jsonencode({
     AWS_SES_SOURCE_ARN = aws_ses_domain_identity.ses_domain[*].arn
-    SMTP_ADDRESS       = "email-smtp.${data.aws_region.current_region.name}.amazonaws.com"
+    SMTP_ADDRESS       = "email-smtp.${data.aws_region.current_region.id}.amazonaws.com"
     SMTP_AUTH          = "plain"
     SMTP_DOMAIN        = var.ses_domain_name
     SMTP_PASSWORD      = aws_iam_access_key.smtp_user[*].ses_smtp_password_v4
     SMTP_PORT          = 2587
-    SMTP_REGION        = data.aws_region.current_region.name
+    SMTP_REGION        = data.aws_region.current_region.id
     SMTP_SECRET        = aws_iam_access_key.smtp_user[*].secret
     SMTP_USERNAME      = aws_iam_access_key.smtp_user[*].id
   })

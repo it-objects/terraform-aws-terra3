@@ -104,9 +104,9 @@ resource "aws_iam_role_policy" "ecr_access" {
           "ecr:GetDownloadUrlForLayer"
         ]
         Resource = local.is_ecr_image ? [
-          "arn:aws:ecr:${data.aws_region.current.name}:${var.ecr_source_account_id != "" ? var.ecr_source_account_id : data.aws_caller_identity.current.account_id}:repository/${local.ecr_repo_name}"
+          "arn:aws:ecr:${data.aws_region.current.id}:${var.ecr_source_account_id != "" ? var.ecr_source_account_id : data.aws_caller_identity.current.account_id}:repository/${local.ecr_repo_name}"
           ] : [
-          "arn:aws:ecr:${data.aws_region.current.name}:${var.ecr_source_account_id != "" ? var.ecr_source_account_id : data.aws_caller_identity.current.account_id}:repository/*"
+          "arn:aws:ecr:${data.aws_region.current.id}:${var.ecr_source_account_id != "" ? var.ecr_source_account_id : data.aws_caller_identity.current.account_id}:repository/*"
         ]
       }
     ]
@@ -139,8 +139,8 @@ resource "aws_iam_role_policy" "ebs_volume_attachment" {
           "ec2:DetachVolume"
         ]
         Resource = [
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*"
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:instance/*"
         ]
       }
     ]
@@ -202,10 +202,10 @@ resource "aws_iam_role_policy" "secrets_access" {
             "kms:Decrypt",
             "kms:DescribeKey"
           ]
-          Resource = "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+          Resource = "arn:aws:kms:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:key/*"
           Condition = {
             StringEquals = {
-              "kms:ViaService" = "ssm.${data.aws_region.current.name}.amazonaws.com"
+              "kms:ViaService" = "ssm.${data.aws_region.current.id}.amazonaws.com"
             }
           }
         }

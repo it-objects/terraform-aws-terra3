@@ -37,7 +37,7 @@ module "lambda_scale_up" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.20.1"
+  version = "8.8.0"
 
   function_name = "${var.solution_name}-global-scale-up"
   description   = "Performs global scale up"
@@ -104,7 +104,7 @@ resource "aws_lambda_permission" "scale_up_lambda_invoke_function_permission" {
 module "eventbridge_up" {
   count   = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   source  = "terraform-aws-modules/eventbridge/aws"
-  version = "3.14.3"
+  version = "4.3.0"
 
   bus_name = "${var.solution_name}-scale-up" # "default" bus already support schedule_expression in rules
 
@@ -137,7 +137,7 @@ module "lambda_scale_down" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.20.1"
+  version = "8.8.0"
 
   function_name = "${var.solution_name}-global-scale-down"
   description   = "Performs global scale down"
@@ -204,7 +204,7 @@ resource "aws_lambda_permission" "scale_down_lambda_invoke_function_permission" 
 module "eventbridge_down" {
   count   = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
   source  = "terraform-aws-modules/eventbridge/aws"
-  version = "3.14.3"
+  version = "4.3.0"
 
   bus_name = "${var.solution_name}-scale-down" # "default" bus already support schedule_expression in rules
 
@@ -228,7 +228,7 @@ module "global_scale_status" {
   count = var.enable_environment_hibernation_sleep_schedule ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.20.1"
+  version = "8.8.0"
 
   function_name = "${var.solution_name}-global-scale-status"
   description   = "Shows the current status of deployment."

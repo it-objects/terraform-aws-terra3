@@ -59,7 +59,7 @@ locals {
       "logDriver" : "awslogs",
       "options" : {
         awslogs-group : "${var.name}LogGroup",
-        awslogs-region : data.aws_region.current_region.name,
+        awslogs-region : data.aws_region.current_region.id,
         awslogs-stream-prefix : var.solution_name
       }
     }
@@ -94,7 +94,7 @@ locals {
       "logDriver" : "awslogs",
       "options" : {
         awslogs-group : "${var.name}LogGroup",
-        awslogs-region : data.aws_region.current_region.name,
+        awslogs-region : data.aws_region.current_region.id,
         awslogs-stream-prefix : var.solution_name
       }
     }

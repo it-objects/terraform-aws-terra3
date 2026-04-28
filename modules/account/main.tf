@@ -23,6 +23,6 @@ resource "aws_ebs_snapshot_block_public_access" "block_public_access" {
 resource "aws_ssm_service_setting" "ssm_document_block_public_sharing" {
   count = var.enable_account_wide_ssm_document_block_public_sharing ? 1 : 0
 
-  setting_id    = "arn:aws:ssm:${data.aws_region.current_region.name}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/documents/console/public-sharing-permission"
+  setting_id    = "arn:aws:ssm:${data.aws_region.current_region.id}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/documents/console/public-sharing-permission"
   setting_value = "Disable"
 }

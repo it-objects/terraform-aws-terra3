@@ -86,7 +86,7 @@ module "log_bucket" {
   count = var.enable_alb_logs ? 1 : 0
 
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "4.6.0"
+  version = "5.12.0"
 
   bucket = "${var.solution_name}-alb-logs-s3-bucket-${random_string.random_s3_alb_logs_postfix.result}"
   acl    = "log-delivery-write"
