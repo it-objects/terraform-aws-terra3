@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.71.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.70.1...v1.71.0) (2026-04-29)
+
+
+### Features
+
+* update Lambda runtime to nodejs24.x and ugrade AWS provider to 6.42.0 ([#71](https://github.com/it-objects/terraform-aws-terra3/issues/71)) ([9e4ffb7](https://github.com/it-objects/terraform-aws-terra3/commit/9e4ffb7e2bbd81f0d8e9c5a5cb6f5e735e754f87))
+
 ### [1.70.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.70.0...v1.70.1) (2026-04-27)
 
 
