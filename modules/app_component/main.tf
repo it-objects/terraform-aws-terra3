@@ -589,7 +589,7 @@ data "aws_iam_policy_document" "ssm_parameter_cloudfront_private_key" {
   statement {
     sid       = "cfPrivatekeyAccessPermissions"
     effect    = "Allow"
-    resources = ["arn:aws:ssm:${data.aws_region.current_region.name}:${data.aws_caller_identity.this.account_id}:parameter/${var.solution_name}/cloudfront/*"]
+    resources = ["arn:aws:ssm:${data.aws_region.current_region.id}:${data.aws_caller_identity.this.account_id}:parameter/${var.solution_name}/cloudfront/*"]
     actions = [
       "ssm:GetParameters"
     ]
@@ -1195,7 +1195,5 @@ resource "aws_service_discovery_service" "this" {
     routing_policy = "MULTIVALUE"
   }
 
-  health_check_custom_config {
-    failure_threshold = 1
-  }
+  health_check_custom_config {}
 }

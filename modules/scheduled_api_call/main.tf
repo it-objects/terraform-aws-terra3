@@ -5,7 +5,7 @@ module "eventbridge" {
   count = var.enable_scheduled_https_api_call ? 1 : 0
 
   source  = "terraform-aws-modules/eventbridge/aws"
-  version = "3.2.3"
+  version = "4.3.0"
 
   create_bus = false
 
@@ -32,12 +32,12 @@ module "lambda" {
   count = var.enable_scheduled_https_api_call ? 1 : 0
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.2.3"
+  version = "8.8.0"
 
   function_name = "${var.solution_name}-scheduled-https-api-call"
   description   = "scheduled https api call"
   handler       = "api_call.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   source_path   = "${path.module}/api_call.js"
 
   create_current_version_allowed_triggers = false

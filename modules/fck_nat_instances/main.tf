@@ -257,7 +257,7 @@ resource "aws_iam_role_policy_attachment" "main" {
 }
 
 locals {
-  fck_nat_eip_allocation_ids = [for eip in aws_eip.main : "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:elastic-ip/${eip.id}"]
+  fck_nat_eip_allocation_ids = [for eip in aws_eip.main : "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:elastic-ip/${eip.id}"]
 }
 
 #tfsec:ignore:aws-iam-no-policy-wildcards
@@ -305,7 +305,7 @@ data "aws_iam_policy_document" "main" {
         "ec2:DisassociateAddress",
       ]
       resources = [
-        "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*"
+        "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:network-interface/*"
       ]
       condition {
         test     = "StringLike"

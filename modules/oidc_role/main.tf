@@ -167,7 +167,7 @@ resource "aws_iam_policy" "ecr_deployment_policy" {
             "ecr:BatchGetImage",
             "ecr:GetDownloadUrlForLayer"
           ],
-          "Resource" : "arn:aws:ecr:${data.aws_region.current_region.name}:${data.aws_caller_identity.current.account_id}:repository/${each.value.ecr_name}"
+          "Resource" : "arn:aws:ecr:${data.aws_region.current_region.id}:${data.aws_caller_identity.current.account_id}:repository/${each.value.ecr_name}"
         },
         {
           "Sid" : "ECRRetrieveCredentials",

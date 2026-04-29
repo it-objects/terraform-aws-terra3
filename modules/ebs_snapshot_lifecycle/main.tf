@@ -119,7 +119,7 @@ resource "aws_cloudwatch_metric_alarm" "snapshot_failed" {
 
 module "snapshot_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.20.1"
+  version = "8.8.0"
 
   function_name = "${var.solution_name}-${var.app_component_name}-ebs-snap"
   description   = "Snapshots EBS volumes on ECS task stop for ${var.solution_name}/${var.app_component_name}"

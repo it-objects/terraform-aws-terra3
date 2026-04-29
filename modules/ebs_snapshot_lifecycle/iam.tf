@@ -24,7 +24,7 @@ resource "aws_iam_policy" "lambda_ebs_snapshot" {
         Resource = "*"
         Condition = {
           StringEquals = {
-            "aws:RequestedRegion" = data.aws_region.current.name
+            "aws:RequestedRegion" = data.aws_region.current.id
           }
         }
       },
@@ -35,7 +35,7 @@ resource "aws_iam_policy" "lambda_ebs_snapshot" {
           "ssm:PutParameter",
           "ssm:GetParameter",
         ]
-        Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.solution_name}/ebs_snapshot/${var.app_component_name}/*"
+        Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter/${var.solution_name}/ebs_snapshot/${var.app_component_name}/*"
       },
       {
         Sid    = "ECSService"
@@ -86,8 +86,8 @@ resource "aws_iam_policy" "lambda_ebs_snapshot" {
           "dynamodb:Query",
         ]
         Resource = [
-          "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.solution_name}-${var.app_component_name}-ebs-lifecycle",
-          "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.solution_name}-${var.app_component_name}-ebs-lifecycle/index/snapshotId-index",
+          "arn:aws:dynamodb:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:table/${var.solution_name}-${var.app_component_name}-ebs-lifecycle",
+          "arn:aws:dynamodb:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:table/${var.solution_name}-${var.app_component_name}-ebs-lifecycle/index/snapshotId-index",
         ]
       },
       {

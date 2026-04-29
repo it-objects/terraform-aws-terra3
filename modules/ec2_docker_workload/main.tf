@@ -240,7 +240,7 @@ resource "aws_kms_key" "logs" {
         Sid    = "Allow CloudWatch Logs"
         Effect = "Allow"
         Principal = {
-          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
+          Service = "logs.${data.aws_region.current.id}.amazonaws.com"
         }
         Action = [
           "kms:Encrypt",
@@ -253,7 +253,7 @@ resource "aws_kms_key" "logs" {
         Resource = "*"
         Condition = {
           ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:*"
           }
         }
       }
@@ -297,7 +297,7 @@ locals {
     instance_name             = var.instance_name
     log_group_name            = aws_cloudwatch_log_group.docker_logs.name
     solution_name             = var.solution_name
-    aws_region                = data.aws_region.current.name
+    aws_region                = data.aws_region.current.id
     expected_devices          = join(" ", local.volume_device_names)
     enable_ecr_access         = var.enable_ecr_access
     enable_internal_dns       = var.enable_internal_dns
@@ -572,8 +572,8 @@ resource "aws_iam_role_policy" "backup_ebs_policy" {
           "ec2:CreateTags"
         ]
         Resource = concat(
-          [for vol in var.ebs_volumes : "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"],
-          ["arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:snapshot/*"]
+          [for vol in var.ebs_volumes : "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*"],
+          ["arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:snapshot/*"]
         )
       },
       {
@@ -583,8 +583,8 @@ resource "aws_iam_role_policy" "backup_ebs_policy" {
           "ec2:DescribeInstances"
         ]
         Resource = [
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:instance/*",
+          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*"
         ]
       },
       {

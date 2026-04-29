@@ -1,6 +1,6 @@
 locals {
   asg_arn   = concat(var.ecs_ec2_instances_autoscaling_group_arn, var.nat_instances_autoscaling_group_arn, var.fck_nat_instances_autoscaling_group_arn, var.bastion_host_autoscaling_group_arn)
-  redis_arn = concat(var.redis_cluster_arn, var.redis_subnet_group_arn, [var.redis_security_group_arn], ["arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parametergroup:*"])
+  redis_arn = concat(var.redis_cluster_arn, var.redis_subnet_group_arn, [var.redis_security_group_arn], ["arn:aws:elasticache:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parametergroup:*"])
 }
 
 resource "aws_iam_policy" "scale_up_down_asg_policy" {
@@ -82,10 +82,10 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
             "ssm:GetParameter"
           ],
           "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}",
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.scale_up_parameters}",
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}",
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.token}"
+            "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}",
+            "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${local.scale_up_parameters}",
+            "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}",
+            "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${local.token}"
           ]
         },
         {
@@ -95,8 +95,8 @@ resource "aws_iam_policy" "scale_up_down_iam_policy" {
             "ssm:PutParameter"
           ],
           "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}",
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}"
+            "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${local.ecs_service_data}",
+            "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}"
           ]
         }
       ]
@@ -120,7 +120,7 @@ resource "aws_iam_policy" "status_lambda_get_parameter" {
             "ssm:GetParameter"
           ],
           "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}",
+            "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${local.hibernation_state}",
           ]
         }
       ]
