@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.71.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.71.0...v1.71.1) (2026-04-30)
+
+
+### Bug Fixes
+
+* **lambda_at_edge:** use async return instead of callback in origin request handler ([a0d75ae](https://github.com/it-objects/terraform-aws-terra3/commit/a0d75ae7b379cd4b1a82e8630b1e120f2eb801a9))
+* updated aws provider version in example ([b415f2a](https://github.com/it-objects/terraform-aws-terra3/commit/b415f2a13db4e29274d50bb4baec9b10b9c20451))
+
 ## [1.71.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.70.1...v1.71.0) (2026-04-29)
 
 
