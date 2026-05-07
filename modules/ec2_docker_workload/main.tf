@@ -635,19 +635,7 @@ resource "aws_backup_selection" "docker_workload" {
   plan_id      = aws_backup_plan.docker_workload[0].id
   iam_role_arn = aws_iam_role.backup_service_role[0].arn
 
-  resources = []
-
-  selection_tag {
-    key   = "Solution"
-    value = var.solution_name
-    type  = "STRINGEQUALS"
-  }
-
-  selection_tag {
-    key   = "WorkloadInstance"
-    value = var.instance_name
-    type  = "STRINGEQUALS"
-  }
+  resources = [for vol in aws_ebs_volume.persistent : vol.arn]
 
   depends_on = [
     aws_iam_role_policy_attachment.backup_service_policy,
