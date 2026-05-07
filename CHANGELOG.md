@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.71.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.71.1...v1.71.2) (2026-05-07)
+
+
+### Bug Fixes
+
+* **ec2_docker_workload:** avoid ec2 instance data to be picked up by backup configuration ([887d30d](https://github.com/it-objects/terraform-aws-terra3/commit/887d30dcf6be33230602287e90e45a3c89c1fbc0))
+
 ### [1.71.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.71.0...v1.71.1) (2026-04-30)
 
 
