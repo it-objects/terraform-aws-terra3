@@ -348,6 +348,8 @@ module "cloudfront_cdn" {
   # when custom_elb_cf_path_patterns is not given by developer, it is being calculated (calculation only works in single state setups)
   custom_elb_cf_path_patterns = length(var.custom_elb_cf_path_patterns) == 0 ? local.app_component_paths : var.custom_elb_cf_path_patterns
 
+  custom_elb_cf_lambda_at_edge_origin_request = var.custom_elb_cf_lambda_at_edge_origin_request
+
   s3_solution_bucket_name        = try(module.s3_solution_bucket[0].s3_solution_bucket_name, "")
   s3_solution_bucket_arn         = try(module.s3_solution_bucket[0].s3_bucket_arn, "")
   s3_solution_bucket_domain_name = try(module.s3_solution_bucket[0].s3_bucket_domain_name, "")

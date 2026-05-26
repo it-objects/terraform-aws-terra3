@@ -35,6 +35,11 @@ module "terra3_examples" {
 
   # static website configuration for Lambda@Edge function to support SPA without default error
   s3_static_website_bucket_cf_lambda_at_edge_origin_request_arn = "${module.lambda_at_edge_example.lambda_at_edge_arn}:${module.lambda_at_edge_example.lambda_at_edge_version}"
+
+  # custom_elb_cf_path_patterns                 = ["/*", "/web-analytics/*"] #web-analytics serves any api
+  # custom_elb_cf_lambda_at_edge_origin_request = {
+  #   "/web-analytics/*" = module.lambda-edge-for-spa.lambda_function_qualified_arn
+  # }
 }
 
 provider "aws" {

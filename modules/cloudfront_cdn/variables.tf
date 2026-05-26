@@ -124,6 +124,12 @@ variable "custom_elb_cf_path_patterns" {
   default     = []
 }
 
+variable "custom_elb_cf_lambda_at_edge_origin_request" {
+  type        = map(string)
+  description = "Map of ELB CF path pattern to Lambda@Edge origin-request qualified ARN."
+  default     = {}
+}
+
 variable "s3_solution_bucket_name" {
   type        = string
   description = "S3 solution bucket's name."
