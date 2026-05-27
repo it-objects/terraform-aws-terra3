@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.72.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.71.2...v1.72.0) (2026-05-27)
+
+
+### Features
+
+* **cloudfront:** add Lambda@Edge origin-request support for custom ELB path behaviors ([#72](https://github.com/it-objects/terraform-aws-terra3/issues/72)) ([637e6e1](https://github.com/it-objects/terraform-aws-terra3/commit/637e6e13491e310e1231210456a04bdd95c9f529))
+
 ### [1.71.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.71.1...v1.71.2) (2026-05-07)
 
 
