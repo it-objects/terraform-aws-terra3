@@ -243,7 +243,14 @@ locals {
         use_forwarded_values     = false
         origin_request_policy_id = data.aws_cloudfront_origin_request_policy.ManagedAllViewer.id
         cache_policy_id          = data.aws_cloudfront_cache_policy.ManagedCachingDisabled.id
-    }],
+
+        lambda_function_association = lookup(var.custom_elb_cf_lambda_at_edge_origin_request, custom_elb_cf_path_pattern, "") != "" ? [{
+          event_type   = "origin-request"
+          lambda_arn   = var.custom_elb_cf_lambda_at_edge_origin_request[custom_elb_cf_path_pattern]
+          include_body = false
+        }] : []
+      }
+    ],
     !var.enable_s3_for_static_website ? [] : [{
       path_pattern           = var.custom_s3_static_website_cf_path_pattern
       target_origin_id       = "s3_static_website"
