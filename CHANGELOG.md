@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.72.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.72.0...v1.72.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **dns_and_certificates:** keep original domain as primary when alias_domain_name is set ([e688c37](https://github.com/it-objects/terraform-aws-terra3/commit/e688c37a84062bb8b18ab3a8b92ec9c87713a623))
+
 ## [1.72.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.71.2...v1.72.0) (2026-05-27)
 
 
