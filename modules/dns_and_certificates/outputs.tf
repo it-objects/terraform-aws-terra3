@@ -11,7 +11,7 @@ output "domain_name" {
 }
 
 output "internal_domain_name" {
-  value = length(var.alias_domain_name) == 0 ? aws_acm_certificate.domain_certificate.domain_name : tolist(aws_acm_certificate.domain_certificate.subject_alternative_names)[0]
+  value = aws_acm_certificate.domain_certificate.domain_name
 }
 
 output "subject_alternative_names" {
