@@ -14,7 +14,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">=5.0.0, < 6.0.0"
+      version = ">=5.0.0, <= 6.42.0"
     }
   }
 }
@@ -213,15 +213,15 @@ module "postgres_docker" {
   ]
 
   # Required: Explicitly specify AZ for EBS volumes to prevent replacement on re-apply
-  ebs_volume_availability_zone = "<tbd>"
+  ebs_volume_availability_zone = "eu-central-1b"
 
   # CloudWatch Logs
-  log_retention_days = 7
+  log_retention_days = 30
 
   # Backup Configuration
   enable_backup         = true
   backup_retention_days = 7
-  backup_schedule       = "cron(0 2 ? * * *)" # Daily at 2 AM UTC
+  backup_schedule       = "cron(30 14 ? * * *)" # Daily at 14:30 UTC (testing)
 
   # Internal DNS is enabled by default
   # The Route53 zone is created by the Terra3 base module
@@ -254,15 +254,42 @@ module "nginx_docker" {
   ]
 
   # CloudWatch Logs
-  log_retention_days = 7
+  log_retention_days = 30
 
   # Explicit dependencies to ensure proper deployment order and SSM access
   # Note: nginx depends on postgres being fully deployed to avoid race conditions
   # with security group and Route53 zone initialization
   depends_on = [
-    module.terra3_examples,
-    module.postgres_docker
+    module.terra3_examples
   ]
+}
+
+# -----------------------------------------------
+# AMI Update Automation
+# -----------------------------------------------
+# Periodically checks for newer Amazon Linux 2023 AMIs and triggers
+# a rolling instance refresh to keep workloads patched.
+
+module "postgres_ami_update" {
+  source = "../../modules/ami_update_automation"
+
+  solution_name      = local.solution_name
+  name_suffix        = "postgres"
+  launch_template_id = module.postgres_docker.launch_template_id
+  asg_name           = module.postgres_docker.asg_name
+
+  depends_on = [module.postgres_docker]
+}
+
+module "nginx_ami_update" {
+  source = "../../modules/ami_update_automation"
+
+  solution_name      = local.solution_name
+  name_suffix        = "nginx"
+  launch_template_id = module.nginx_docker.launch_template_id
+  asg_name           = module.nginx_docker.asg_name
+
+  depends_on = [module.nginx_docker]
 }
 
 # -----------------------------------------------
