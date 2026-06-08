@@ -332,30 +332,76 @@ aws backup list-recovery-points-by-backup-vault \
 - **Snapshot Copy:** ~$0.01 per GB for cross-region (if configured)
 - **Example Cost:** 50GB PostgreSQL with 7-day retention ≈ $0.13-$0.26/month
 
-### Recovery Procedure
+### Recovery Procedure (Post-Restore Flow)
 
-To restore from a backup:
+The backup selection targets EBS volumes by their Terraform resource ARN. After restoring
+a snapshot, the restored volume gets a new ARN. The instance's user data script discovers
+volumes by tags (`WorkloadInstance` + `Persistent=true`), so tagging the restored volume
+correctly is the key step.
 
-1. **Create Volume from Snapshot:**
-   ```bash
-   aws ec2 create-volume \
-     --availability-zone us-east-1a \
-     --snapshot-id snap-xxxxx \
-     --volume-type gp3
-   ```
+**Step 1: Restore the snapshot via AWS Backup or CLI**
 
-2. **Attach to New Instance:**
-   ```bash
-   aws ec2 attach-volume \
-     --volume-id vol-xxxxx \
-     --instance-id i-xxxxx \
-     --device /dev/sdf
-   ```
+```bash
+# Option A: Restore from AWS Backup console (Backup → Vaults → select recovery point → Restore)
+# Option B: CLI
+SNAPSHOT_ID="snap-xxxxx"  # from the recovery point
 
-3. **Update Terraform:**
-   - Delete old instance/ASG resources
-   - Update volumes list to reference recovered volumes
-   - Re-apply configuration
+aws ec2 create-volume \
+  --availability-zone <same-az-as-original> \
+  --snapshot-id "$SNAPSHOT_ID" \
+  --volume-type gp3 \
+  --encrypted \
+  --tag-specifications "ResourceType=volume,Tags=[
+    {Key=Name,Value=<solution_name>-<instance_name>-volume-0},
+    {Key=WorkloadInstance,Value=<instance_name>},
+    {Key=Persistent,Value=true},
+    {Key=DeviceName,Value=/dev/sdf},
+    {Key=MountPath,Value=/var/lib/postgresql/data},
+    {Key=Solution,Value=<solution_name>}
+  ]"
+```
+
+**Step 2: Remove tags from the old volume (or delete it)**
+
+```bash
+# Remove discovery tags so the instance doesn't attach the wrong volume
+aws ec2 delete-tags --resources vol-OLD_ID \
+  --tags Key=WorkloadInstance Key=Persistent
+```
+
+**Step 3: Terminate the current instance (ASG recreates it)**
+
+```bash
+# The new instance will discover and attach the restored volume via tags
+aws autoscaling terminate-instance-in-auto-scaling-group \
+  --instance-id i-xxxxx \
+  --no-should-decrement-desired-capacity
+```
+
+The ASG launches a new instance → user data script finds the restored volume by tags → attaches and mounts it → container starts with restored data.
+
+**Step 4: Update Terraform state**
+
+```bash
+# Remove the old volume from state
+terraform state rm 'module.<name>.aws_ebs_volume.persistent[0]'
+
+# Import the restored volume
+terraform import 'module.<name>.aws_ebs_volume.persistent[0]' vol-NEW_ID
+```
+
+**Step 5: Apply to update backup selection**
+
+```bash
+terraform apply
+```
+
+This updates the backup plan's selection to reference the new volume ARN. Backups resume automatically on the next scheduled run.
+
+**Why this works:**
+- Instance attachment: tag-based discovery (works immediately after re-tagging)
+- Backup selection: ARN-based via Terraform resource reference (self-heals after `terraform apply`)
+- Time window without backup coverage: between restore and `terraform apply` only
 
 ### Backup Vault Outputs
 
