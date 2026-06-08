@@ -17,3 +17,7 @@ output "bastion_host_autoscaling_group_desired_capacity" {
 output "bastion_host_autoscaling_group_arn" {
   value = aws_autoscaling_group.my_autoscaling_group.arn
 }
+
+output "launch_template_id" {
+  value = aws_launch_template.my_asg_launch_template.id
+}
