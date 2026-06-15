@@ -26,26 +26,33 @@ resource "aws_iam_policy" "lambda_ami_updater" {
     Statement = concat(
       [
         {
-          Sid      = "DescribeAMIs"
-          Effect   = "Allow"
-          Action   = ["ec2:DescribeImages"]
+          Sid    = "DescribeEC2"
+          Effect = "Allow"
+          Action = [
+            "ec2:DescribeImages",
+            "ec2:DescribeLaunchTemplateVersions"
+          ]
           Resource = "*"
         },
         {
-          Sid    = "ManageLaunchTemplate"
+          Sid    = "UpdateLaunchTemplate"
           Effect = "Allow"
           Action = [
-            "ec2:DescribeLaunchTemplateVersions",
             "ec2:CreateLaunchTemplateVersion"
           ]
           Resource = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:launch-template/${var.launch_template_id}"
         },
         {
-          Sid    = "ManageASGRefresh"
+          Sid      = "DescribeASGRefreshes"
+          Effect   = "Allow"
+          Action   = ["autoscaling:DescribeInstanceRefreshes"]
+          Resource = "*"
+        },
+        {
+          Sid    = "StartASGRefresh"
           Effect = "Allow"
           Action = [
-            "autoscaling:StartInstanceRefresh",
-            "autoscaling:DescribeInstanceRefreshes"
+            "autoscaling:StartInstanceRefresh"
           ]
           Resource = "arn:aws:autoscaling:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.asg_name}"
         }
@@ -104,7 +111,7 @@ module "lambda" {
   allowed_triggers = {
     AmiCheckSchedule = {
       principal  = "events.amazonaws.com"
-      source_arn = module.eventbridge.eventbridge_rule_arns["ami_check"]
+      source_arn = module.eventbridge.eventbridge_rule_arns[local.function_name]
     }
   }
 
@@ -119,17 +126,19 @@ module "eventbridge" {
   source  = "terraform-aws-modules/eventbridge/aws"
   version = "4.3.0"
 
-  create_bus = false
+  create_bus                 = false
+  create_role                = false
+  create_log_delivery_source = false
 
   rules = {
-    ami_check = {
+    "${local.function_name}" = {
       description         = "Periodic AMI update check for ${var.name_suffix}"
       schedule_expression = var.schedule_expression
     }
   }
 
   targets = {
-    ami_check = [
+    "${local.function_name}" = [
       {
         name = "${local.function_name}-target"
         arn  = module.lambda.lambda_function_arn

@@ -10,7 +10,7 @@ output "lambda_function_name" {
 
 output "eventbridge_rule_arn" {
   description = "ARN of the EventBridge rule that triggers AMI checks"
-  value       = module.eventbridge.eventbridge_rule_arns["ami_check"]
+  value       = module.eventbridge.eventbridge_rule_arns[local.function_name]
 }
 
 output "lambda_log_group_name" {

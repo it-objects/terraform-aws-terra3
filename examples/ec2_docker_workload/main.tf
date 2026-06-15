@@ -292,6 +292,17 @@ module "nginx_ami_update" {
   depends_on = [module.nginx_docker]
 }
 
+module "bastion_ami_update" {
+  source = "../../modules/ami_update_automation"
+
+  solution_name      = local.solution_name
+  name_suffix        = "bastion"
+  launch_template_id = module.terra3_examples.bastion_host_launch_template_id
+  asg_name           = module.terra3_examples.bastion_host_asg_name
+
+  depends_on = [module.terra3_examples]
+}
+
 # -----------------------------------------------
 # Grant ECS Task Role Access to SSM Parameter Store
 # -----------------------------------------------
