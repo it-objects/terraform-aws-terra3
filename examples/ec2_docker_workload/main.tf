@@ -43,8 +43,9 @@ module "terra3_examples" {
   create_database = false
   nat             = "NAT_INSTANCES" # Required for container image pulls
 
-  create_bastion_host = true
-  enable_ecs_exec     = true # Required for app_components with enable_ecs_exec
+  create_bastion_host        = true
+  enable_bastion_ami_updates = true
+  enable_ecs_exec            = true # Required for app_components with enable_ecs_exec
 
   enable_internal_service_dns = true
 
@@ -223,6 +224,9 @@ module "postgres_docker" {
   backup_retention_days = 7
   backup_schedule       = "cron(30 14 ? * * *)" # Daily at 14:30 UTC (testing)
 
+  # AMI Update Automation
+  enable_ami_updates = true
+
   # Internal DNS is enabled by default
   # The Route53 zone is created by the Terra3 base module
   # This module automatically creates DNS A records for service discovery
@@ -256,51 +260,15 @@ module "nginx_docker" {
   # CloudWatch Logs
   log_retention_days = 30
 
+  # AMI Update Automation
+  enable_ami_updates = true
+
   # Explicit dependencies to ensure proper deployment order and SSM access
   # Note: nginx depends on postgres being fully deployed to avoid race conditions
   # with security group and Route53 zone initialization
   depends_on = [
     module.terra3_examples
   ]
-}
-
-# -----------------------------------------------
-# AMI Update Automation
-# -----------------------------------------------
-# Periodically checks for newer Amazon Linux 2023 AMIs and triggers
-# a rolling instance refresh to keep workloads patched.
-
-module "postgres_ami_update" {
-  source = "../../modules/ami_update_automation"
-
-  solution_name      = local.solution_name
-  name_suffix        = "postgres"
-  launch_template_id = module.postgres_docker.launch_template_id
-  asg_name           = module.postgres_docker.asg_name
-
-  depends_on = [module.postgres_docker]
-}
-
-module "nginx_ami_update" {
-  source = "../../modules/ami_update_automation"
-
-  solution_name      = local.solution_name
-  name_suffix        = "nginx"
-  launch_template_id = module.nginx_docker.launch_template_id
-  asg_name           = module.nginx_docker.asg_name
-
-  depends_on = [module.nginx_docker]
-}
-
-module "bastion_ami_update" {
-  source = "../../modules/ami_update_automation"
-
-  solution_name      = local.solution_name
-  name_suffix        = "bastion"
-  launch_template_id = module.terra3_examples.bastion_host_launch_template_id
-  asg_name           = module.terra3_examples.bastion_host_asg_name
-
-  depends_on = [module.terra3_examples]
 }
 
 # -----------------------------------------------

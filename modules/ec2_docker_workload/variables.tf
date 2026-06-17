@@ -365,3 +365,25 @@ variable "health_check_grace_period" {
     error_message = "Health check grace period must be between 60 and 3600 seconds."
   }
 }
+
+# -----------------------------------------------
+# AMI Update Automation
+# -----------------------------------------------
+
+variable "enable_ami_updates" {
+  description = "Enable automated AMI updates via EventBridge + Lambda. Periodically checks for newer AMIs, updates the launch template, and triggers an instance refresh."
+  type        = bool
+  default     = false
+}
+
+variable "ami_update_schedule" {
+  description = "EventBridge schedule expression for AMI update checks (e.g., 'rate(7 days)' or 'cron(0 3 ? * SUN *)')"
+  type        = string
+  default     = "rate(7 days)"
+}
+
+variable "ami_update_sns_topic_arn" {
+  description = "Optional SNS topic ARN for AMI update notifications. If empty, no notifications are sent."
+  type        = string
+  default     = ""
+}

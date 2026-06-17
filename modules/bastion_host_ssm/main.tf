@@ -130,3 +130,19 @@ resource "aws_iam_role_policy_attachment" "ssm_managed_instance_role_attach" {
   role       = aws_iam_role.ssm_managed_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# AMI Update Automation
+# ---------------------------------------------------------------------------------------------------------------------
+
+module "ami_update" {
+  count  = var.enable_ami_updates ? 1 : 0
+  source = "../ami_update_automation"
+
+  solution_name       = var.solution_name
+  name_suffix         = "bastion"
+  launch_template_id  = aws_launch_template.my_asg_launch_template.id
+  asg_name            = aws_autoscaling_group.my_autoscaling_group.name
+  schedule_expression = var.ami_update_schedule
+  sns_topic_arn       = var.ami_update_sns_topic_arn
+}

@@ -32,9 +32,37 @@ export const handler = async () => {
   const additionalFilters = JSON.parse(AMI_ADDITIONAL_FILTERS);
 
   try {
+    const ltVersionsResp = await ec2.send(
+      new DescribeLaunchTemplateVersionsCommand({
+        LaunchTemplateId: LAUNCH_TEMPLATE_ID,
+        Versions: ["$Latest"],
+      })
+    );
+
+    const currentVersion = ltVersionsResp.LaunchTemplateVersions[0];
+    const currentAmiId = currentVersion.LaunchTemplateData.ImageId;
+
+    let architecture = AMI_ARCHITECTURE;
+    if (!architecture || architecture === "auto") {
+      const currentAmiResp = await ec2.send(
+        new DescribeImagesCommand({ ImageIds: [currentAmiId] })
+      );
+      if (currentAmiResp.Images && currentAmiResp.Images.length > 0) {
+        architecture = currentAmiResp.Images[0].Architecture;
+        console.log(
+          `Auto-detected architecture from current AMI: ${architecture}`
+        );
+      } else {
+        architecture = "arm64";
+        console.log(
+          `Could not describe current AMI ${currentAmiId}, falling back to arm64`
+        );
+      }
+    }
+
     const filters = [
       { Name: "name", Values: [AMI_NAME_FILTER] },
-      { Name: "architecture", Values: [AMI_ARCHITECTURE] },
+      { Name: "architecture", Values: [architecture] },
       { Name: "state", Values: ["available"] },
     ];
 
@@ -58,16 +86,6 @@ export const handler = async () => {
     console.log(
       `Latest AMI: ${latestAmi.ImageId} (${latestAmi.Name}), created ${latestAmi.CreationDate}`
     );
-
-    const ltVersionsResp = await ec2.send(
-      new DescribeLaunchTemplateVersionsCommand({
-        LaunchTemplateId: LAUNCH_TEMPLATE_ID,
-        Versions: ["$Latest"],
-      })
-    );
-
-    const currentVersion = ltVersionsResp.LaunchTemplateVersions[0];
-    const currentAmiId = currentVersion.LaunchTemplateData.ImageId;
     console.log(
       `Current launch template AMI: ${currentAmiId} (version ${currentVersion.VersionNumber})`
     );

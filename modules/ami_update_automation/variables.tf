@@ -31,9 +31,9 @@ variable "ami_name_filter" {
 }
 
 variable "ami_architecture" {
-  description = "CPU architecture filter for AMI lookup"
+  description = "CPU architecture filter for AMI lookup. Set to 'auto' to derive from the current launch template's AMI."
   type        = string
-  default     = "arm64"
+  default     = "auto"
 }
 
 variable "ami_additional_filters" {

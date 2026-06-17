@@ -642,3 +642,20 @@ resource "aws_backup_selection" "docker_workload" {
     aws_iam_role_policy.backup_ebs_policy
   ]
 }
+
+# -----------------------------------------------
+# AMI Update Automation
+# -----------------------------------------------
+
+module "ami_update" {
+  count  = var.enable_ami_updates ? 1 : 0
+  source = "../ami_update_automation"
+
+  solution_name       = var.solution_name
+  name_suffix         = var.instance_name
+  launch_template_id  = aws_launch_template.docker_workload.id
+  asg_name            = aws_autoscaling_group.docker_workload.name
+  schedule_expression = var.ami_update_schedule
+  sns_topic_arn       = var.ami_update_sns_topic_arn
+  tags                = var.tags
+}

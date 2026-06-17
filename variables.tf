@@ -246,6 +246,12 @@ variable "create_bastion_host" {
   default     = false
 }
 
+variable "enable_bastion_ami_updates" {
+  description = "Enable automated AMI updates for the bastion host. Periodically checks for newer AMIs and triggers an instance refresh."
+  type        = bool
+  default     = false
+}
+
 variable "create_database" {
   description = "Creates an AWS RDS MySQL database and gives access to it from ECS containers and the bastion host."
   type        = bool
