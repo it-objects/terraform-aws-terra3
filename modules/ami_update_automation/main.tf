@@ -83,7 +83,7 @@ module "lambda" {
   function_name = local.function_name
   description   = "Checks for new AMIs and triggers instance refresh for ${var.name_suffix}"
   handler       = "ami_updater.handler"
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
   timeout       = 120
   source_path   = "${path.module}/ami_updater.mjs"
 
