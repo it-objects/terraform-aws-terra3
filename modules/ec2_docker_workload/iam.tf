@@ -62,6 +62,7 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
   depends_on = [aws_cloudwatch_log_group.docker_logs]
 }
 
+#tfsec:ignore:aws-iam-no-policy-wildcards # CloudWatch log group ARN requires :* for log stream operations
 data "aws_iam_policy_document" "cloudwatch_logs" {
   statement {
     effect = "Allow"
