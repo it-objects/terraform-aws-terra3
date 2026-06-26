@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.72.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.72.1...v1.72.2) (2026-06-26)
+
+
+### Bug Fixes
+
+* **ec2_docker_workload:** replace jsonencode with aws_iam_policy_document ([f36bf98](https://github.com/it-objects/terraform-aws-terra3/commit/f36bf98f25f06cd9cca6aafa570d46e6c0504274))
+
 ### [1.72.1](https://github.com/it-objects/terraform-aws-terra3/compare/v1.72.0...v1.72.1) (2026-06-02)
 
 
