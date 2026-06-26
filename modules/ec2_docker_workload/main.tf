@@ -224,43 +224,45 @@ resource "aws_kms_key" "logs" {
   deletion_window_in_days = 7
   enable_key_rotation     = true
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow CloudWatch Logs"
-        Effect = "Allow"
-        Principal = {
-          Service = "logs.${data.aws_region.current.id}.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:CreateGrant",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-        Condition = {
-          ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:*"
-          }
-        }
-      }
-    ]
-  })
+  policy = data.aws_iam_policy_document.kms_logs.json
 
   tags = local.common_tags
+}
+
+data "aws_iam_policy_document" "kms_logs" {
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "Allow CloudWatch Logs"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["logs.${data.aws_region.current.id}.amazonaws.com"]
+    }
+    actions = [
+      "kms:CreateGrant",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey*",
+      "kms:ReEncrypt*",
+    ]
+    resources = ["*"]
+    condition {
+      test     = "ArnLike"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values   = ["arn:aws:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:*"]
+    }
+  }
 }
 
 resource "aws_kms_alias" "logs" {
@@ -529,22 +531,22 @@ resource "aws_kms_alias" "backup" {
 
 # IAM Role for AWS Backup Service
 resource "aws_iam_role" "backup_service_role" {
-  count = var.enable_backup ? 1 : 0
-  name  = "${var.solution_name}-${var.instance_name}-backup-service-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "backup.amazonaws.com"
-        }
-      }
-    ]
-  })
+  count              = var.enable_backup ? 1 : 0
+  name               = "${var.solution_name}-${var.instance_name}-backup-service-role"
+  assume_role_policy = data.aws_iam_policy_document.backup_assume_role.json
 
   tags = local.common_tags
+}
+
+data "aws_iam_policy_document" "backup_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["backup.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
 }
 
 # Attach AWS managed policy for backup service
@@ -560,46 +562,49 @@ resource "aws_iam_role_policy" "backup_ebs_policy" {
   name  = "${var.solution_name}-${var.instance_name}-backup-ebs"
   role  = aws_iam_role.backup_service_role[0].id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:CreateSnapshot",
-          "ec2:DescribeSnapshots",
-          "ec2:CopySnapshot",
-          "ec2:CreateTags"
-        ]
-        Resource = concat(
-          [for vol in var.ebs_volumes : "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*"],
-          ["arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:snapshot/*"]
-        )
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:DescribeVolumes",
-          "ec2:DescribeInstances"
-        ]
-        Resource = [
-          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:instance/*",
-          "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "kms:CreateGrant",
-          "kms:Decrypt",
-          "kms:DescribeKey",
-          "kms:Encrypt",
-          "kms:GenerateDataKey"
-        ]
-        Resource = aws_kms_key.backup[0].arn
-      }
+  policy = data.aws_iam_policy_document.backup_ebs[0].json
+}
+
+data "aws_iam_policy_document" "backup_ebs" {
+  count = var.enable_backup ? 1 : 0
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CopySnapshot",
+      "ec2:CreateSnapshot",
+      "ec2:CreateTags",
+      "ec2:DescribeSnapshots",
     ]
-  })
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*",
+      "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:snapshot/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeInstances",
+      "ec2:DescribeVolumes",
+    ]
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:instance/*",
+      "arn:aws:ec2:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:volume/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:CreateGrant",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey",
+    ]
+    resources = [aws_kms_key.backup[0].arn]
+  }
 }
 
 # Backup Plan
