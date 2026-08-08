@@ -453,6 +453,8 @@ module "bastion_host_ssm" {
   vpc_id           = local.vpc_id
   private_subnets  = local.private_subnets
 
+  enable_ami_updates = var.enable_bastion_ami_updates
+
   depends_on = [module.security_groups]
 }
 

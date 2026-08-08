@@ -92,3 +92,13 @@ output "internal_service_dns_zone_arn" {
   value       = try(module.internal_service_dns[0].zone_arn, "")
   description = "Route53 internal service DNS zone ARN"
 }
+
+output "bastion_host_launch_template_id" {
+  value       = try(module.bastion_host_ssm[0].launch_template_id, "")
+  description = "Launch template ID of the bastion host"
+}
+
+output "bastion_host_asg_name" {
+  value       = try(module.bastion_host_ssm[0].bastion_host_autoscaling_group_name, "")
+  description = "Auto Scaling Group name of the bastion host"
+}
