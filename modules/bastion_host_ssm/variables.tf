@@ -14,3 +14,9 @@ variable "private_subnets" {
   type        = list(string)
   description = "Private subnets of vpc."
 }
+
+variable "extra_tags" {
+  type        = map(string)
+  description = "Additional tags to apply to the bastion host ASG and its instances."
+  default     = {}
+}
