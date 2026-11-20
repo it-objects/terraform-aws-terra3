@@ -62,10 +62,13 @@ resource "aws_launch_template" "my_asg_launch_template" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = {
-      LaunchTemplate = "${var.solution_name}_launch_template"
-      Name           = "${var.solution_name}-bastion-host-ssm"
-    }
+    tags = merge(
+      {
+        LaunchTemplate = "${var.solution_name}_launch_template"
+        Name           = "${var.solution_name}-bastion-host-ssm"
+      },
+      var.extra_tags
+    )
   }
 
   lifecycle {
@@ -99,6 +102,15 @@ resource "aws_autoscaling_group" "my_autoscaling_group" {
     strategy = "Rolling"
     preferences {
       min_healthy_percentage = 50
+    }
+  }
+
+  dynamic "tag" {
+    for_each = var.extra_tags
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
     }
   }
 }

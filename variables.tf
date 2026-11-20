@@ -246,6 +246,12 @@ variable "create_bastion_host" {
   default     = false
 }
 
+variable "bastion_host_extra_tags" {
+  description = "Additional tags to apply to the bastion host ASG and its instances."
+  type        = map(string)
+  default     = {}
+}
+
 variable "create_database" {
   description = "Creates an AWS RDS MySQL database and gives access to it from ECS containers and the bastion host."
   type        = bool
