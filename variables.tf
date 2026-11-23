@@ -247,7 +247,7 @@ variable "create_bastion_host" {
 }
 
 variable "bastion_host_instance_type" {
-  description = "EC2 instance type for the bastion host. Must have sufficient RAM for any agents installed (e.g. t4g.micro for Microsoft Defender)."
+  description = "EC2 instance type for the bastion host. Override when a use case requires a different instance type than the default t4g.nano."
   type        = string
   default     = "t4g.nano"
 }
