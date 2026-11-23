@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.73.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.72.2...v1.73.0) (2026-11-23)
+
+
+### Features
+
+* **bastion:** add bastion_host_extra_tags to pass custom tags to ASG and instances ([#75](https://github.com/it-objects/terraform-aws-terra3/issues/75)) ([ca33a64](https://github.com/it-objects/terraform-aws-terra3/commit/ca33a647d5172a5245fcd8a973373e909fad69ac))
+
 ### [1.72.2](https://github.com/it-objects/terraform-aws-terra3/compare/v1.72.1...v1.72.2) (2026-06-26)
 
 
