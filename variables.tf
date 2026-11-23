@@ -246,6 +246,12 @@ variable "create_bastion_host" {
   default     = false
 }
 
+variable "bastion_host_instance_type" {
+  description = "EC2 instance type for the bastion host. Must have sufficient RAM for any agents installed (e.g. t4g.micro for Microsoft Defender)."
+  type        = string
+  default     = "t4g.nano"
+}
+
 variable "bastion_host_extra_tags" {
   description = "Additional tags to apply to the bastion host ASG and its instances."
   type        = map(string)
