@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.74.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.73.0...v1.74.0) (2026-11-24)
+
+
+### Features
+
+* **bastion:** add bastion_host_instance_type variable ([#76](https://github.com/it-objects/terraform-aws-terra3/issues/76)) ([34ff9af](https://github.com/it-objects/terraform-aws-terra3/commit/34ff9af567807248c4eed1bedb39114d33ead5cb))
+
 ## [1.73.0](https://github.com/it-objects/terraform-aws-terra3/compare/v1.72.2...v1.73.0) (2026-11-23)
 
 
