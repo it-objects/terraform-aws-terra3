@@ -246,6 +246,12 @@ variable "create_bastion_host" {
   default     = false
 }
 
+variable "bastion_host_instance_type" {
+  description = "EC2 instance type for the bastion host. Override when a use case requires a different instance type than the default t4g.nano."
+  type        = string
+  default     = "t4g.nano"
+}
+
 variable "bastion_host_extra_tags" {
   description = "Additional tags to apply to the bastion host ASG and its instances."
   type        = map(string)

@@ -33,7 +33,7 @@ data "aws_ami" "this" {
 resource "aws_launch_template" "my_asg_launch_template" {
   name_prefix   = "${var.solution_name}_"
   image_id      = data.aws_ami.this.id
-  instance_type = "t4g.nano"
+  instance_type = var.instance_type
   metadata_options {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
